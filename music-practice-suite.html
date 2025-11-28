@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Musician's Practice Suite</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vexflow@4.2.2/build/cjs/vexflow.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@500;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827;
+            color: #ffffff;
+            touch-action: manipulation;
+        }
+
+        .chord-card { font-family: 'Roboto Mono', monospace; }
+
+        .fade-in { animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { 
+            from { opacity: 0; transform: scale(0.98); } 
+            to { opacity: 1; transform: scale(1); } 
+        }
+
+        .slide-up { animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes slideUp { 
+            from { transform: translateY(20px); opacity: 0; } 
+            to { transform: translateY(0); opacity: 1; } 
+        }
+
+        .progress-bar { transition: width 100ms linear; }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #1f2937; }
+        ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 3px; }
+
+        .view-section { display: none; height: 100%; width: 100%; }
+        .view-section.active { display: flex; }
+
+        /* COF Picker Styles */
+        .cof-container {
+            position: relative;
+            width: 260px;
+            height: 260px;
+            margin: 0 auto;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(31,41,55,0) 0%, rgba(31,41,55,0.5) 100%);
+        }
+        .cof-btn {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            cursor: pointer;
+            /* Centering logic handled by JS transform */
+            left: 50%;
+            top: 50%;
+            margin-left: -20px;
+            margin-top: -20px;
+        }
+        .cof-btn.selected, .int-btn.selected, .inv-btn.selected {
+            background-color: #2563eb; /* blue-600 */
+            color: white;
+            box-shadow: 0 0 10px rgba(37, 99, 235, 0.6);
+            border: 2px solid white;
+            z-index: 10;
+        }
+        .cof-btn:not(.selected), .int-btn:not(.selected), .inv-btn:not(.selected) {
+            background-color: #374151; /* gray-700 */
+            color: #9ca3af; /* gray-400 */
+            border: 1px solid #4b5563;
+        }
+        .cof-center-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 0.7rem;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            pointer-events: none;
+        }
+        
+        /* VexFlow Container */
+        #st-canvas {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #st-canvas svg {
+            width: 100%;
+            max-width: 500px;
+            height: auto;
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden bg-gray-900 text-white font-sans">
+
+    <!-- Navigation -->
+    <nav class="bg-gray-900 border-b border-gray-800 p-3 flex justify-between items-center shrink-0 z-50 h-16">
+        <div class="flex items-center gap-4">
+            <button id="nav-home-btn" class="text-gray-400 hover:text-white transition p-2 rounded-lg hover:bg-gray-800" title="Back to Home">
+                <i class="fas fa-th-large text-xl"></i>
+            </button>
+            <div class="h-6 w-px bg-gray-700"></div>
+            <h1 id="nav-title" class="text-lg font-bold tracking-wide text-gray-100">Practice Suite</h1>
+        </div>
+        <div class="hidden md:flex gap-2">
+            <button data-app="notes" class="nav-app-btn px-3 py-1.5 text-sm rounded hover:bg-gray-800 text-gray-400 hover:text-white transition">Notes</button>
+            <button data-app="intervals" class="nav-app-btn px-3 py-1.5 text-sm rounded hover:bg-gray-800 text-gray-400 hover:text-white transition">Intervals</button>
+            <button data-app="staff" class="nav-app-btn px-3 py-1.5 text-sm rounded hover:bg-gray-800 text-gray-400 hover:text-white transition">Staff</button>
+            <button data-app="inversions" class="nav-app-btn px-3 py-1.5 text-sm rounded hover:bg-gray-800 text-gray-400 hover:text-white transition">Inversions</button>
+            <button data-app="chords" class="nav-app-btn px-3 py-1.5 text-sm rounded hover:bg-gray-800 text-gray-400 hover:text-white transition">Chords</button>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1 relative overflow-hidden bg-gray-900">
+
+        <!-- HOME DASHBOARD -->
+        <div id="view-home" class="view-section active flex-col p-6 overflow-y-auto">
+            <div class="max-w-6xl mx-auto w-full mt-8">
+                <h2 class="text-3xl font-black text-white mb-2">Welcome back</h2>
+                <p class="text-gray-400 mb-10">Choose a tool to begin your practice session.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+                    <div data-app="notes" class="app-card group bg-gray-800 rounded-2xl p-6 border border-gray-700 hover:border-purple-500 cursor-pointer transition-all hover:-translate-y-1 shadow-lg relative overflow-hidden slide-up" style="animation-delay: 0ms;">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-bl-full -mr-8 -mt-8 transition group-hover:bg-purple-500/20"></div>
+                        <div class="w-12 h-12 bg-gray-900 rounded-xl flex items-center justify-center mb-4 border border-gray-700 group-hover:border-purple-500 transition"><i class="fas fa-music text-purple-400 text-xl"></i></div>
+                        <h3 class="text-xl font-bold text-white mb-2">Note Flashcards</h3>
+                        <p class="text-sm text-gray-400">Learn to identify notes on the staff or fretboard.</p>
+                    </div>
+                    <div data-app="intervals" class="app-card group bg-gray-800 rounded-2xl p-6 border border-gray-700 hover:border-blue-500 cursor-pointer transition-all hover:-translate-y-1 shadow-lg relative overflow-hidden slide-up" style="animation-delay: 100ms;">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-bl-full -mr-8 -mt-8 transition group-hover:bg-blue-500/20"></div>
+                        <div class="w-12 h-12 bg-gray-900 rounded-xl flex items-center justify-center mb-4 border border-gray-700 group-hover:border-blue-500 transition"><i class="fas fa-ruler-horizontal text-blue-400 text-xl"></i></div>
+                        <h3 class="text-xl font-bold text-white mb-2">Interval Trainer</h3>
+                        <p class="text-sm text-gray-400">Practice intervals relative to a root note.</p>
+                    </div>
+                    <div data-app="staff" class="app-card group bg-gray-800 rounded-2xl p-6 border border-gray-700 hover:border-emerald-500 cursor-pointer transition-all hover:-translate-y-1 shadow-lg relative overflow-hidden slide-up" style="animation-delay: 150ms;">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-bl-full -mr-8 -mt-8 transition group-hover:bg-emerald-500/20"></div>
+                        <div class="w-12 h-12 bg-gray-900 rounded-xl flex items-center justify-center mb-4 border border-gray-700 group-hover:border-emerald-500 transition"><i class="fas fa-list text-emerald-400 text-xl"></i></div>
+                        <h3 class="text-xl font-bold text-white mb-2">Staff & MIDI</h3>
+                        <p class="text-sm text-gray-400">Connect your MIDI keyboard and read from the staff.</p>
+                    </div>
+                    <div data-app="inversions" class="app-card group bg-gray-800 rounded-2xl p-6 border border-gray-700 hover:border-orange-500 cursor-pointer transition-all hover:-translate-y-1 shadow-lg relative overflow-hidden slide-up" style="animation-delay: 200ms;">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-orange-500/10 rounded-bl-full -mr-8 -mt-8 transition group-hover:bg-orange-500/20"></div>
+                        <div class="w-12 h-12 bg-gray-900 rounded-xl flex items-center justify-center mb-4 border border-gray-700 group-hover:border-orange-500 transition"><i class="fas fa-exchange-alt text-orange-400 text-xl"></i></div>
+                        <h3 class="text-xl font-bold text-white mb-2">Inversions</h3>
+                        <p class="text-sm text-gray-400">Master chord inversions and bass notes.</p>
+                    </div>
+                    <div data-app="chords" class="app-card group bg-gray-800 rounded-2xl p-6 border border-gray-700 hover:border-indigo-500 cursor-pointer transition-all hover:-translate-y-1 shadow-lg relative overflow-hidden slide-up" style="animation-delay: 250ms;">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-bl-full -mr-8 -mt-8 transition group-hover:bg-indigo-500/20"></div>
+                        <div class="w-12 h-12 bg-gray-900 rounded-xl flex items-center justify-center mb-4 border border-gray-700 group-hover:border-indigo-500 transition"><i class="fas fa-layer-group text-indigo-400 text-xl"></i></div>
+                        <h3 class="text-xl font-bold text-white mb-2">Chord Flow</h3>
+                        <p class="text-sm text-gray-400">Generate RH/LH chord progressions.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NOTE TRAINER -->
+        <div id="view-notes" class="view-section hidden flex-col md:flex-row h-full w-full relative">
+            <aside id="nt-settings" class="hidden md:flex flex-col w-full md:w-80 bg-gray-900 border-r border-gray-700 p-6 overflow-y-auto absolute md:relative z-20 h-full">
+                <div class="flex justify-between mb-6 md:hidden"><h2 class="font-bold text-white">Settings</h2><button class="nt-close-settings text-gray-400"><i class="fas fa-times"></i></button></div>
+                <div class="mb-6"><label class="block text-sm font-medium mb-2 text-gray-300">Timer Duration</label><select id="nt-timerDuration" class="w-full bg-gray-800 border border-gray-700 rounded-lg p-3 text-white"><option value="10">10s</option><option value="15">15s</option><option value="20">20s</option><option value="30">30s</option></select></div>
+                <div class="mb-6">
+                    <label class="block text-sm font-medium mb-2 text-gray-300">Display</label>
+                    <div class="grid grid-cols-1 gap-2"><button class="nt-acc-btn bg-purple-600 text-white p-2 rounded text-sm" data-mode="both">Mixed</button><div class="grid grid-cols-2 gap-2"><button class="nt-acc-btn bg-gray-800 text-gray-300 p-2 rounded text-sm" data-mode="sharps">Sharps</button><button class="nt-acc-btn bg-gray-800 text-gray-300 p-2 rounded text-sm" data-mode="flats">Flats</button></div></div>
+                </div>
+                <div class="space-y-4">
+                    <div class="flex justify-between bg-gray-800 p-3 rounded-lg"><span class="text-sm text-white">Timer</span><button id="nt-timerToggle" class="w-12 h-6 rounded-full bg-green-500 relative"><div class="w-4 h-4 bg-white rounded-full absolute top-1 right-1"></div></button></div>
+                    <div class="flex justify-between bg-gray-800 p-3 rounded-lg"><span class="text-sm text-white">No Repeats</span><button id="nt-repeatToggle" class="w-12 h-6 rounded-full bg-gray-600 relative"><div class="w-4 h-4 bg-white rounded-full absolute top-1 left-1"></div></button></div>
+                </div>
+            </aside>
+            <section class="flex-1 flex flex-col relative bg-gray-900/50">
+                 <button id="nt-settingsToggle" class="md:hidden absolute top-4 right-4 text-gray-400"><i class="fas fa-cog text-xl"></i></button>
+                <div class="h-2 w-full bg-gray-800"><div id="nt-progressBar" class="h-full bg-purple-500 w-0"></div></div>
+                <div class="flex-1 flex flex-col items-center justify-center p-6">
+                    <div id="nt-card" class="w-full max-w-md aspect-square md:aspect-auto md:h-80 bg-gray-800 rounded-3xl border border-gray-700 flex flex-col items-center justify-center relative shadow-2xl cursor-pointer">
+                         <div class="absolute top-4 right-4 text-xs text-gray-500" id="nt-poolStatus">12/12</div>
+                        <h1 id="nt-display" class="text-9xl font-black text-white">?</h1>
+                        <p id="nt-hint" class="mt-4 text-gray-400 text-sm uppercase tracking-widest animate-pulse">Tap to Start</p>
+                    </div>
+                    <div class="mt-8 flex gap-4 w-full max-w-md">
+                        <button id="nt-actionBtn" class="flex-1 bg-white text-gray-900 py-4 rounded-xl font-bold text-lg hover:bg-gray-200"><i class="fas fa-play"></i> Start</button>
+                        <button id="nt-nextBtn" class="bg-gray-700 text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-gray-600"><i class="fas fa-step-forward"></i></button>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- INTERVAL TRAINER -->
+        <div id="view-intervals" class="view-section hidden flex-col md:flex-row h-full w-full relative">
+            <aside id="it-settings" class="hidden md:flex flex-col w-full md:w-96 bg-gray-900 border-r border-gray-700 p-6 overflow-y-auto absolute md:relative z-20 h-full">
+                <div class="flex justify-between mb-6 md:hidden"><h2 class="font-bold text-white">Settings</h2><button class="it-close-settings text-gray-400"><i class="fas fa-times"></i></button></div>
+                
+                <div class="space-y-6 mb-8">
+                    <!-- Mode Switcher -->
+                    <div>
+                        <label class="block text-sm text-blue-300 font-bold mb-2">Mode</label>
+                        <div class="flex gap-2 bg-gray-800 p-1 rounded-lg">
+                            <button class="it-mode-btn flex-1 py-2 text-xs font-bold rounded transition bg-blue-600 text-white shadow-md" data-mode="standard">Root + Int</button>
+                            <button class="it-mode-btn flex-1 py-2 text-xs font-bold rounded transition hover:bg-gray-700 text-gray-400" data-mode="pure">Pure Int</button>
+                        </div>
+                    </div>
+
+                    <div id="it-rootPickerSection">
+                        <div class="flex justify-between items-center mb-2"><label class="text-sm text-blue-300 font-bold">Root Selection</label><span class="text-xs text-gray-500">Click to toggle</span></div>
+                        <div id="it-cofContainer" class="cof-container"><div class="cof-center-text">Roots</div></div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center mb-2"><label class="text-sm text-blue-300 font-bold">Interval Selection</label></div>
+                        <div id="it-intGrid" class="grid grid-cols-4 gap-2"></div>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-blue-300 font-bold mb-2">Direction</label>
+                        <div class="flex gap-2 bg-gray-800 p-1 rounded-lg">
+                            <button class="it-dir-btn flex-1 py-2 text-xs font-bold rounded transition bg-blue-600 text-white shadow-md" data-dir="up">Up <i class="fas fa-arrow-right ml-1"></i></button>
+                            <button class="it-dir-btn flex-1 py-2 text-xs font-bold rounded transition hover:bg-gray-700 text-gray-400" data-dir="down">Down <i class="fas fa-arrow-left ml-1"></i></button>
+                            <button class="it-dir-btn flex-1 py-2 text-xs font-bold rounded transition hover:bg-gray-700 text-gray-400" data-dir="both">Both <i class="fas fa-arrows-alt-h ml-1"></i></button>
+                            <button class="it-dir-btn flex-1 py-2 text-xs font-bold rounded transition hover:bg-gray-700 text-gray-400" data-dir="random">Rand <i class="fas fa-random ml-1"></i></button>
+                        </div>
+                    </div>
+                    <div class="relative group pt-2">
+                        <div class="absolute bottom-full left-0 mb-2 w-full p-2 bg-gray-800 border border-gray-700 rounded-lg shadow-2xl text-xs text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 text-center">Refreshes the flashcards.<div class="absolute bottom-0 left-1/2 -mb-1 w-2 h-2 bg-gray-800 border-r border-b border-gray-700 transform rotate-45 -translate-x-1/2"></div></div>
+                        <button id="it-applyBtn" class="w-full py-3 bg-blue-600 rounded-xl text-sm font-bold text-white hover:bg-blue-500 transition-colors shadow-lg"><i class="fas fa-sync-alt mr-2"></i> Update Deck</button>
+                    </div>
+                </div>
+                <div class="border-t border-gray-700 my-4"></div>
+                <div class="mb-4"><label class="text-sm text-gray-300">Timer</label><select id="it-timerDuration" class="w-full bg-gray-800 border border-gray-700 rounded p-2 mt-1 text-white"><option value="10">10s</option><option value="15">15s</option><option value="20">20s</option><option value="30">30s</option><option value="40">40s</option><option value="50">50s</option><option value="60">1 min</option></select></div>
+                 <div class="space-y-4"><div class="flex justify-between bg-gray-800 p-3 rounded-lg"><span class="text-sm text-white">Timer</span><button id="it-timerToggle" class="w-12 h-6 rounded-full bg-green-500 relative"><div class="w-4 h-4 bg-white rounded-full absolute top-1 right-1"></div></button></div><div class="flex justify-between bg-gray-800 p-3 rounded-lg"><span class="text-sm text-white">No Repeats</span><button id="it-repeatToggle" class="w-12 h-6 rounded-full bg-gray-600 relative"><div class="w-4 h-4 bg-white rounded-full absolute top-1 left-1"></div></button></div></div>
+            </aside>
+            <section class="flex-1 flex flex-col relative bg-gray-900/50">
+                <button id="it-settingsToggle" class="md:hidden absolute top-4 right-4 text-gray-400"><i class="fas fa-cog text-xl"></i></button>
+                <div class="h-2 w-full bg-gray-800"><div id="it-progressBar" class="h-full bg-blue-500 w-0"></div></div>
+                <div class="flex-1 flex flex-col items-center justify-center p-6">
+                    <div id="it-card" class="w-full max-w-lg aspect-[4/3] md:aspect-auto md:h-80 bg-gray-800 rounded-3xl border border-gray-700 flex flex-col items-center justify-center relative shadow-2xl cursor-pointer group">
+                        <div class="absolute top-4 right-4 text-xs text-gray-500" id="it-deckCount">0/0</div>
+                        <div class="text-center z-10">
+                            <div id="it-rootDisplay" class="text-7xl font-black text-white mb-2">?</div>
+                            <div id="it-separator" class="w-16 h-1 bg-blue-500 mx-auto mb-4 rounded-full opacity-50"></div>
+                            <div id="it-intDisplay" class="text-4xl font-bold text-blue-300">?</div>
+                        </div>
+                        <p id="it-hint" class="absolute bottom-8 text-gray-500 text-xs uppercase tracking-widest animate-pulse">Tap to Start</p>
+                    </div>
+                    <div class="mt-8 flex gap-4 w-full max-w-lg"><button id="it-actionBtn" class="flex-1 bg-white text-gray-900 py-4 rounded-xl font-bold text-lg hover:bg-gray-200"><i class="fas fa-play"></i> Start</button><button id="it-nextBtn" class="bg-gray-700 text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-gray-600"><i class="fas fa-step-forward"></i></button></div>
+                </div>
+            </section>
+        </div>
+
+        <!-- STAFF TRAINER -->
+        <div id="view-staff" class="view-section hidden flex-col md:flex-row h-full w-full relative">
+            <aside id="st-settings" class="hidden md:flex flex-col w-full md:w-96 bg-gray-900 border-r border-gray-700 p-6 overflow-y-auto absolute md:relative z-20 h-full">
+                <div class="flex justify-between mb-6 md:hidden"><h2 class="font-bold text-white">Settings</h2><button class="st-close-settings text-gray-400"><i class="fas fa-times"></i></button></div>
+                
+                <!-- Reuse Pickers logic for Staff -->
+                <div class="space-y-6 mb-8">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium mb-2 text-emerald-300">Note Duration</label>
+                        <select id="st-noteDuration" class="w-full bg-gray-800 border border-gray-700 rounded p-2 text-white">
+                            <option value="w">Whole Note</option>
+                            <option value="h">Half Note</option>
+                            <option value="q">Quarter Note</option>
+                            <option value="8">Eighth Note</option>
+                        </select>
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center mb-2"><label class="text-sm text-emerald-300 font-bold">Root Selection</label><span class="text-xs text-gray-500">Click to toggle</span></div>
+                        <div id="st-cofContainer" class="cof-container"><div class="cof-center-text">Roots</div></div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center mb-2"><label class="text-sm text-emerald-300 font-bold">Interval Selection</label></div>
+                        <div id="st-intGrid" class="grid grid-cols-4 gap-2"></div>
+                    </div>
+                    <div class="relative group pt-2">
+                        <button id="st-applyBtn" class="w-full py-3 bg-emerald-600 rounded-xl text-sm font-bold text-white hover:bg-emerald-500 transition-colors shadow-lg"><i class="fas fa-sync-alt mr-2"></i> Update Deck</button>
+                    </div>
+                </div>
+                <div class="border-t border-gray-700 my-4"></div>
+                <div class="mb-4"><label class="text-sm text-gray-300">Timer</label><select id="st-timerDuration" class="w-full bg-gray-800 border border-gray-700 rounded p-2 mt-1 text-white"><option value="10">10s</option><option value="15">15s</option><option value="30">30s</option></select></div>
+                 <div class="space-y-4">
+                    <div class="flex justify-between bg-gray-800 p-3 rounded-lg"><span class="text-sm text-white">Timer</span><button id="st-timerToggle" class="w-12 h-6 rounded-full bg-green-500 relative"><div class="w-4 h-4 bg-white rounded-full absolute top-1 right-1"></div></button></div>
+                    <div class="flex justify-between bg-gray-800 p-3 rounded-lg">
+                        <span class="text-sm text-white">MIDI Input</span>
+                        <!-- Made clickable for retry -->
+                        <div id="st-midiStatus" class="text-xs text-gray-500 font-mono cursor-pointer hover:text-white transition-colors" title="Click to retry connection">Checking...</div>
+                    </div>
+                </div>
+            </aside>
+            <section class="flex-1 flex flex-col relative bg-gray-900/50">
+                <button id="st-settingsToggle" class="md:hidden absolute top-4 right-4 text-gray-400 z-50"><i class="fas fa-cog text-xl"></i></button>
+                <div class="h-2 w-full bg-gray-800"><div id="st-progressBar" class="h-full bg-emerald-500 w-0"></div></div>
+                <div class="flex-1 flex flex-col items-center justify-center p-4">
+                    <!-- Updated Background Color to bg-gray-800 -->
+                    <div id="st-card" class="w-full max-w-3xl h-[400px] bg-gray-800 rounded-xl border-4 border-gray-700 flex flex-col items-center justify-center relative shadow-2xl cursor-pointer group overflow-hidden">
+                        <div id="st-canvas" class="w-full h-full"></div>
+                        <p id="st-hint" class="absolute bottom-4 text-gray-400 text-xs uppercase tracking-widest animate-pulse">Tap to Start</p>
+                    </div>
+                    <div class="mt-8 flex gap-4 w-full max-w-lg">
+                        <button id="st-actionBtn" class="flex-1 bg-white text-gray-900 py-4 rounded-xl font-bold text-lg hover:bg-gray-200"><i class="fas fa-play"></i> Start</button>
+                        <button id="st-nextBtn" class="bg-gray-700 text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-gray-600"><i class="fas fa-step-forward"></i></button>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- INVERSION TRAINER (NEW) -->
+        <div id="view-inversions" class="view-section hidden flex-col md:flex-row h-full w-full relative">
+            <aside id="iv-settings" class="hidden md:flex flex-col w-full md:w-80 bg-gray-900 border-r border-gray-800 p-6 overflow-y-auto absolute md:relative z-30 h-full">
+                <div class="flex justify-between mb-6 md:hidden"><h2 class="font-bold text-white">Settings</h2><button class="iv-close-settings text-gray-400"><i class="fas fa-times"></i></button></div>
+                
+                <!-- Keys (COF) -->
+                <div class="mb-6">
+                    <div class="flex justify-between items-center mb-2"><label class="text-sm font-medium text-orange-300">Key Selection</label><span class="text-xs text-gray-500">Click to toggle</span></div>
+                    <div id="iv-cofContainer" class="cof-container"><div class="cof-center-text">Keys</div></div>
+                </div>
+
+                <!-- Quality Picker -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium mb-2 text-orange-300">Quality</label>
+                    <div class="flex gap-2 bg-gray-800 p-1 rounded-lg">
+                        <!-- Updated buttons to match Extension/Inv style (border, bg-gray-700 default) -->
+                        <button class="iv-qual-btn flex-1 py-2 text-xs font-bold rounded transition bg-orange-600 text-white border border-white shadow-md" data-val="random">Mix</button>
+                        <button class="iv-qual-btn flex-1 py-2 text-xs font-bold rounded transition bg-gray-700 text-gray-400 border border-gray-600 hover:bg-gray-600" data-val="Major">Maj</button>
+                        <button class="iv-qual-btn flex-1 py-2 text-xs font-bold rounded transition bg-gray-700 text-gray-400 border border-gray-600 hover:bg-gray-600" data-val="Minor">Min</button>
+                    </div>
+                </div>
+
+                <!-- Extensions Grid -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium mb-2 text-orange-300">Extensions</label>
+                    <div class="grid grid-cols-3 gap-2" id="iv-extGrid"></div>
+                </div>
+
+                <!-- Inversion Type Filter -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium mb-2 text-orange-300">Inversions</label>
+                    <div class="grid grid-cols-2 gap-2" id="iv-invGrid"></div>
+                </div>
+
+                <!-- Timer & Repeats -->
+                <div class="space-y-4">
+                    <div class="flex justify-between bg-gray-800 p-3 rounded-lg"><span class="text-sm text-white">Timer</span><button id="iv-timerToggle" class="w-12 h-6 rounded-full bg-green-500 relative"><div class="w-4 h-4 bg-white rounded-full absolute top-1 right-1"></div></button></div>
+                    <div class="flex justify-between bg-gray-800 p-3 rounded-lg"><span class="text-sm text-white">No Repeats</span><button id="iv-repeatToggle" class="w-12 h-6 rounded-full bg-gray-600 relative"><div class="w-4 h-4 bg-white rounded-full absolute top-1 left-1"></div></button></div>
+                     <div class="mb-6"><label class="block text-sm font-medium mb-2 text-gray-300">Duration</label><select id="iv-timerDuration" class="w-full bg-gray-800 border border-gray-700 rounded p-2 text-white"><option value="15">15s</option><option value="30">30s</option><option value="60">60s</option></select></div>
+                </div>
+            </aside>
+            <section class="flex-1 flex flex-col relative bg-gray-900">
+                 <button id="iv-settingsToggle" class="md:hidden absolute top-4 right-4 text-gray-400 z-50"><i class="fas fa-cog text-xl"></i></button>
+                <div class="h-1.5 w-full bg-gray-800 relative"><div id="iv-progressBar" class="h-full bg-orange-500 w-full shadow-[0_0_15px_rgba(249,115,22,0.6)]"></div></div>
+                
+                <div class="flex-1 relative overflow-y-auto overflow-x-hidden p-6 flex flex-col items-center justify-center">
+                    <div id="iv-card" class="w-full max-w-lg aspect-[4/3] md:aspect-auto md:h-80 bg-gray-800 rounded-3xl border border-gray-700 flex flex-col items-center justify-center relative shadow-2xl cursor-pointer group">
+                        <!-- Deck Count Display -->
+                        <div class="absolute top-4 right-4 text-xs text-gray-500 opacity-0 transition-opacity" id="iv-deckCount">0 left</div>
+                        
+                        <div class="text-center z-10 px-4">
+                            <div id="iv-chordDisplay" class="text-6xl md:text-8xl font-black text-white mb-4 tracking-tighter">?</div>
+                            <div class="w-20 h-1 bg-orange-500 mx-auto mb-6 rounded-full opacity-50"></div>
+                            <div id="iv-invDisplay" class="text-3xl md:text-4xl font-bold text-orange-300 uppercase tracking-widest">?</div>
+                        </div>
+                        <p id="iv-hint" class="absolute bottom-8 text-gray-500 text-xs uppercase tracking-widest animate-pulse">Tap to Start</p>
+                    </div>
+                    <div class="mt-8 flex gap-4 w-full max-w-lg">
+                        <button id="iv-actionBtn" class="flex-1 bg-white text-gray-900 py-4 rounded-xl font-bold text-lg hover:bg-gray-200"><i class="fas fa-play"></i> Start</button>
+                        <button id="iv-nextBtn" class="bg-gray-700 text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-gray-600"><i class="fas fa-step-forward"></i></button>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- CHORD FLOW -->
+        <div id="view-chords" class="view-section hidden flex-col md:flex-row h-full w-full relative">
+            <aside id="cp-settings" class="hidden md:flex flex-col w-full md:w-80 bg-gray-900 border-r border-gray-800 p-6 overflow-y-auto absolute md:relative z-30 h-full">
+                <div class="flex justify-between mb-6 md:hidden"><h2 class="font-bold text-white">Settings</h2><button class="cp-close-settings text-gray-400"><i class="fas fa-times"></i></button></div>
+                
+                <div class="mb-6 relative group">
+                    <div class="flex justify-between text-sm mb-2"><label class="text-gray-300 cursor-help">Chain Length</label><span id="cp-lenDisplay" class="text-indigo-400 font-bold">4</span></div>
+                    <div class="absolute bottom-full left-0 mb-2 w-56 p-3 bg-gray-800 border border-gray-700 rounded-lg shadow-2xl text-xs text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">Sets the number of chords in the generated sequence (2-10).<div class="absolute bottom-0 left-6 -mb-1 w-2 h-2 bg-gray-800 border-r border-b border-gray-700 transform rotate-45"></div></div>
+                    <input type="range" id="cp-length" min="2" max="10" value="4" class="w-full h-2 bg-gray-700 rounded-lg appearance-none accent-indigo-500">
+                </div>
+
+                <div class="mb-8 relative group">
+                    <div class="flex justify-between text-sm mb-2"><label class="text-gray-300 cursor-help">Logic</label><span id="cp-chaosDisplay" class="text-indigo-400 font-bold text-xs uppercase">Random</span></div>
+                    <div class="absolute bottom-full left-0 mb-2 w-64 p-3 bg-gray-800 border border-gray-700 rounded-lg shadow-2xl text-xs text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 leading-relaxed">Adjusts harmonic rules.<br><span class="text-indigo-400 font-bold">Smooth:</span> Follows music theory.<br><span class="text-indigo-400 font-bold">Random:</span> Pure chaos.<br><span class="text-gray-500">Mix to balance.</span><div class="absolute bottom-0 left-6 -mb-1 w-2 h-2 bg-gray-800 border-r border-b border-gray-700 transform rotate-45"></div></div>
+                    <input type="range" id="cp-chaos" min="0" max="100" value="100" step="10" class="w-full h-2 bg-gray-700 rounded-lg appearance-none accent-indigo-500">
+                    <div class="flex justify-between text-[10px] text-gray-500 mt-1 font-mono"><span>Smooth</span><span>Chaotic</span></div>
+                </div>
+                
+                <!-- Key Lock (COF Picker) -->
+                <div class="mb-6">
+                    <div class="flex justify-between items-center mb-2"><label class="text-sm font-medium text-indigo-300">Key Lock</label><span class="text-xs text-gray-500">Click to toggle</span></div>
+                    <div id="cp-cofContainer" class="cof-container"><div class="cof-center-text">Keys</div></div>
+                </div>
+
+                <!-- Quality Picker -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium mb-2 text-indigo-300">Quality</label>
+                    <div class="flex gap-2 bg-gray-800 p-1 rounded-lg">
+                        <button class="cp-qual-btn flex-1 py-2 text-xs font-bold rounded transition bg-indigo-600 text-white shadow-md" data-val="random">Mix</button>
+                        <button class="cp-qual-btn flex-1 py-2 text-xs font-bold rounded transition hover:bg-gray-700 text-gray-400" data-val="Major">Maj</button>
+                        <button class="cp-qual-btn flex-1 py-2 text-xs font-bold rounded transition hover:bg-gray-700 text-gray-400" data-val="Minor">Min</button>
+                    </div>
+                </div>
+
+                <!-- Extensions Picker -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium mb-2 text-indigo-300">Extensions</label>
+                    <div class="grid grid-cols-3 gap-2" id="cp-extGrid">
+                        <!-- Buttons generated by JS -->
+                    </div>
+                </div>
+
+                <div class="mb-6"><label class="block text-sm font-medium mb-2 text-gray-300">Context</label><div class="grid grid-cols-2 gap-2"><button class="cp-mode-btn bg-indigo-600 text-white py-2 rounded text-sm" data-mode="diatonic">Diatonic</button><button class="cp-mode-btn bg-gray-800 text-gray-400 py-2 rounded text-sm" data-mode="chromatic">Chromatic</button></div></div>
+                 
+                 <!-- Bass Picker (New Grid) -->
+                 <div class="mb-6">
+                    <label class="block text-sm font-medium mb-2 text-gray-300">Bass</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button class="cp-bass-btn py-2 px-1 rounded text-xs font-bold transition bg-gray-700 text-gray-400 border border-gray-600 hover:bg-gray-600" data-val="root">Root</button>
+                        <button class="cp-bass-btn py-2 px-1 rounded text-xs font-bold transition bg-gray-700 text-gray-400 border border-gray-600 hover:bg-gray-600" data-val="inversions">Inv</button>
+                        <button class="cp-bass-btn py-2 px-1 rounded text-xs font-bold transition bg-indigo-600 text-white border-white shadow-md" data-val="slash">Slash</button>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="flex justify-between bg-gray-800 p-3 rounded-lg"><span class="text-sm text-white">Timer</span><button id="cp-timerToggle" class="w-12 h-6 rounded-full bg-green-500 relative"><div class="w-4 h-4 bg-white rounded-full absolute top-1 right-1"></div></button></div>
+                     <div class="mb-6"><label class="block text-sm font-medium mb-2 text-gray-300">Duration</label><select id="cp-timerDuration" class="w-full bg-gray-800 border border-gray-700 rounded p-2 text-white"><option value="15">15s</option><option value="30">30s</option><option value="60">60s</option></select></div>
+                </div>
+            </aside>
+            <section class="flex-1 flex flex-col relative bg-gray-900">
+                 <button id="cp-settingsToggle" class="md:hidden absolute top-4 right-4 text-gray-400 z-50"><i class="fas fa-cog text-xl"></i></button>
+                <div class="h-1.5 w-full bg-gray-800 relative"><div id="cp-progressBar" class="h-full bg-indigo-500 w-full shadow-[0_0_15px_rgba(99,102,241,0.6)]"></div></div>
+                <div class="w-full bg-gray-800/50 border-b border-gray-800 p-4 text-center backdrop-blur-sm sticky top-0 z-10">
+                    <p class="text-xs uppercase tracking-widest text-gray-500 font-bold mb-1">Key Context</p>
+                    <h2 id="cp-keyDisplay" class="text-3xl font-black text-white tracking-tight">C Major</h2>
+                </div>
+                <div class="flex-1 relative overflow-y-auto overflow-x-hidden p-4 flex flex-col items-center"><div id="cp-container" class="flex flex-wrap justify-center gap-4 w-full max-w-6xl my-auto"></div></div>
+                <div class="p-4 bg-gray-900 border-t border-gray-800 flex justify-center gap-4 shrink-0">
+                    <button id="cp-actionBtn" class="w-32 bg-white text-gray-900 py-3 rounded-xl font-bold text-lg hover:bg-gray-200"><i class="fas fa-play"></i> Start</button>
+                    <button id="cp-refreshBtn" class="w-20 bg-gray-800 text-white py-3 rounded-xl font-bold text-lg hover:bg-gray-700 border border-gray-700"><i class="fas fa-random"></i></button>
+                </div>
+            </section>
+        </div>
+
+    </main>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        
+        // =====================
+        // AUDIO CONTROLLER
+        // =====================
+        const AudioController = {
+            ctx: null,
+            init() { if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); if (this.ctx.state === 'suspended') this.ctx.resume(); },
+            playBeep() {
+                if (!this.ctx) this.init(); if (this.ctx.state === 'suspended') this.ctx.resume();
+                const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
+                osc.connect(gain); gain.connect(this.ctx.destination);
+                osc.type = 'sine'; osc.frequency.setValueAtTime(880, this.ctx.currentTime);
+                gain.gain.setValueAtTime(0, this.ctx.currentTime); gain.gain.linearRampToValueAtTime(0.1, this.ctx.currentTime + 0.01); gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.1);
+                osc.start(); osc.stop(this.ctx.currentTime + 0.1);
+            }
+        };
+
+        // =====================
+        // SHARED ROUTER & UTILS
+        // =====================
+        const AppRouter = {
+            currentApp: null,
+            switch(appName) {
+                if (this.currentApp && this.currentApp.stop) this.currentApp.stop();
+                document.querySelectorAll('.view-section').forEach(el => { el.classList.remove('active'); el.classList.add('hidden'); el.classList.remove('flex'); });
+                const target = document.getElementById(`view-${appName}`);
+                if (target) { target.classList.add('active'); target.classList.remove('hidden'); target.classList.add('flex'); }
+                const titles = { 'notes': 'Note Flashcards', 'intervals': 'Interval Trainer', 'staff': 'Staff Trainer', 'chords': 'Chord Flow', 'inversions': 'Inversion Trainer' };
+                document.getElementById('nav-title').textContent = titles[appName] || 'Practice Suite';
+                
+                if (appName === 'notes') { this.currentApp = NoteTrainer; NoteTrainer.init(); }
+                else if (appName === 'intervals') { this.currentApp = IntervalTrainer; IntervalTrainer.init(); }
+                else if (appName === 'staff') { this.currentApp = StaffTrainer; StaffTrainer.init(); }
+                else if (appName === 'chords') { this.currentApp = ChordTrainer; ChordTrainer.init(); }
+                else if (appName === 'inversions') { this.currentApp = InversionTrainer; InversionTrainer.init(); }
+            },
+            goHome() {
+                if (this.currentApp && this.currentApp.stop) this.currentApp.stop();
+                this.currentApp = null;
+                document.querySelectorAll('.view-section').forEach(el => { el.classList.remove('active'); el.classList.add('hidden'); el.classList.remove('flex'); });
+                const home = document.getElementById('view-home');
+                home.classList.add('active'); home.classList.remove('hidden'); home.classList.add('flex');
+                document.getElementById('nav-title').textContent = 'Practice Suite';
+            }
+        };
+
+        document.getElementById('nav-home-btn').addEventListener('click', () => AppRouter.goHome());
+        document.querySelectorAll('.nav-app-btn').forEach(btn => btn.addEventListener('click', () => AppRouter.switch(btn.dataset.app)));
+        document.querySelectorAll('.app-card').forEach(card => card.addEventListener('click', () => AppRouter.switch(card.dataset.app)));
+
+        const setupSidebar = (toggleId, panelId, closeClass) => {
+            const toggle = document.getElementById(toggleId);
+            const panel = document.getElementById(panelId);
+            const closes = document.querySelectorAll(`.${closeClass}`);
+            if(toggle && panel) {
+                toggle.onclick = () => { panel.classList.remove('hidden'); panel.classList.add('absolute', 'inset-0'); };
+                closes.forEach(btn => btn.onclick = () => { panel.classList.add('hidden'); panel.classList.remove('absolute', 'inset-0'); });
+            }
+        };
+
+        const updateToggleUI = (btn, active, colorClass = 'bg-green-500') => {
+            if(!btn) return;
+            const knob = btn.firstElementChild;
+            if(active) { btn.classList.remove('bg-gray-600'); btn.classList.add(colorClass); knob.classList.remove('left-1'); knob.classList.add('right-1'); }
+            else { btn.classList.remove(colorClass); btn.classList.add('bg-gray-600'); knob.classList.remove('right-1'); knob.classList.add('left-1'); }
+        };
+
+        // ... (NoteTrainer, IntervalTrainer, StaffTrainer remain identical) ...
+        const NoteTrainer = { initialized: false, state: { isPlaying: false, timerEnabled: true, noRepeats: false, duration: 10, mode: 'both', pool: [], index: null, timer: null }, data: [ { type: 'n', name: 'C' }, { type: 'a', s: 'C♯', f: 'D♭' }, { type: 'n', name: 'D' }, { type: 'a', s: 'D♯', f: 'E♭' }, { type: 'n', name: 'E' }, { type: 'n', name: 'F' }, { type: 'a', s: 'F♯', f: 'G♭' }, { type: 'n', name: 'G' }, { type: 'a', s: 'G♯', f: 'A♭' }, { type: 'n', name: 'A' }, { type: 'a', s: 'A♯', f: 'B♭' }, { type: 'n', name: 'B' } ], init() { if(this.initialized) return; setupSidebar('nt-settingsToggle', 'nt-settings', 'nt-close-settings'); this.els = { display: document.getElementById('nt-display'), bar: document.getElementById('nt-progressBar'), action: document.getElementById('nt-actionBtn'), next: document.getElementById('nt-nextBtn'), card: document.getElementById('nt-card'), timerToggle: document.getElementById('nt-timerToggle'), repTog: document.getElementById('nt-repeatToggle'), dur: document.getElementById('nt-timerDuration'), hint: document.getElementById('nt-hint'), status: document.getElementById('nt-poolStatus') }; this.els.action.onclick = () => this.togglePlay(); this.els.next.onclick = () => this.next(true); this.els.card.onclick = () => this.state.isPlaying ? this.next(true) : this.togglePlay(); this.els.timerToggle.onclick = () => { this.state.timerEnabled = !this.state.timerEnabled; this.updateUI(); if(this.state.isPlaying && !this.state.timerEnabled) clearInterval(this.state.timer); }; this.els.repTog.onclick = () => { this.state.noRepeats = !this.state.noRepeats; this.resetPool(); this.updateUI(); }; this.els.dur.onchange = (e) => { this.state.duration = parseInt(e.target.value); if(this.state.isPlaying) this.restartTimer(); }; document.querySelectorAll('.nt-acc-btn').forEach(b => b.onclick = () => { this.state.mode = b.dataset.mode; document.querySelectorAll('.nt-acc-btn').forEach(x => x.classList.replace('bg-purple-600', 'bg-gray-800') || x.classList.remove('text-white')); b.classList.remove('bg-gray-800'); b.classList.add('bg-purple-600', 'text-white'); }); this.resetPool(); this.updateUI(); this.initialized = true; }, resetPool() { this.state.pool = Array.from({length:12}, (_,i)=>i); this.updateUI(); }, updateUI() { updateToggleUI(this.els.timerToggle, this.state.timerEnabled); updateToggleUI(this.els.repTog, this.state.noRepeats, 'bg-purple-500'); this.els.status.style.opacity = this.state.noRepeats ? '1' : '0'; if(this.state.noRepeats) this.els.status.textContent = `${this.state.pool.length}/12`; }, format(note) { if(note.type === 'n') return note.name; if(this.state.mode === 'sharps') return note.s; if(this.state.mode === 'flats') return note.f; return Math.random() > 0.5 ? note.s : note.f; }, next(manual) { if(!this.state.isPlaying && !manual) return; let pool = this.state.noRepeats ? this.state.pool : Array.from({length:12},(_,i)=>i); if(pool.length === 0) { this.resetPool(); pool = this.state.pool; } let idx; do { idx = pool[Math.floor(Math.random()*pool.length)]; } while(idx === this.state.index && pool.length > 1); this.state.index = idx; if(this.state.noRepeats) { this.state.pool = this.state.pool.filter(i => i !== idx); this.updateUI(); } this.els.display.textContent = this.format(this.data[idx]); this.els.card.classList.remove('fade-in'); void this.els.card.offsetWidth; this.els.card.classList.add('fade-in'); if(this.state.isPlaying && this.state.timerEnabled) this.restartTimer(); else { clearInterval(this.state.timer); this.els.bar.style.width = '0%'; } }, restartTimer() { clearInterval(this.state.timer); const tot = this.state.duration * 1000; let elap = 0; let lastBeep = Math.ceil(this.state.duration); this.els.bar.style.width = '100%'; setTimeout(()=>this.els.bar.style.width = '100%', 10); this.state.timer = setInterval(() => { elap += 50; this.els.bar.style.width = `${100 - (elap/tot)*100}%`; const remaining = Math.ceil((tot - elap) / 1000); if (remaining <= 3 && remaining > 0 && remaining < lastBeep) { AudioController.playBeep(); lastBeep = remaining; } if(elap >= tot) this.next(); }, 50); }, togglePlay() { this.state.isPlaying = !this.state.isPlaying; if(this.state.isPlaying) { AudioController.init(); this.els.hint.classList.add('hidden'); this.els.action.innerHTML = '<i class="fas fa-stop"></i> Stop'; this.els.action.className = "flex-1 bg-red-500 text-white py-4 rounded-xl font-bold text-lg hover:bg-red-600"; this.next(); } else { this.stop(); } }, stop() { this.state.isPlaying = false; clearInterval(this.state.timer); if(this.els && this.els.bar) { this.els.bar.style.width = '0%'; this.els.action.innerHTML = '<i class="fas fa-play"></i> Start'; this.els.action.className = "flex-1 bg-white text-gray-900 py-4 rounded-xl font-bold text-lg hover:bg-gray-200"; this.els.display.textContent = "?"; this.els.hint.classList.remove('hidden'); } } };
+        const IntervalTrainer = { initialized: false, state: { isPlaying: false, timerEnabled: true, noRepeats: false, duration: 10, mode: 'standard', deck: [], drawn: [], timer: null, selectedRoots: [], selectedIntervals: [], direction: 'up' }, defaults: { roots: ['C', 'G', 'D', 'A', 'E', 'B', 'F♯', 'D♭', 'A♭', 'E♭', 'B♭', 'F'], ints: ['♭2', '2', '♭3', '3', '4', '♯4', '5', '♭6', '6', '♭7', '7', '8', '♭9', '9', '♯9', '11', '♯11', '♭13', '13'] }, init() { if(this.initialized) return; setupSidebar('it-settingsToggle', 'it-settings', 'it-close-settings'); this.els = { rDisp: document.getElementById('it-rootDisplay'), iDisp: document.getElementById('it-intDisplay'), bar: document.getElementById('it-progressBar'), action: document.getElementById('it-actionBtn'), next: document.getElementById('it-nextBtn'), card: document.getElementById('it-card'), count: document.getElementById('it-deckCount'), timerToggle: document.getElementById('it-timerToggle'), repTog: document.getElementById('it-repeatToggle'), dur: document.getElementById('it-timerDuration'), apply: document.getElementById('it-applyBtn'), hint: document.getElementById('it-hint'), cofContainer: document.getElementById('it-cofContainer'), intGrid: document.getElementById('it-intGrid'), separator: document.getElementById('it-separator'), rootPickerSection: document.getElementById('it-rootPickerSection') }; this.generatePickers(); this.els.action.onclick = () => this.togglePlay(); this.els.next.onclick = () => this.next(true); this.els.card.onclick = () => this.state.isPlaying ? this.next(true) : this.togglePlay(); this.els.timerToggle.onclick = () => { this.state.timerEnabled = !this.state.timerEnabled; this.updateUI(); if(this.state.isPlaying && !this.state.timerEnabled) clearInterval(this.state.timer); }; this.els.repTog.onclick = () => { this.state.noRepeats = !this.state.noRepeats; this.buildDeck(); this.updateUI(); }; this.els.dur.onchange = (e) => { this.state.duration = parseInt(e.target.value); if(this.state.isPlaying) this.restartTimer(); }; this.els.apply.onclick = () => this.buildDeck(); document.querySelectorAll('.it-dir-btn').forEach(btn => { btn.addEventListener('click', () => { this.state.direction = btn.dataset.dir; document.querySelectorAll('.it-dir-btn').forEach(b => { b.classList.remove('bg-blue-600', 'text-white', 'shadow-md'); b.classList.add('hover:bg-gray-700', 'text-gray-400'); }); btn.classList.remove('hover:bg-gray-700', 'text-gray-400'); btn.classList.add('bg-blue-600', 'text-white', 'shadow-md'); this.buildDeck(); }); }); document.querySelectorAll('.it-mode-btn').forEach(btn => { btn.addEventListener('click', () => { this.state.mode = btn.dataset.mode; document.querySelectorAll('.it-mode-btn').forEach(b => { b.classList.remove('bg-blue-600', 'text-white', 'shadow-md'); b.classList.add('hover:bg-gray-700', 'text-gray-400'); }); btn.classList.remove('hover:bg-gray-700', 'text-gray-400'); btn.classList.add('bg-blue-600', 'text-white', 'shadow-md'); if (this.state.mode === 'pure') { this.els.rootPickerSection.style.opacity = '0.3'; this.els.rootPickerSection.style.pointerEvents = 'none'; } else { this.els.rootPickerSection.style.opacity = '1'; this.els.rootPickerSection.style.pointerEvents = 'auto'; } this.buildDeck(); }); }); this.buildDeck(); this.updateUI(); this.initialized = true; }, generatePickers() { const roots = this.defaults.roots; const radius = 105; roots.forEach((note, index) => { const btn = document.createElement('div'); btn.className = 'cof-btn'; btn.textContent = note; const angleDeg = (index * 30) - 90; const angleRad = angleDeg * (Math.PI / 180); const x = Math.cos(angleRad) * radius; const y = Math.sin(angleRad) * radius; btn.style.transform = `translate(${x}px, ${y}px)`; btn.onclick = () => { btn.classList.toggle('selected'); this.updateSelectionState('root', note); }; this.els.cofContainer.appendChild(btn); }); this.defaults.ints.forEach(int => { const btn = document.createElement('div'); btn.className = 'int-btn p-2 rounded text-center text-xs font-bold cursor-pointer transition bg-gray-700 border border-gray-600 hover:bg-gray-600'; btn.textContent = int; btn.onclick = () => { btn.classList.toggle('selected'); this.updateSelectionState('int', int); }; this.els.intGrid.appendChild(btn); }); }, updateSelectionState(type, value) { if (type === 'root') { if (this.state.selectedRoots.includes(value)) this.state.selectedRoots = this.state.selectedRoots.filter(r => r !== value); else this.state.selectedRoots.push(value); } else { if (this.state.selectedIntervals.includes(value)) this.state.selectedIntervals = this.state.selectedIntervals.filter(i => i !== value); else this.state.selectedIntervals.push(value); } this.buildDeck(); }, buildDeck() { const ints = this.state.selectedIntervals.length > 0 ? this.state.selectedIntervals : this.defaults.ints; const dir = this.state.direction; this.state.deck = []; if (this.state.mode === 'pure') { ints.forEach(i => { if (dir === 'random') { this.state.deck.push({r: '', i, d: 'up'}); this.state.deck.push({r: '', i, d: 'down'}); } else { this.state.deck.push({r: '', i, d: dir}); } }); } else { const roots = this.state.selectedRoots.length > 0 ? this.state.selectedRoots : this.defaults.roots; roots.forEach(r => { ints.forEach(i => { if (dir === 'random') { this.state.deck.push({r, i, d: 'up'}); this.state.deck.push({r, i, d: 'down'}); } else { this.state.deck.push({r, i, d: dir}); } }); }); } this.state.drawn = []; this.updateUI(); const oldTxt = this.els.apply.innerHTML; this.els.apply.innerHTML = '<i class="fas fa-check mr-2"></i> Updated!'; this.els.apply.classList.add('bg-green-600'); setTimeout(() => { this.els.apply.innerHTML = oldTxt; this.els.apply.classList.remove('bg-green-600'); }, 1000); }, updateUI() { updateToggleUI(this.els.timerToggle, this.state.timerEnabled); updateToggleUI(this.els.repTog, this.state.noRepeats, 'bg-purple-500'); this.els.count.style.opacity = this.state.noRepeats ? '1' : '0'; if(this.state.noRepeats) this.els.count.textContent = `${this.state.deck.length - this.state.drawn.length} left`; }, next(manual) { if(!this.state.isPlaying && !manual) return; let avail = this.state.deck.map((_,i)=>i).filter(i => !this.state.drawn.includes(i)); if(avail.length === 0) { if(this.state.noRepeats) { this.stop(); this.els.rDisp.textContent = ""; this.els.separator.style.display = 'none'; this.els.iDisp.innerHTML = "<span class='text-sm text-gray-400'>Session Complete</span>"; return; } else { avail = this.state.deck.map((_,i)=>i); } } const idx = avail[Math.floor(Math.random()*avail.length)]; if(this.state.noRepeats) { this.state.drawn.push(idx); this.updateUI(); } const card = this.state.deck[idx]; if (this.state.mode === 'pure') { this.els.rDisp.style.display = 'none'; this.els.separator.style.display = 'none'; this.els.iDisp.classList.replace('text-4xl', 'text-6xl'); } else { this.els.rDisp.style.display = 'block'; this.els.separator.style.display = 'block'; this.els.rDisp.textContent = card.r; this.els.iDisp.classList.replace('text-6xl', 'text-4xl'); } let dirDisplay = card.i; if (card.d === 'up') { dirDisplay = `${card.i}<i class="fas fa-arrow-right text-2xl text-green-400 ml-3"></i>`; } else if (card.d === 'down') { dirDisplay = `<i class="fas fa-arrow-left text-2xl text-red-400 mr-3"></i>${card.i}`; } else { dirDisplay = `<i class="fas fa-arrow-left text-2xl text-red-400 mr-3"></i>${card.i}<i class="fas fa-arrow-right text-2xl text-green-400 ml-3"></i>`; } this.els.iDisp.innerHTML = dirDisplay; this.els.card.classList.remove('fade-in'); void this.els.card.offsetWidth; this.els.card.classList.add('fade-in'); if(this.state.isPlaying && this.state.timerEnabled) this.restartTimer(); else { clearInterval(this.state.timer); this.els.bar.style.width = '0%'; } }, restartTimer() { clearInterval(this.state.timer); const tot = this.state.duration * 1000; let elap = 0; let lastBeep = Math.ceil(this.state.duration); this.els.bar.style.width = '100%'; setTimeout(()=>this.els.bar.style.width = '100%', 10); this.state.timer = setInterval(() => { elap += 50; this.els.bar.style.width = `${100 - (elap/tot)*100}%`; const remaining = Math.ceil((tot - elap) / 1000); if (remaining <= 3 && remaining > 0 && remaining < lastBeep) { AudioController.playBeep(); lastBeep = remaining; } if(elap >= tot) this.next(); }, 50); }, togglePlay() { this.state.isPlaying = !this.state.isPlaying; if(this.state.isPlaying) { AudioController.init(); this.els.hint.classList.add('hidden'); this.els.action.innerHTML = '<i class="fas fa-stop"></i> Stop'; this.els.action.className = "flex-1 bg-red-500 text-white py-4 rounded-xl font-bold text-lg hover:bg-red-600"; if(this.state.deck.length === 0) this.buildDeck(); this.next(); } else { this.stop(); } }, stop() { this.state.isPlaying = false; clearInterval(this.state.timer); if(this.els && this.els.bar) { this.els.bar.style.width = '0%'; this.els.action.innerHTML = '<i class="fas fa-play"></i> Start'; this.els.action.className = "flex-1 bg-white text-gray-900 py-4 rounded-xl font-bold text-lg hover:bg-gray-200"; this.els.rDisp.textContent = "?"; this.els.iDisp.textContent = "?"; this.els.rDisp.style.display = 'block'; this.els.separator.style.display = 'block'; this.els.hint.classList.remove('hidden'); } } };
+        const StaffTrainer = { initialized: false, state: { isPlaying: false, timerEnabled: true, duration: 10, noteDuration: 'w', deck: [], drawn: [], timer: null, selectedRoots: [], selectedIntervals: [], activeMidiNotes: [], targetNotes: [] }, defaults: { roots: ['C', 'G', 'D', 'A', 'E', 'B', 'F♯', 'D♭', 'A♭', 'E♭', 'B♭', 'F'], ints: ['♭2', '2', '♭3', '3', '4', '♯4', '5', '♭6', '6', '♭7', '7'] }, vex: null, renderer: null, context: null, staveTreble: null, staveBass: null, init() { if(this.initialized) return; setupSidebar('st-settingsToggle', 'st-settings', 'st-close-settings'); this.els = { canvas: document.getElementById('st-canvas'), bar: document.getElementById('st-progressBar'), action: document.getElementById('st-actionBtn'), next: document.getElementById('st-nextBtn'), card: document.getElementById('st-card'), timerToggle: document.getElementById('st-timerToggle'), dur: document.getElementById('st-timerDuration'), apply: document.getElementById('st-applyBtn'), hint: document.getElementById('st-hint'), cofContainer: document.getElementById('st-cofContainer'), intGrid: document.getElementById('st-intGrid'), noteDur: document.getElementById('st-noteDuration'), midiStatus: document.getElementById('st-midiStatus') }; this.generatePickers(); this.initVexFlow(); this.initMidi(); this.els.action.onclick = () => this.togglePlay(); this.els.next.onclick = () => this.next(true); this.els.card.onclick = () => this.state.isPlaying ? this.next(true) : this.togglePlay(); this.els.timerToggle.onclick = () => { this.state.timerEnabled = !this.state.timerEnabled; updateToggleUI(this.els.timerToggle, this.state.timerEnabled); if(this.state.isPlaying && !this.state.timerEnabled) clearInterval(this.state.timer); }; this.els.dur.onchange = (e) => { this.state.duration = parseInt(e.target.value); if(this.state.isPlaying) this.restartTimer(); }; this.els.noteDur.onchange = (e) => { this.state.noteDuration = e.target.value; if(this.state.isPlaying) this.render(); }; this.els.apply.onclick = () => this.buildDeck(); this.buildDeck(); updateToggleUI(this.els.timerToggle, true); this.initialized = true; }, initVexFlow() { const { Renderer, Stave } = Vex.Flow; this.renderer = new Renderer(this.els.canvas, Renderer.Backends.SVG); this.renderer.resize(500, 300); this.context = this.renderer.getContext(); this.context.setFont("Arial", 10, "").setBackgroundFillStyle("#1F2937"); }, drawStave() { this.context.clear(); this.context.setFillStyle("#E5E7EB"); this.context.setStrokeStyle("#E5E7EB"); const { Stave, StaveConnector } = Vex.Flow; this.staveTreble = new Stave(30, 40, 440); this.staveTreble.addClef("treble").setContext(this.context).draw(); this.staveBass = new Stave(30, 150, 440); this.staveBass.addClef("bass").setContext(this.context).draw(); new StaveConnector(this.staveTreble, this.staveBass).setType(StaveConnector.type.BRACE).setContext(this.context).draw(); new StaveConnector(this.staveTreble, this.staveBass).setType(StaveConnector.type.SINGLE_LEFT).setContext(this.context).draw(); new StaveConnector(this.staveTreble, this.staveBass).setType(StaveConnector.type.SINGLE_RIGHT).setContext(this.context).draw(); }, render() { this.drawStave(); const { StaveNote, Voice, Formatter, Modifier } = Vex.Flow; const trebleNotes = []; const bassNotes = []; const allNotes = [...this.state.targetNotes.map(n => ({...n, type: 'target'})), ...this.state.activeMidiNotes.map(n => ({...n, type: 'midi'}))]; const trebs = allNotes.filter(n => n.octave >= 4); const basses = allNotes.filter(n => n.octave < 4); const createVexNote = (notes, clef) => { if (notes.length === 0) { const rest = new StaveNote({ clef, keys: ["b/4"], duration: this.state.noteDuration + "r" }); rest.setStyle({ fillStyle: "#E5E7EB", strokeStyle: "#E5E7EB" }, 0); return rest; } const keys = notes.map(n => `${n.key}/${n.octave}`); const note = new StaveNote({ clef, keys, duration: this.state.noteDuration }); notes.forEach((n, i) => { if (n.accidental) note.addModifier(new Vex.Flow.Accidental(n.accidental), i); if (n.type === 'midi') { note.setStyle({ fillStyle: "#FBBF24", strokeStyle: "#FBBF24" }, i); } else if (n.type === 'target') { note.setStyle({ fillStyle: "white", strokeStyle: "white" }, i); } }); return note; }; const tNote = createVexNote(trebs, "treble"); const bNote = createVexNote(basses, "bass"); const voices = [ new Voice({ num_beats: 4, beat_value: 4 }).addTickables([tNote]), new Voice({ num_beats: 4, beat_value: 4 }).addTickables([bNote]) ]; new Formatter().joinVoices(voices).format(voices, 400); voices[0].draw(this.context, this.staveTreble); voices[1].draw(this.context, this.staveBass); }, initMidi() { if (navigator.requestMIDIAccess) { this.els.midiStatus.textContent = "Requesting..."; navigator.requestMIDIAccess({ sysex: false, software: true }).then( (midiAccess) => this.onMidiSuccess(midiAccess), (err) => this.onMidiFail(err) ); } else { this.els.midiStatus.textContent = "Not Supported"; } }, onMidiSuccess(midiAccess) { this.els.midiStatus.textContent = "Ready (Click to Reset)"; this.els.midiStatus.className = "text-xs text-green-400 font-mono cursor-pointer"; this.els.midiStatus.onclick = () => this.initMidi(); for (let input of midiAccess.inputs.values()) { input.onmidimessage = (msg) => this.onMidiMessage(msg); } midiAccess.onstatechange = (e) => { if (e.port.type === 'input' && e.port.state === 'connected') { console.log("MIDI Device Connected:", e.port.name); e.port.onmidimessage = (msg) => this.onMidiMessage(msg); this.els.midiStatus.textContent = "Device Connected"; setTimeout(() => this.els.midiStatus.textContent = "Ready (Click to Reset)", 2000); } }; }, onMidiFail(err) { console.warn("MIDI Init Warning:", err); this.els.midiStatus.textContent = "Permission Needed (Click)"; this.els.midiStatus.className = "text-xs text-red-400 font-mono cursor-pointer underline font-bold"; this.els.midiStatus.title = "Click here or 'Start' to enable MIDI access"; this.els.midiStatus.onclick = () => this.initMidi(); }, onMidiMessage(msg) { const [cmd, note, velocity] = msg.data; if ((cmd & 0xF0) === 144 && velocity > 0) { this.addMidiNote(note); } else if ((cmd & 0xF0) === 128 || ((cmd & 0xF0) === 144 && velocity === 0)) { this.removeMidiNote(note); } }, addMidiNote(midiVal) { const names = ["c", "c#", "d", "d#", "e", "f", "f#", "g", "g#", "a", "a#", "b"]; const key = names[midiVal % 12]; const octave = Math.floor(midiVal / 12) - 1; const accidental = key.includes('#') ? '#' : null; const cleanKey = key.replace('#', ''); this.state.activeMidiNotes.push({ key: cleanKey, octave, accidental, midiVal }); this.render(); }, removeMidiNote(midiVal) { this.state.activeMidiNotes = this.state.activeMidiNotes.filter(n => n.midiVal !== midiVal); this.render(); }, generatePickers() { const roots = this.defaults.roots; const radius = 105; roots.forEach((note, index) => { const btn = document.createElement('div'); btn.className = 'cof-btn'; btn.textContent = note; const angle = ((index * 30) - 90) * (Math.PI / 180); btn.style.transform = `translate(${Math.cos(angle)*radius}px, ${Math.sin(angle)*radius}px)`; btn.onclick = () => { btn.classList.toggle('selected'); this.updateSelectionState('root', note); }; this.els.cofContainer.appendChild(btn); }); this.defaults.ints.forEach(int => { const btn = document.createElement('div'); btn.className = 'int-btn p-2 rounded text-center text-xs font-bold cursor-pointer transition bg-gray-700 border border-gray-600 hover:bg-gray-600'; btn.textContent = int; btn.onclick = () => { btn.classList.toggle('selected'); this.updateSelectionState('int', int); }; this.els.intGrid.appendChild(btn); }); }, updateSelectionState(type, value) { if (type === 'root') { if (this.state.selectedRoots.includes(value)) this.state.selectedRoots = this.state.selectedRoots.filter(r => r !== value); else this.state.selectedRoots.push(value); } else { if (this.state.selectedIntervals.includes(value)) this.state.selectedIntervals = this.state.selectedIntervals.filter(i => i !== value); else this.state.selectedIntervals.push(value); } this.buildDeck(); }, buildDeck() { const roots = this.state.selectedRoots.length > 0 ? this.state.selectedRoots : this.defaults.roots; const ints = this.state.selectedIntervals.length > 0 ? this.state.selectedIntervals : this.defaults.ints; this.state.deck = []; roots.forEach(r => ints.forEach(i => this.state.deck.push({r, i}))); const oldTxt = this.els.apply.innerHTML; this.els.apply.innerHTML = '<i class="fas fa-check mr-2"></i> Updated!'; this.els.apply.classList.add('bg-green-600'); setTimeout(() => { this.els.apply.innerHTML = oldTxt; this.els.apply.classList.remove('bg-green-600'); }, 1000); }, next(manual) { if(!this.state.isPlaying && !manual) return; const idx = Math.floor(Math.random() * this.state.deck.length); const card = this.state.deck[idx]; this.state.targetNotes = this.calculateNotes(card.r, card.i); this.render(); if(this.state.isPlaying && this.state.timerEnabled) this.restartTimer(); else { clearInterval(this.state.timer); this.els.bar.style.width = '0%'; } }, calculateNotes(rootName, intName) { const noteMap = { 'C':0, 'C♯':1, 'D♭':1, 'D':2, 'D♯':3, 'E♭':3, 'E':4, 'F':5, 'F♯':6, 'G♭':6, 'G':7, 'G♯':8, 'A♭':8, 'A':9, 'A♯':10, 'B♭':10, 'B':11 }; const intMap = { '♭2':1, '2':2, '♭3':3, '3':4, '4':5, '♯4':6, '5':7, '♭6':8, '6':9, '♭7':10, '7':11 }; const rootVal = noteMap[rootName.replace('♭','b').replace('♯','#')] || 0; const intVal = intMap[intName] || 0; const n1Val = rootVal + 60; const n2Val = n1Val + intVal; return [this.midiToVex(n1Val), this.midiToVex(n2Val)]; }, midiToVex(midiVal) { const names = ["c", "c#", "d", "d#", "e", "f", "f#", "g", "g#", "a", "a#", "b"]; const key = names[midiVal % 12]; const octave = Math.floor(midiVal / 12) - 1; const accidental = key.includes('#') ? '#' : null; return { key: key.replace('#',''), octave, accidental }; }, restartTimer() { clearInterval(this.state.timer); const tot = this.state.duration * 1000; let elap = 0; let lastBeep = Math.ceil(this.state.duration); this.els.bar.style.width = '100%'; setTimeout(()=>this.els.bar.style.width = '100%', 10); this.state.timer = setInterval(() => { elap += 50; this.els.bar.style.width = `${100 - (elap/tot)*100}%`; const remaining = Math.ceil((tot - elap) / 1000); if (remaining <= 3 && remaining > 0 && remaining < lastBeep) { AudioController.playBeep(); lastBeep = remaining; } if(elap >= tot) this.next(); }, 50); }, togglePlay() { this.state.isPlaying = !this.state.isPlaying; if(this.state.isPlaying) { AudioController.init(); if(this.els.midiStatus.textContent.includes("Permission") || this.els.midiStatus.textContent.includes("Failed")) { this.initMidi(); } this.els.hint.classList.add('hidden'); this.els.action.innerHTML = '<i class="fas fa-stop"></i> Stop'; this.els.action.className = "flex-1 bg-red-500 text-white py-4 rounded-xl font-bold text-lg hover:bg-red-600"; this.next(); } else { this.stop(); } }, stop() { this.state.isPlaying = false; clearInterval(this.state.timer); if(this.els && this.els.bar) { this.els.bar.style.width = '0%'; this.els.action.innerHTML = '<i class="fas fa-play"></i> Start'; this.els.action.className = "flex-1 bg-white text-gray-900 py-4 rounded-xl font-bold text-lg hover:bg-gray-200"; this.els.hint.classList.remove('hidden'); } } };
+
+        // =====================
+        // APP 4: INVERSION TRAINER
+        // =====================
+        const InversionTrainer = {
+            initialized: false,
+            state: { isPlaying: false, timerEnabled: true, noRepeats: false, duration: 10, selectedRoots: [], selectedQuality: 'random', extensionMode: 'off', selectedInvs: [], deck: [], drawn: [], timer: null },
+            // C, G, D, A, E, B, F#, Db, Ab, Eb, Bb, F (Circle Order)
+            keys: ['C','G','D','A','E','B','F♯','D♭','A♭','E♭','B♭','F'],
+            invOptions: [
+                {id: 'root', lbl: 'Root Pos'},
+                {id: '1st', lbl: '1st Inv'},
+                {id: '2nd', lbl: '2nd Inv'},
+                {id: '3rd', lbl: '3rd Inv (7th)'}
+            ],
+            
+            init() {
+                if(this.initialized) return;
+                setupSidebar('iv-settingsToggle', 'iv-settings', 'iv-close-settings');
+                this.els = {
+                    display: document.getElementById('iv-chordDisplay'), subDisplay: document.getElementById('iv-invDisplay'), bar: document.getElementById('iv-progressBar'),
+                    action: document.getElementById('iv-actionBtn'), next: document.getElementById('iv-nextBtn'), card: document.getElementById('iv-card'),
+                    timerToggle: document.getElementById('iv-timerToggle'), repTog: document.getElementById('iv-repeatToggle'), dur: document.getElementById('iv-timerDuration'), count: document.getElementById('iv-deckCount'),
+                    cofContainer: document.getElementById('iv-cofContainer'), extGrid: document.getElementById('iv-extGrid'), invGrid: document.getElementById('iv-invGrid')
+                };
+
+                this.generatePickers();
+
+                this.els.action.onclick = () => this.togglePlay();
+                this.els.next.onclick = () => this.next(true);
+                this.els.card.onclick = () => this.state.isPlaying ? this.next(true) : this.togglePlay();
+                this.els.timerToggle.onclick = () => { this.state.timerEnabled = !this.state.timerEnabled; updateToggleUI(this.els.timerToggle, this.state.timerEnabled); if(this.state.isPlaying && !this.state.timerEnabled) clearInterval(this.state.timer); };
+                this.els.repTog.onclick = () => { this.state.noRepeats = !this.state.noRepeats; this.buildDeck(); this.updateUI(); };
+                this.els.dur.onchange = (e) => { this.state.duration = parseInt(e.target.value); if(this.state.isPlaying) this.restartTimer(); };
+                
+                // Quality Buttons Logic Updated for Consistency
+                document.querySelectorAll('.iv-qual-btn').forEach(b => b.onclick = () => {
+                    this.state.selectedQuality = b.dataset.val;
+                    // Reset all to inactive style
+                    document.querySelectorAll('.iv-qual-btn').forEach(x => { 
+                        x.classList.remove('bg-orange-600', 'text-white', 'shadow-md', 'border-white'); 
+                        x.classList.add('bg-gray-700', 'text-gray-400', 'border-gray-600', 'hover:bg-gray-600'); 
+                    });
+                    // Set active style
+                    b.classList.remove('bg-gray-700', 'text-gray-400', 'border-gray-600', 'hover:bg-gray-600'); 
+                    b.classList.add('bg-orange-600', 'text-white', 'shadow-md', 'border-white');
+                    this.buildDeck();
+                });
+
+                this.buildDeck(); this.updateUI(); this.initialized = true;
+            },
+
+            generatePickers() {
+                // COF
+                const radius = 105;
+                this.keys.forEach((note, index) => {
+                    const btn = document.createElement('div'); btn.className = 'cof-btn'; btn.textContent = note;
+                    const angle = ((index * 30) - 90) * (Math.PI / 180);
+                    btn.style.transform = `translate(${Math.cos(angle)*radius}px, ${Math.sin(angle)*radius}px)`;
+                    btn.onclick = () => { 
+                        btn.classList.toggle('selected'); 
+                        if(this.state.selectedRoots.includes(note)) this.state.selectedRoots = this.state.selectedRoots.filter(k=>k!==note);
+                        else this.state.selectedRoots.push(note);
+                        this.buildDeck();
+                    };
+                    this.els.cofContainer.appendChild(btn);
+                });
+
+                // Extensions
+                const exts = [{lbl:'Triad', val:'off'}, {lbl:'7th', val:'7'}, {lbl:'9th', val:'9'}, {lbl:'Mix', val:'all'}];
+                exts.forEach(ext => {
+                    const btn = document.createElement('button');
+                    btn.className = 'iv-ext-btn p-2 rounded text-xs font-bold transition bg-gray-700 text-gray-400 border border-gray-600 hover:bg-gray-600';
+                    if(ext.val === 'off') btn.classList.add('bg-orange-600', 'text-white', 'border-white'); // Default
+                    btn.textContent = ext.lbl;
+                    btn.onclick = () => {
+                        this.state.extensionMode = ext.val;
+                        document.querySelectorAll('.iv-ext-btn').forEach(b => { 
+                            b.classList.remove('bg-orange-600', 'text-white', 'border-white'); 
+                            b.classList.add('bg-gray-700', 'text-gray-400'); 
+                        });
+                        btn.classList.remove('bg-gray-700', 'text-gray-400'); 
+                        btn.classList.add('bg-orange-600', 'text-white', 'border-white');
+                        this.buildDeck();
+                    };
+                    this.els.extGrid.appendChild(btn);
+                });
+
+                // Inversion Type Filters
+                this.invOptions.forEach(inv => {
+                    const btn = document.createElement('button');
+                    btn.className = 'iv-inv-btn p-2 rounded text-xs font-bold transition bg-gray-700 text-gray-400 border border-gray-600 hover:bg-gray-600';
+                    btn.textContent = inv.lbl;
+                    btn.onclick = () => {
+                        // Strictly toggle classes to ensure clean contrast
+                        if (this.state.selectedInvs.includes(inv.id)) {
+                            // Deselect
+                            this.state.selectedInvs = this.state.selectedInvs.filter(i => i !== inv.id);
+                            btn.classList.remove('bg-orange-600', 'text-white', 'border-white', 'shadow-md');
+                            btn.classList.add('bg-gray-700', 'text-gray-400');
+                        } else {
+                            // Select
+                            this.state.selectedInvs.push(inv.id);
+                            btn.classList.remove('bg-gray-700', 'text-gray-400', 'hover:bg-gray-600');
+                            btn.classList.add('bg-orange-600', 'text-white', 'border-white', 'shadow-md');
+                        }
+                        this.buildDeck();
+                    };
+                    this.els.invGrid.appendChild(btn);
+                });
+            },
+
+            buildDeck() {
+                const roots = this.state.selectedRoots.length > 0 ? this.state.selectedRoots : this.keys;
+                
+                // Determine qualities to iterate
+                let qualities = [];
+                if (this.state.selectedQuality === 'random') qualities = ['Major', 'Minor'];
+                else qualities = [this.state.selectedQuality];
+
+                // Determine extensions to iterate
+                let exts = [];
+                const emode = this.state.extensionMode;
+                if (emode === 'all') exts = ['Triad', '7th', '9th'];
+                else if (emode === 'off') exts = ['Triad'];
+                else if (emode === '7') exts = ['7th'];
+                else if (emode === '9') exts = ['9th'];
+
+                this.state.deck = [];
+
+                roots.forEach(root => {
+                    qualities.forEach(qual => {
+                        exts.forEach(extType => {
+                            // Calculate display chord string
+                            let suffix = '';
+                            let isTriad = false;
+                            
+                            if (extType === 'Triad') {
+                                suffix = (qual === 'Minor') ? 'm' : '';
+                                isTriad = true;
+                            } else if (extType === '7th') {
+                                suffix = (qual === 'Minor') ? 'm7' : 'maj7';
+                            } else if (extType === '9th') {
+                                suffix = (qual === 'Minor') ? 'm9' : 'maj9';
+                            }
+                            
+                            const displayChord = root + suffix;
+
+                            // Calculate valid inversions for this specific extension
+                            let validInvs = ['root', '1st', '2nd'];
+                            if (!isTriad) validInvs.push('3rd');
+
+                            // Filter by user selection (if any)
+                            if (this.state.selectedInvs.length > 0) {
+                                validInvs = validInvs.filter(i => this.state.selectedInvs.includes(i));
+                            }
+
+                            // Add card for each valid inversion
+                            validInvs.forEach(inv => {
+                                this.state.deck.push({
+                                    chord: displayChord,
+                                    inv: inv
+                                });
+                            });
+                        });
+                    });
+                });
+
+                this.state.drawn = [];
+                this.updateUI();
+            },
+
+            updateUI() {
+                updateToggleUI(this.els.timerToggle, this.state.timerEnabled);
+                updateToggleUI(this.els.repTog, this.state.noRepeats, 'bg-orange-500');
+                this.els.count.style.opacity = this.state.noRepeats ? '1' : '0';
+                if(this.state.noRepeats) this.els.count.textContent = `${this.state.deck.length - this.state.drawn.length} left`;
+            },
+
+            next(manual) {
+                if(!this.state.isPlaying && !manual) return;
+                
+                let avail = this.state.deck.map((_,i)=>i).filter(i => !this.state.drawn.includes(i));
+
+                // Handle Empty Deck
+                if(avail.length === 0) {
+                    if(this.state.noRepeats) {
+                        this.stop();
+                        this.els.display.textContent = "Done";
+                        this.els.subDisplay.textContent = "Session Complete";
+                        return;
+                    } else {
+                        avail = this.state.deck.map((_,i)=>i); // Reshuffle
+                    }
+                }
+                
+                const idx = avail[Math.floor(Math.random()*avail.length)];
+                if(this.state.noRepeats) { this.state.drawn.push(idx); this.updateUI(); }
+                const card = this.state.deck[idx];
+                
+                const invNames = { 'root': 'Root Pos', '1st': '1st Inv', '2nd': '2nd Inv', '3rd': '3rd Inv' };
+                this.els.display.textContent = card.chord;
+                this.els.subDisplay.textContent = invNames[card.inv];
+                
+                // Anim
+                this.els.card.classList.remove('fade-in'); void this.els.card.offsetWidth; this.els.card.classList.add('fade-in');
+                
+                if(this.state.isPlaying && this.state.timerEnabled) this.restartTimer(); else { clearInterval(this.state.timer); this.els.bar.style.width = '0%'; }
+            },
+
+            restartTimer() { 
+                clearInterval(this.state.timer); const tot = this.state.duration * 1000; let elap = 0; let lastBeep = Math.ceil(this.state.duration);
+                this.els.bar.style.width = '100%'; setTimeout(()=>this.els.bar.style.width = '100%', 10); 
+                this.state.timer = setInterval(() => { 
+                    elap += 50; this.els.bar.style.width = `${100 - (elap/tot)*100}%`; 
+                    const remaining = Math.ceil((tot - elap) / 1000);
+                    if (remaining <= 3 && remaining > 0 && remaining < lastBeep) { AudioController.playBeep(); lastBeep = remaining; }
+                    if(elap >= tot) this.next(); 
+                }, 50); 
+            },
+            togglePlay() { this.state.isPlaying = !this.state.isPlaying; if(this.state.isPlaying) { AudioController.init(); document.getElementById('iv-hint').classList.add('hidden'); this.els.action.innerHTML = '<i class="fas fa-stop"></i> Stop'; this.els.action.className = "flex-1 bg-red-500 text-white py-4 rounded-xl font-bold text-lg hover:bg-red-600"; if(this.state.deck.length === 0) this.buildDeck(); this.next(); } else { this.stop(); } },
+            stop() { this.state.isPlaying = false; clearInterval(this.state.timer); if(this.els && this.els.bar) { this.els.bar.style.width = '0%'; this.els.action.innerHTML = '<i class="fas fa-play"></i> Start'; this.els.action.className = "flex-1 bg-white text-gray-900 py-4 rounded-xl font-bold text-lg hover:bg-gray-200"; document.getElementById('iv-hint').classList.remove('hidden'); } }
+        };
+
+        // =====================
+        // APP 5: CHORD FLOW
+        // =====================
+        const ChordTrainer = {
+            initialized: false,
+            state: { isPlaying: false, timerEnabled: true, duration: 30, length: 4, mode: 'diatonic', bassMode: 'slash', fixedRoot: 'random', fixedQuality: 'random', extensionMode: 'off', chaos: 100, timer: null, selectedRoots: [] },
+            keys: ['C','G','D','A','E','B','F#','Gb','Db','Ab','Eb','Bb','F'],
+            funcMap: {
+                'I': { g: 'T', next: ['IV','ii','V','vi'] }, 'ii': { g: 'S', next: ['V','vii°','I'] }, 'iii': { g: 'T', next: ['vi','IV'] },
+                'IV': { g: 'S', next: ['V','vii°','I'] }, 'V': { g: 'D', next: ['I','vi'] }, 'vi': { g: 'T', next: ['ii','IV'] },
+                'vii°': { g: 'D', next: ['I'] }, 'i': { g: 'T', next: ['iv','ii°','V','VI'] }, 'ii°': { g: 'S', next: ['V','vii°','i'] },
+                'III': { g: 'T', next: ['VI','iv'] }, 'iv': { g: 'S', next: ['V','vii°','i'] }, 'VI': { g: 'T', next: ['ii°','iv','V'] }
+            },
+            init() {
+                if(this.initialized) return;
+                setupSidebar('cp-settingsToggle', 'cp-settings', 'cp-close-settings');
+                this.els = {
+                    cont: document.getElementById('cp-container'), key: document.getElementById('cp-keyDisplay'), bar: document.getElementById('cp-progressBar'), action: document.getElementById('cp-actionBtn'),
+                    refresh: document.getElementById('cp-refreshBtn'), len: document.getElementById('cp-length'), lenD: document.getElementById('cp-lenDisplay'), dur: document.getElementById('cp-timerDuration'),
+                    timerToggle: document.getElementById('cp-timerToggle'), bassBtns: document.querySelectorAll('.cp-bass-btn'), 
+                    cofContainer: document.getElementById('cp-cofContainer'), extGrid: document.getElementById('cp-extGrid'),
+                    chaos: document.getElementById('cp-chaos'), chaosD: document.getElementById('cp-chaosDisplay')
+                };
+
+                this.generatePickers();
+
+                this.els.action.onclick = () => this.togglePlay();
+                this.els.refresh.onclick = () => { this.gen(); if(this.state.isPlaying && this.state.timerEnabled) this.restartTimer(); };
+                this.els.len.oninput = (e) => { this.state.length = e.target.value; this.els.lenD.textContent = e.target.value; if(this.state.isPlaying) this.gen(); };
+                this.els.dur.onchange = (e) => { this.state.duration = parseInt(e.target.value); if(this.state.isPlaying) this.restartTimer(); };
+                this.els.timerToggle.onclick = () => { this.state.timerEnabled = !this.state.timerEnabled; updateToggleUI(this.els.timerToggle, this.state.timerEnabled); if(this.state.isPlaying && !this.state.timerEnabled) clearInterval(this.state.timer); };
+                
+                // Bass Button Logic
+                this.els.bassBtns.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        this.state.bassMode = btn.dataset.val;
+                        // Reset all bass buttons
+                        this.els.bassBtns.forEach(b => {
+                            b.classList.remove('bg-indigo-600', 'text-white', 'border-white', 'shadow-md');
+                            b.classList.add('bg-gray-700', 'text-gray-400', 'border-gray-600');
+                        });
+                        // Set active
+                        btn.classList.remove('bg-gray-700', 'text-gray-400', 'border-gray-600');
+                        btn.classList.add('bg-indigo-600', 'text-white', 'border-white', 'shadow-md');
+                        if(this.state.isPlaying) this.gen();
+                    });
+                });
+                
+                // Handle Buttons
+                this.els.chaos.oninput = (e) => { this.state.chaos = parseInt(e.target.value); this.els.chaosD.textContent = this.state.chaos > 80 ? "Random" : (this.state.chaos < 20 ? "Smooth" : "Mixed"); if(this.state.isPlaying) this.gen(); };
+                
+                // Mode & Quality Buttons
+                const updateBtnGroup = (selector, stateKey) => {
+                    document.querySelectorAll(selector).forEach(b => b.onclick = () => {
+                        this.state[stateKey] = b.dataset.val || b.dataset.mode; 
+                        document.querySelectorAll(selector).forEach(x => {
+                            x.classList.remove('bg-indigo-600', 'text-white', 'shadow-md');
+                            x.classList.add('hover:bg-gray-700', 'text-gray-400');
+                        });
+                        b.classList.remove('hover:bg-gray-700', 'text-gray-400');
+                        b.classList.add('bg-indigo-600', 'text-white', 'shadow-md');
+                        if(this.state.isPlaying) this.gen();
+                    });
+                };
+                
+                updateBtnGroup('.cp-mode-btn', 'mode');
+                updateBtnGroup('.cp-qual-btn', 'fixedQuality');
+
+                this.gen(); updateToggleUI(this.els.timerToggle, true); this.initialized = true;
+            },
+
+            generatePickers() {
+                // COF for Chord Flow
+                const radius = 105;
+                const circleOrder = ['C', 'G', 'D', 'A', 'E', 'B', 'F#', 'Db', 'Ab', 'Eb', 'Bb', 'F'];
+                
+                circleOrder.forEach((note, index) => {
+                    const btn = document.createElement('div'); btn.className = 'cof-btn'; btn.textContent = note;
+                    const angle = ((index * 30) - 90) * (Math.PI / 180);
+                    btn.style.transform = `translate(${Math.cos(angle)*radius}px, ${Math.sin(angle)*radius}px)`;
+                    btn.onclick = () => { 
+                        btn.classList.toggle('selected'); 
+                        if(this.state.selectedRoots.includes(note)) this.state.selectedRoots = this.state.selectedRoots.filter(k=>k!==note);
+                        else this.state.selectedRoots.push(note);
+                        if(this.state.isPlaying) this.gen();
+                    };
+                    this.els.cofContainer.appendChild(btn);
+                });
+
+                // Extensions Grid
+                const exts = [
+                    {lbl:'None', val:'off'}, {lbl:'7th', val:'7'}, {lbl:'9th', val:'9'},
+                    {lbl:'11/13', val:'11_13'}, {lbl:'Alt', val:'alt'}, {lbl:'Mix', val:'all'}
+                ];
+                
+                exts.forEach(ext => {
+                    const btn = document.createElement('button');
+                    btn.className = 'cp-ext-btn p-2 rounded text-xs font-bold transition bg-gray-700 text-gray-400 border border-gray-600 hover:bg-gray-600';
+                    if(ext.val === 'off') btn.classList.add('bg-indigo-600', 'text-white', 'border-white');
+                    
+                    btn.textContent = ext.lbl;
+                    btn.onclick = () => {
+                        this.state.extensionMode = ext.val;
+                        document.querySelectorAll('.cp-ext-btn').forEach(b => {
+                            b.classList.remove('bg-indigo-600', 'text-white', 'border-white');
+                            b.classList.add('bg-gray-700', 'text-gray-400');
+                        });
+                        btn.classList.remove('bg-gray-700', 'text-gray-400');
+                        btn.classList.add('bg-indigo-600', 'text-white', 'border-white');
+                        if(this.state.isPlaying) this.gen();
+                    };
+                    this.els.extGrid.appendChild(btn);
+                });
+            },
+
+            gen() {
+                // Determine Root: If selectedRoots is empty, use full random pool. Else pick from selected.
+                const pool = this.state.selectedRoots.length > 0 ? this.state.selectedRoots : this.keys;
+                let root = pool[Math.floor(Math.random() * pool.length)];
+                
+                let qual = this.state.fixedQuality === 'random' ? (Math.random() > 0.7 ? 'Minor' : 'Major') : this.state.fixedQuality;
+                this.els.key.textContent = `${root} ${qual}`; this.els.cont.innerHTML = '';
+                let roms = qual === 'Major' ? ['I','ii','iii','IV','V','vi','vii°'] : ['i','ii°','III','iv','V','VI','vii°'];
+                if(this.state.mode === 'chromatic') roms.push('bII','bIII','bVI','bVII');
+                const bassD = ['1','2','3','4','5','6','7']; const bassC = [...bassD, 'b2','b3','#4','b6','b7'];
+                let lastRom = null;
+                for(let i=0; i<this.state.length; i++) {
+                    let rh; const entropy = Math.random() * 100;
+                    if (lastRom && this.funcMap[lastRom] && entropy > this.state.chaos) {
+                        const suggestions = this.funcMap[lastRom].next; const validNext = suggestions.filter(s => roms.includes(s));
+                        rh = validNext.length > 0 ? validNext[Math.floor(Math.random()*validNext.length)] : roms[Math.floor(Math.random()*roms.length)];
+                    } else { rh = roms[Math.floor(Math.random()*roms.length)]; }
+                    lastRom = rh;
+                    let displayRh = rh; let ext = ''; const mode = this.state.extensionMode;
+                    if (mode !== 'off') {
+                        const isMajor = ['I','IV','bII','bIII','bVI','III','VI'].includes(rh), isMinor = ['ii','iii','vi','i','iv'].includes(rh), isDom = ['V','bVII'].includes(rh), isDim = ['vii°','ii°'].includes(rh);
+                        const pick = (opts) => opts[Math.floor(Math.random()*opts.length)];
+                        if (mode === '7') { ext = isMajor ? 'maj7' : (isMinor ? '7' : (isDom ? '7' : 'ø7')); }
+                        else if (mode === '9') { ext = isMajor ? pick(['maj9','add9']) : (isDim ? 'ø9' : '9'); }
+                        else if (mode === '11_13') { ext = isMajor ? pick(['maj13','6/9','maj7#11']) : (isMinor ? pick(['11','13']) : (isDom ? pick(['13','11']) : 'ø11')); }
+                        else if (mode === 'alt') { ext = isDom ? pick(['7b9','7#9','7#5','7b13','alt']) : (isMajor ? 'maj7#11' : (isMinor ? 'min(maj7)' : '7')); }
+                        else if (mode === 'all') { ext = isMajor ? pick(['maj7','maj9','6','6/9','maj13','maj7#11']) : (isMinor ? pick(['7','9','11','13','min(maj7)']) : (isDom ? pick(['7','9','13','7b9','7#9','alt']) : pick(['ø7','°7']))); }
+                    }
+                    displayRh += ext;
+                    let lh = '1';
+                    if(this.state.bassMode === 'slash') lh = (this.state.mode === 'chromatic' ? bassC : bassD)[Math.floor(Math.random()*bassD.length)];
+                    else if(this.state.bassMode === 'inversions' && Math.random()>0.4) lh = (Math.random()>0.5 ? '3' : '5');
+                    const el = document.createElement('div');
+                    el.className = "w-32 h-44 bg-gray-800 rounded-xl border border-gray-700 flex flex-col items-center justify-center relative chord-card opacity-0 translate-y-4 transition-all duration-500";
+                    const fontSize = displayRh.length > 5 ? 'text-2xl' : (displayRh.length > 3 ? 'text-3xl' : 'text-4xl');
+                    el.innerHTML = `<div class="${fontSize} font-bold text-white mb-2 text-center px-1 break-words">${displayRh}</div><div class="w-8 h-0.5 bg-indigo-500 mb-2"></div><div class="text-2xl text-indigo-300">${lh}</div>`;
+                    this.els.cont.appendChild(el);
+                    setTimeout(() => el.classList.remove('opacity-0', 'translate-y-4'), i*100);
+                }
+            },
+            restartTimer() { clearInterval(this.state.timer); const tot = this.state.duration * 1000; let elap = 0; this.els.bar.style.width = '100%'; setTimeout(()=>this.els.bar.style.width = '100%', 10); this.state.timer = setInterval(() => { elap += 50; this.els.bar.style.width = `${100 - (elap/tot)*100}%`; if(elap >= tot) this.gen(); }, 50); },
+            togglePlay() { this.state.isPlaying = !this.state.isPlaying; if(this.state.isPlaying) { this.els.action.innerHTML = '<i class="fas fa-stop"></i> Stop'; this.els.action.classList.replace('bg-white', 'bg-red-500'); this.els.action.classList.replace('text-gray-900', 'text-white'); this.gen(); if(this.state.timerEnabled) this.restartTimer(); } else { this.stop(); } },
+            stop() {
+                this.state.isPlaying = false; clearInterval(this.state.timer);
+                if(this.els && this.els.bar) { this.els.bar.style.width = '0%'; this.els.action.innerHTML = '<i class="fas fa-play"></i> Start'; this.els.action.classList.replace('bg-red-500', 'bg-white'); this.els.action.classList.replace('text-white', 'text-gray-900'); }
+            }
+        };
+    });
+    </script>
+</body>
+</html>
