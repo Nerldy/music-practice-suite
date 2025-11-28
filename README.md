@@ -1,76 +1,95 @@
 Musician's Practice Suite 🎵
 
-A mobile-friendly, web-based suite of tools designed to help musicians practice the fundamentals of music theory on the go.
+A comprehensive, mobile-friendly web application designed to help musicians practice music theory fundamentals, ear training visualization, and instrument proficiency. Built as a single-file application using HTML5, Tailwind CSS, and VexFlow.
 
-🌟 Features
+🌟 Application Tools
 
-The suite includes three distinct tools accessible from a central dashboard:
+The suite features five specialized tools accessible from a central dashboard:
 
-Note Flashcards:
+1. 🎼 Note Flashcards
 
-Learn to identify notes instantly.
+Build speed in recognizing chromatic notes.
 
-Customizable timer (10s - 30s).
+Display Modes: Toggle between Sharps (♯), Flats (♭), or Mixed accidentals.
 
-Supports Sharps, Flats, or Mixed accidentals.
+Timer: Auto-advance functionality with countdown beeps (10s - 30s).
 
-"No Repeats" mode to cycle through all 12 keys without duplicates.
+Smart Cycling: "No Repeats" mode ensures you practice all 12 keys before seeing a duplicate.
 
-Interval Trainer:
+2. 📏 Interval Trainer
 
-Practice identifying or finding specific intervals (e.g., Major 3rd, Tritone) relative to a Root note.
+Practice constructing or identifying intervals on your instrument.
 
-Custom Decks: Enter specific roots (e.g., C, F, Bb) and intervals (e.g., 3, 7) to focus your practice.
+Dual Modes:
 
-Chord Flow (Progression Generator):
+Standard: Displays a Root Note + Interval (e.g., C + Major 3rd).
 
-Generates random chord progressions (Roman Numeral / Bass Interval).
+Pure Mode: Displays only the abstract interval (e.g., ♭5) without a root context.
 
-Key Lock: Practice in a specific key or let it randomize.
+Interactive Pickers: Select specific Roots via a Circle of Fifths wheel and specific Intervals via a grid.
 
-Extensions: Toggle between Triads, 7ths, 9ths, or Altered dominant chords.
+Directional Practice: Practice intervals Ascending (→), Descending (←), Both, or Random.
 
-Logic Slider: Control the chaos! Slide between "Smooth" (theory-correct functional harmony) and "Random" (pure chaos).
+Visual Feedback: Color-coded arrows (Green for Up, Red for Down).
 
-📂 Project Structure
+3. 🎹 Staff & MIDI Trainer
 
-/
-├── index.html          # Main entry point and layout
-├── css/
-│   └── style.css       # Custom animations and overrides
-└── js/
-    ├── shared.js       # Router, Mobile Sidebar, and UI Utils
-    ├── notes.js        # Logic for Note Flashcards
-    ├── intervals.js    # Logic for Interval Trainer
-    └── chords.js       # Logic for Chord Flow
+Sight-reading practice with real-time instrument feedback.
 
+Grand Staff: Renders target notes on Treble and Bass clefs using VexFlow.
 
-🚀 How to Run
+MIDI Support: Connect a MIDI keyboard to see played notes highlight in real-time (Yellow) against target notes (White).
 
-Option 1: GitHub Pages (Recommended for Mobile)
+Note Values: Toggle display between Whole, Half, Quarter, and Eighth notes.
 
-Upload these files to a GitHub repository.
+Custom Scope: Filter exercises by Root keys and Interval distances.
 
-Go to Settings > Pages.
+4. 🔄 Inversion Trainer
 
-Select the main branch and save.
+Master chord voicings and inversion shapes.
 
-Open the provided link on your phone!
+Flashcards: Generates a chord symbol (e.g., Cm7) and a required inversion (e.g., 2nd Inv).
 
-Option 2: Local
+Intelligent Filters: * Keys: Select specific keys via Circle of Fifths.
 
-Simply open index.html in any modern web browser. No server required.
+Extensions: Practice Triads, 7ths, 9ths, or a Mix.
 
-🛠 Technologies
+Inversion Types: Toggle specific inversions (Root, 1st, 2nd, 3rd).
 
-HTML5 & CSS3
+5. 🌊 Chord Flow
 
-Tailwind CSS (via CDN for styling)
+Generate harmonic progressions for comping and voice-leading practice.
+
+Harmonic Logic: A slider that moves between Smooth (functional harmony rules) and Chaotic (random chords).
+
+Key Lock: Constrain progressions to a specific key center (e.g., "Eb Major") or let it randomize.
+
+Bass Lines: Options for Root bass, Inverted bass, or Poly/Slash chords.
+
+Context: Toggle between Diatonic (strictly in-key) and Chromatic (borrowed chords) modes.
+
+🛠 Features & Tech
+
+Zero-Install: Runs entirely in the browser from a single HTML file.
+
+Audio Cues: Subtle beep sounds for the final 3 seconds of any timer.
+
+Responsive Design: Optimized for both desktop and mobile screens.
+
+Tech Stack:
 
 Vanilla JavaScript (ES6+)
 
-FontAwesome (Icons)
+Tailwind CSS (Styling)
 
-📝 License
+VexFlow (Music Notation)
 
-Free to use for personal practice!
+Web MIDI API (Controller Support)
+
+🚀 Usage
+
+Download the index.html file.
+
+Open it in Chrome, Safari, or Edge.
+
+For MIDI features, ensure your browser supports the Web MIDI API and allow permissions when prompted.
