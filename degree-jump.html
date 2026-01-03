@@ -95,6 +95,10 @@
             'E': ['E', 'F♯', 'G♯', 'A', 'B', 'C♯', 'D♯'],
             'B': ['B', 'C♯', 'D♯', 'E', 'F♯', 'G♯', 'A♯'],
             'F#': ['F♯', 'G♯', 'A♯', 'B', 'C♯', 'D♯', 'E♯'],
+            'C#': ['C♯', 'D♯', 'E♯', 'F♯', 'G♯', 'A♯', 'B♯'],
+            'G#': ['G♯', 'A♯', 'B♯', 'C♯', 'D♯', 'E♯', 'F𝄪'],
+            'D#': ['D♯', 'E♯', 'F𝄪', 'G♯', 'A♯', 'B♯', 'C𝄪'],
+            'A#': ['A♯', 'B♯', 'C𝄪', 'D♯', 'E♯', 'F𝄪', 'G𝄪'],
             'Gb': ['G♭', 'A♭', 'B♭', 'C♭', 'D♭', 'E♭', 'F'],
             'Db': ['D♭', 'E♭', 'F', 'G♭', 'A♭', 'B♭', 'C'],
             'Ab': ['A♭', 'B♭', 'C', 'D♭', 'E♭', 'F', 'G'],
@@ -103,7 +107,10 @@
             'F': ['F', 'G', 'A', 'B♭', 'C', 'D', 'E'],
         };
         const NOTES_REF = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-        const COF_KEYS = ['C', 'G', 'D', 'A', 'E', 'B', 'Gb', 'Db', 'Ab', 'Eb', 'Bb', 'F'];
+        
+        const COF_FLATS = ['C', 'G', 'D', 'A', 'E', 'B', 'Gb', 'Db', 'Ab', 'Eb', 'Bb', 'F'];
+        const COF_SHARPS = ['C', 'G', 'D', 'A', 'E', 'B', 'F#', 'C#', 'G#', 'D#', 'A#', 'F'];
+
         const CHROMATIC_INTERVALS = [
             { name: 'P1', semitones: 0 }, { name: 'Min 2', semitones: 1 }, { name: 'Maj 2', semitones: 2 },
             { name: 'Min 3', semitones: 3 }, { name: 'Maj 3', semitones: 4 }, { name: 'P4', semitones: 5 },
@@ -123,9 +130,11 @@
         // --- Shared Note Formatter (Exponent style) ---
         const NoteDisplay = ({ note, className = "" }) => {
             if (!note) return null;
+            // Handle internal calculation symbols temporarily
+            const displayNote = formatNote(note);
             // Split note into base letter and accidental
-            const match = note.match(/^([A-G])([♯♭]?)$/);
-            if (!match) return <span className={className}>{note}</span>;
+            const match = displayNote.match(/^([A-G])([♯♭]?)$/);
+            if (!match) return <span className={className}>{displayNote}</span>;
             
             const [_, letter, accidental] = match;
             return (
@@ -172,6 +181,7 @@
         function DegreeJump() {
             const [mode, setMode] = useState('diatonic');
             const [selectedKey, setSelectedKey] = useState('C');
+            const [accidentalMode, setAccidentalMode] = useState('flats'); // 'flats' or 'sharps'
             const [scaleDegree, setScaleDegree] = useState(1);
             const [directionPref, setDirectionPref] = useState('up');
             const [lockStartNote, setLockStartNote] = useState(true);
@@ -185,6 +195,7 @@
             const [pool, setPool] = useState([]);
             const [sessionComplete, setSessionComplete] = useState(false);
 
+            const currentCOF = useMemo(() => accidentalMode === 'flats' ? COF_FLATS : COF_SHARPS, [accidentalMode]);
             const currentScale = useMemo(() => SCALE_SPELLINGS[selectedKey] || SCALE_SPELLINGS['C'], [selectedKey]);
             const totalPossible = useMemo(() => mode === 'diatonic' ? 8 : CHROMATIC_INTERVALS.length, [mode]);
 
@@ -328,12 +339,29 @@
                             </div>
                         </header>
                         <section className="space-y-8">
+                            {/* Circle of Fifths Section */}
                             <div className="relative flex flex-col items-center">
-                                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-10 w-full text-center">Circle of Fifths</label>
+                                <div className="flex justify-between items-center w-full mb-10 px-2">
+                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Circle of Fifths</label>
+                                    <div className="flex bg-slate-800 p-1 rounded-lg">
+                                        <button 
+                                            onClick={() => setAccidentalMode('flats')}
+                                            className={`px-2 py-0.5 rounded text-[10px] font-black transition-all ${accidentalMode === 'flats' ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/20' : 'text-slate-500 hover:text-slate-300'}`}
+                                        >
+                                            ♭
+                                        </button>
+                                        <button 
+                                            onClick={() => setAccidentalMode('sharps')}
+                                            className={`px-2 py-0.5 rounded text-[10px] font-black transition-all ${accidentalMode === 'sharps' ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/20' : 'text-slate-500 hover:text-slate-300'}`}
+                                        >
+                                            ♯
+                                        </button>
+                                    </div>
+                                </div>
                                 <div className="relative w-48 h-48 border-2 border-slate-800 rounded-full flex items-center justify-center">
                                     <div className="absolute inset-0 flex items-center justify-center text-slate-700 pointer-events-none"><Music size={40} className="opacity-10" /></div>
-                                    {COF_KEYS.map((key, i) => {
-                                        const angle = (i * (360 / COF_KEYS.length) - 90) * (Math.PI / 180);
+                                    {currentCOF.map((key, i) => {
+                                        const angle = (i * (360 / currentCOF.length) - 90) * (Math.PI / 180);
                                         const x = Math.cos(angle) * 80; const y = Math.sin(angle) * 80;
                                         return (
                                             <button key={key} onClick={() => { setSelectedKey(key); setTimerRunning(false); }} style={{ transform: `translate(${x}px, ${y}px)` }}
@@ -394,7 +422,7 @@
                                 </div>
                                 <div className="relative group">
                                     <select disabled={!timerEnabled || timerRunning} value={timerSeconds} onChange={e => { const val = Number(e.target.value); setTimerSeconds(val); setTimeLeft(val); }}
-                                        className="w-full bg-slate-800 border-2 border-slate-700 rounded-xl py-2.5 px-4 text-xs font-black uppercase tracking-widest outline-none appearance-none cursor-pointer">
+                                        className="w-full bg-slate-800 border-2 border-slate-700 rounded-xl py-2.5 px-4 text-xs font-black uppercase tracking-widest outline-none focus:border-indigo-500 disabled:opacity-30 appearance-none cursor-pointer">
                                         {[10, 20, 30, 40, 50, 60].map(s => <option key={s} value={s} className="bg-slate-900">{s} Seconds</option>)}
                                     </select>
                                     <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500"><ChevronDown size={14} /></div>
