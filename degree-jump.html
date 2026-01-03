@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Degree Jump Practice</title>
+    <title>Music Practice Suite</title>
     <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- React and Babel for standalone execution -->
@@ -17,7 +17,7 @@
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-        .animate-in { animation: fadeIn 0.5s ease-out forwards; }
+        .animate-in { animation: fadeIn 0.4s ease-out forwards; }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-100 selection:bg-indigo-500/30">
@@ -44,19 +44,14 @@
             </svg>
         );
 
-        // New modern "Leap" icon representing stepping between degrees
         const Footprints = (props) => (
             <Icon {...props}>
-                {/* Lower footprint sole */}
                 <path d="M4 17.5c0-1.4 1.1-2.5 2.5-2.5s2.5 1.1 2.5 2.5c0 1.9-1.1 2.5-2.5 2.5S4 19.4 4 17.5z" opacity="0.4" />
-                {/* Upper footprint sole */}
                 <path d="M15 6.5c0-1.4 1.1-2.5 2.5-2.5s2.5 1.1 2.5 2.5c0 1.9-1.1 2.5-2.5 2.5s-2.5-.6-2.5-2.5z" />
-                {/* Arcing jump arrow */}
                 <path d="M7 14c1.5-4 5-6 9-7" />
                 <path d="m13 7 3-1-1 3" />
             </Icon>
         );
-
         const Music = (props) => <Icon {...props}><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></Icon>;
         const Keyboard = (props) => <Icon {...props}><rect width="20" height="16" x="2" y="4" rx="2"/><path d="M6 8h.01"/><path d="M10 8h.01"/><path d="M14 8h.01"/><path d="M18 8h.01"/><path d="M8 12h.01"/><path d="M12 12h.01"/><path d="M16 12h.01"/><path d="M7 16h10"/></Icon>;
         const ChevronUp = (props) => <Icon {...props}><path d="m18 15-6-6-6 6"/></Icon>;
@@ -70,10 +65,11 @@
         const ChevronRight = (props) => <Icon {...props}><path d="m9 18 6-6-6-6"/></Icon>;
         const RotateCcw = (props) => <Icon {...props}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></Icon>;
         const Layers = (props) => <Icon {...props}><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></Icon>;
+        const Zap = (props) => <Icon {...props}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></Icon>;
+        const Home = (props) => <Icon {...props}><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></Icon>;
 
         // --- Audio Synthesis Utility ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
         const playTone = (freq, duration, type = 'sine', volume = 0.1) => {
             if (audioCtx.state === 'suspended') audioCtx.resume();
             const oscillator = audioCtx.createOscillator();
@@ -87,7 +83,6 @@
             oscillator.start();
             oscillator.stop(audioCtx.currentTime + duration);
         };
-
         const playBeep = () => playTone(440, 0.1, 'sine', 0.05);
         const playTing = () => playTone(1200, 0.3, 'sine', 0.1);
 
@@ -107,10 +102,8 @@
             'Bb': ['B♭', 'C', 'D', 'E♭', 'F', 'G', 'A'],
             'F': ['F', 'G', 'A', 'B♭', 'C', 'D', 'E'],
         };
-
         const NOTES_REF = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
         const COF_KEYS = ['C', 'G', 'D', 'A', 'E', 'B', 'Gb', 'Db', 'Ab', 'Eb', 'Bb', 'F'];
-
         const CHROMATIC_INTERVALS = [
             { name: 'P1', semitones: 0 }, { name: 'Min 2', semitones: 1 }, { name: 'Maj 2', semitones: 2 },
             { name: 'Min 3', semitones: 3 }, { name: 'Maj 3', semitones: 4 }, { name: 'P4', semitones: 5 },
@@ -118,62 +111,113 @@
             { name: 'Maj 6', semitones: 9 }, { name: 'Min 7', semitones: 10 }, { name: 'Maj 7', semitones: 11 },
             { name: 'P8', semitones: 12 },
         ];
-
         const DIATONIC_INTERVAL_NAMES = { 0: '1st', 1: '2nd', 2: '3rd', 3: '4th', 4: '5th', 5: '6th', 6: '7th', 7: '8th' };
+        const NOTE_POOLS = {
+            'sharps': ['C', 'C♯', 'D', 'D♯', 'E', 'E♯', 'F', 'F♯', 'G', 'G♯', 'A', 'A♯', 'B', 'B♯'],
+            'flats': ['C', 'C♭', 'D', 'D♭', 'E', 'E♭', 'F', 'F♭', 'G', 'G♭', 'A', 'A♭', 'B', 'B♭'],
+            'mixed': ['C', 'C♯', 'D♭', 'D', 'D♯', 'E♭', 'E', 'E♯', 'F', 'F♭', 'F♯', 'G♭', 'G', 'G♯', 'A♭', 'A', 'A♯', 'B♭', 'B', 'C♭', 'B♯']
+        };
 
         const formatNote = (note) => note ? note.replace('#', '♯').replace('b', '♭') : '';
 
-        const calculateDiatonic = (scale, startDegree, intervalSteps, direction) => {
-            const startIndex = startDegree - 1;
-            let targetIndex;
-            if (direction === 'up') targetIndex = (startIndex + intervalSteps) % 7;
-            else {
-                targetIndex = (startIndex - intervalSteps) % 7;
-                if (targetIndex < 0) targetIndex += 7;
-            }
-            return scale[targetIndex];
+        // --- Shared Note Formatter (Exponent style) ---
+        const NoteDisplay = ({ note, className = "" }) => {
+            if (!note) return null;
+            // Split note into base letter and accidental
+            const match = note.match(/^([A-G])([♯♭]?)$/);
+            if (!match) return <span className={className}>{note}</span>;
+            
+            const [_, letter, accidental] = match;
+            return (
+                <span className={className}>
+                    {letter}
+                    {accidental && <sup className="text-[0.45em] -top-[0.6em] ml-1 opacity-90">{accidental}</sup>}
+                </span>
+            );
         };
 
-        const calculateChromatic = (startNote, semitones, direction) => {
-            const normalizedStart = startNote.replace('♯', '#').replace('♭', 'b');
-            let sIdx = NOTES_REF.indexOf(normalizedStart);
-            if (sIdx === -1) {
-                if (normalizedStart === 'Cb') sIdx = 11;
-                if (normalizedStart === 'E#') sIdx = 5;
-                if (normalizedStart === 'Fb') sIdx = 4;
-                if (normalizedStart === 'B#') sIdx = 0;
-            }
-            let eIdx = direction === 'up' ? (sIdx + semitones) % 12 : (sIdx - semitones) % 12;
-            while (eIdx < 0) eIdx += 12;
-            return formatNote(NOTES_REF[eIdx % 12]);
-        };
+        // --- Navigation Component ---
+        function Navbar({ activeView, onNavigate }) {
+            return (
+                <nav className="fixed top-0 left-0 right-0 bg-slate-900 border-b border-slate-800 z-50 px-4">
+                    <div className="max-w-7xl mx-auto flex items-center justify-between h-14">
+                        <button 
+                            onClick={() => onNavigate('home')}
+                            className="flex items-center gap-2 text-white font-black text-sm tracking-tighter uppercase italic hover:opacity-80 transition-all active:scale-95"
+                        >
+                            <Music size={18} className="text-indigo-500" />
+                            <span>Practice <span className="text-slate-500 font-bold">Suite</span></span>
+                        </button>
+                        
+                        <div className="flex items-center gap-1 md:gap-4">
+                            <button 
+                                onClick={() => onNavigate('degreeJump')}
+                                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${activeView === 'degreeJump' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 shadow-[0_0_15px_rgba(99,102,241,0.1)]' : 'text-slate-500 hover:text-white'}`}
+                            >
+                                <Footprints size={14} /> <span className="hidden md:inline">Degree Jump</span>
+                            </button>
+                            <button 
+                                onClick={() => onNavigate('noteFlasher')}
+                                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${activeView === 'noteFlasher' ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20 shadow-[0_0_15px_rgba(244,63,94,0.1)]' : 'text-slate-500 hover:text-white'}`}
+                            >
+                                <Zap size={14} /> <span className="hidden md:inline">Note Flasher</span>
+                            </button>
+                        </div>
+                    </div>
+                </nav>
+            );
+        }
 
-        function App() {
+        // --- Degree Jump Component ---
+        function DegreeJump() {
             const [mode, setMode] = useState('diatonic');
             const [selectedKey, setSelectedKey] = useState('C');
-            const [scaleDegree, setScaleDegree] = useState(1); // 1-7 or 'random'
-            const [directionPref, setDirectionPref] = useState('up'); 
+            const [scaleDegree, setScaleDegree] = useState(1);
+            const [directionPref, setDirectionPref] = useState('up');
             const [lockStartNote, setLockStartNote] = useState(true);
             const [noRepeats, setNoRepeats] = useState(false);
-            
             const [timerEnabled, setTimerEnabled] = useState(false);
             const [timerRunning, setTimerRunning] = useState(false);
             const [timerSeconds, setTimerSeconds] = useState(30);
             const [timeLeft, setTimeLeft] = useState(30);
-            
             const [currentTask, setCurrentTask] = useState(null);
             const [showTarget, setShowTarget] = useState(false);
-            const [pool, setPool] = useState([]); 
+            const [pool, setPool] = useState([]);
             const [sessionComplete, setSessionComplete] = useState(false);
 
             const currentScale = useMemo(() => SCALE_SPELLINGS[selectedKey] || SCALE_SPELLINGS['C'], [selectedKey]);
             const totalPossible = useMemo(() => mode === 'diatonic' ? 8 : CHROMATIC_INTERVALS.length, [mode]);
 
+            const calculateDiatonic = (scale, startDegree, intervalSteps, direction) => {
+                const startIndex = startDegree - 1;
+                let targetIndex;
+                if (direction === 'up') targetIndex = (startIndex + intervalSteps) % 7;
+                else {
+                    targetIndex = (startIndex - intervalSteps) % 7;
+                    if (targetIndex < 0) targetIndex += 7;
+                }
+                return scale[targetIndex];
+            };
+
+            const calculateChromatic = (startNote, semitones, direction) => {
+                const normalizedStart = startNote.replace('♯', '#').replace('♭', 'b');
+                let sIdx = NOTES_REF.indexOf(normalizedStart);
+                if (sIdx === -1) {
+                    if (normalizedStart === 'Cb') sIdx = 11;
+                    if (normalizedStart === 'E#') sIdx = 5;
+                    if (normalizedStart === 'Fb') sIdx = 4;
+                    if (normalizedStart === 'B#') sIdx = 0;
+                }
+                let eIdx = direction === 'up' ? (sIdx + semitones) % 12 : (sIdx - semitones) % 12;
+                while (eIdx < 0) eIdx += 12;
+                return formatNote(NOTES_REF[eIdx % 12]);
+            };
+
             const resetPool = useCallback(() => {
                 const size = mode === 'diatonic' ? 8 : CHROMATIC_INTERVALS.length;
                 setPool(Array.from({ length: size }, (_, i) => i));
                 setSessionComplete(false);
-                setTimerRunning(false); 
+                setTimerRunning(false);
                 setTimeLeft(timerSeconds);
             }, [mode, timerSeconds]);
 
@@ -185,20 +229,15 @@
                 if (!shouldMute) playTing();
 
                 let direction = directionPref === 'random' ? (Math.random() > 0.5 ? 'up' : 'down') : directionPref;
-                
-                const effectiveDegree = scaleDegree === 'random' 
-                    ? Math.floor(Math.random() * 7) + 1 
-                    : scaleDegree;
-
+                const effectiveDegree = scaleDegree === 'random' ? Math.floor(Math.random() * 7) + 1 : scaleDegree;
                 const startNote = lockStartNote ? currentScale[effectiveDegree - 1] : currentScale[Math.floor(Math.random() * 7)];
 
                 let intervalIndex;
                 let newPool = [...pool];
-
                 if (noRepeats) {
                     if (newPool.length === 0) {
                         setSessionComplete(true);
-                        setTimerRunning(false); 
+                        setTimerRunning(false);
                         return;
                     }
                     const poolIdx = Math.floor(Math.random() * newPool.length);
@@ -279,12 +318,12 @@
             };
 
             return (
-                <div className="min-h-screen p-0 md:p-6 overflow-hidden flex flex-col md:flex-row gap-6">
+                <div className="min-h-screen pt-14 md:p-6 md:pt-20 overflow-hidden flex flex-col md:flex-row gap-6 animate-in">
                     <aside className="w-full md:w-[380px] bg-slate-900/50 border-b md:border border-slate-800 md:rounded-3xl p-6 overflow-y-auto custom-scrollbar flex flex-col gap-8 shrink-0 z-20">
                         <header className="flex items-center gap-3">
-                            <div className="p-2 bg-indigo-500 rounded-xl shadow-lg shadow-indigo-500/20"><Footprints className="text-white" size={24} /></div>
+                            <div className="p-2 bg-indigo-500 rounded-xl"><Footprints className="text-white" size={24} /></div>
                             <div>
-                                <h2 className="text-lg font-black tracking-tight leading-tight">DEGREE JUMP</h2>
+                                <h2 className="text-lg font-black tracking-tight leading-tight uppercase">Degree Jump</h2>
                                 <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Practice Session</p>
                             </div>
                         </header>
@@ -299,7 +338,7 @@
                                         return (
                                             <button key={key} onClick={() => { setSelectedKey(key); setTimerRunning(false); }} style={{ transform: `translate(${x}px, ${y}px)` }}
                                                 className={`absolute w-10 h-10 rounded-full flex items-center justify-center text-xs font-black transition-all border-2 ${selectedKey === key ? 'bg-indigo-500 border-indigo-400 text-white shadow-[0_0_15px_rgba(99,102,241,0.5)] z-10 scale-110' : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-500'}`}>
-                                                {formatNote(key)}
+                                                <NoteDisplay note={formatNote(key)} />
                                             </button>
                                         );
                                     })}
@@ -322,29 +361,16 @@
                                     {[1, 2, 3, 4, 5, 6, 7].map(deg => (
                                         <button key={deg} onClick={() => setScaleDegree(deg)} className={`py-3 text-xs font-black rounded-lg transition-all border-2 ${scaleDegree === deg ? 'bg-indigo-500 border-indigo-400 text-white shadow-lg shadow-indigo-500/20' : 'bg-slate-800/50 border-slate-800 text-slate-500 hover:border-slate-700'}`}>{deg}</button>
                                     ))}
-                                    <button 
-                                        onClick={() => {
-                                            if (audioCtx.state === 'suspended') audioCtx.resume();
-                                            if (scaleDegree === 'random') {
-                                                nextTask();
-                                            } else {
-                                                setScaleDegree('random');
-                                            }
-                                        }} 
-                                        className={`py-3 rounded-lg border-2 flex items-center justify-center transition-all bg-violet-900/30 border-violet-800/50 text-violet-300 hover:border-violet-500 hover:bg-violet-900/50 active:bg-indigo-500 active:border-indigo-400 active:text-white`}
-                                        title="Randomize Starting Degree"
-                                    >
-                                        <Dices size={14} />
-                                    </button>
+                                    <button onClick={() => { if(scaleDegree === 'random') nextTask(); else setScaleDegree('random'); }} className={`py-3 rounded-lg border-2 flex items-center justify-center transition-all bg-violet-900/30 border-violet-800/50 text-violet-300 hover:bg-violet-900/50 active:bg-indigo-500 active:text-white`}><Dices size={14} /></button>
                                 </div>
                                 <div className="flex flex-col gap-3 pt-2">
                                     <label className="flex items-center gap-3 group cursor-pointer">
-                                        <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${lockStartNote ? 'bg-indigo-500 border-indigo-500' : 'border-slate-700 bg-slate-800'}`}>{lockStartNote && <div className="w-2 h-2 bg-white rounded-sm" />}</div>
+                                        <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${lockStartNote ? 'bg-indigo-500 border-indigo-400' : 'border-slate-700'}`}>{lockStartNote && <div className="w-2 h-2 bg-white rounded-sm" />}</div>
                                         <input type="checkbox" className="hidden" checked={lockStartNote} onChange={e => setLockStartNote(e.target.checked)} />
-                                        <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 group-hover:text-slate-200 transition-colors">Lock Start to Anchor</span>
+                                        <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 group-hover:text-slate-200 transition-colors">Lock Start Note</span>
                                     </label>
                                     <label className="flex items-center gap-3 group cursor-pointer">
-                                        <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${noRepeats ? 'bg-amber-500 border-amber-500' : 'border-slate-700 bg-slate-800'}`}>{noRepeats && <div className="w-2 h-2 bg-white rounded-sm" />}</div>
+                                        <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${noRepeats ? 'bg-amber-500 border-amber-400' : 'border-slate-700'}`}>{noRepeats && <div className="w-2 h-2 bg-white rounded-sm" />}</div>
                                         <input type="checkbox" className="hidden" checked={noRepeats} onChange={e => setNoRepeats(e.target.checked)} />
                                         <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 group-hover:text-slate-200 transition-colors">No Repeats</span>
                                     </label>
@@ -353,13 +379,8 @@
                             <div className="space-y-3">
                                 <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">Interval Direction</label>
                                 <div className="grid grid-cols-2 gap-2">
-                                    {[
-                                        { id: 'up', icon: <ChevronUp size={14} />, label: 'UP' },
-                                        { id: 'down', icon: <ChevronDown size={14} />, label: 'DOWN' },
-                                        { id: 'both', icon: <Shuffle size={14} />, label: 'BOTH' },
-                                        { id: 'random', icon: <Dices size={14} />, label: 'RAND' }
-                                    ].map(dir => (
-                                        <button key={dir.id} onClick={() => setDirectionPref(dir.id)} className={`flex items-center justify-center gap-2 py-3 rounded-xl border-2 transition-all ${directionPref === dir.id ? 'bg-indigo-500 border-indigo-400 text-white shadow-lg shadow-indigo-500/20' : 'bg-slate-800/50 border-slate-800 text-slate-500 hover:border-slate-700'}`}>{dir.icon}<span className="text-[10px] font-black ml-2">{dir.label}</span></button>
+                                    {[{id:'up',icon:<ChevronUp size={14}/>,label:'UP'},{id:'down',icon:<ChevronDown size={14}/>,label:'DOWN'},{id:'both',icon:<Shuffle size={14}/>,label:'BOTH'},{id:'random',icon:<Dices size={14}/>,label:'RAND'}].map(dir => (
+                                        <button key={dir.id} onClick={() => setDirectionPref(dir.id)} className={`flex items-center justify-center gap-2 py-3 rounded-xl border-2 transition-all ${directionPref === dir.id ? 'bg-indigo-500 border-indigo-400 text-white' : 'bg-slate-800/50 border-slate-800 text-slate-500 hover:border-slate-700'}`}>{dir.icon}<span className="text-[10px] font-black ml-1">{dir.label}</span></button>
                                     ))}
                                 </div>
                             </div>
@@ -373,15 +394,13 @@
                                 </div>
                                 <div className="relative group">
                                     <select disabled={!timerEnabled || timerRunning} value={timerSeconds} onChange={e => { const val = Number(e.target.value); setTimerSeconds(val); setTimeLeft(val); }}
-                                        className="w-full bg-slate-800 border-2 border-slate-700 rounded-xl py-2.5 px-4 text-xs font-black uppercase tracking-widest outline-none focus:border-indigo-500 disabled:opacity-30 appearance-none cursor-pointer">
+                                        className="w-full bg-slate-800 border-2 border-slate-700 rounded-xl py-2.5 px-4 text-xs font-black uppercase tracking-widest outline-none appearance-none cursor-pointer">
                                         {[10, 20, 30, 40, 50, 60].map(s => <option key={s} value={s} className="bg-slate-900">{s} Seconds</option>)}
                                     </select>
                                     <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500"><ChevronDown size={14} /></div>
                                 </div>
-                                {timerRunning && <p className="text-[9px] font-bold text-indigo-400 uppercase tracking-wider text-center animate-pulse">Running: {timeLeft}s remaining</p>}
                             </div>
                         </section>
-                        <div className="mt-auto pt-6 border-t border-slate-800 flex justify-between items-center opacity-40"><p className="text-[9px] font-bold uppercase tracking-widest">Degree Jump v4.0</p></div>
                     </aside>
                     <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 lg:p-12 h-full overflow-hidden z-10">
                         <div className="w-full max-w-4xl max-h-full bg-slate-900 border border-slate-800 rounded-[2.5rem] md:rounded-[3rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.6)] flex flex-col relative overflow-hidden">
@@ -418,13 +437,19 @@
                                         </div>
                                         <div className="flex items-center justify-center gap-6 md:gap-16 w-full pt-4">
                                             <div className="flex flex-col items-center">
-                                                <div className="text-7xl md:text-9xl lg:text-[10rem] font-black text-white leading-none tracking-tighter">{currentTask.startNote}</div>
+                                                <div className="text-7xl md:text-9xl lg:text-[10rem] font-black text-white leading-none tracking-tighter">
+                                                    <NoteDisplay note={currentTask.startNote} />
+                                                </div>
                                                 <div className="text-[10px] md:text-xs font-black text-indigo-400 uppercase tracking-[0.3em] mt-1 opacity-70 italic">ANCHOR</div>
                                             </div>
                                             <div className="h-24 w-px bg-slate-800 opacity-50 shrink-0"></div>
                                             <div className="flex flex-col items-center relative">
                                                 <div className={`text-7xl md:text-9xl lg:text-[10rem] font-black leading-none tracking-tighter cursor-pointer select-none transition-all duration-300 ${showTarget ? 'text-emerald-400 scale-105' : 'text-slate-800 opacity-50 blur-[4px]'}`} onClick={() => setShowTarget(!showTarget)}>
-                                                    {showTarget ? (Array.isArray(currentTask.endNote) ? currentTask.endNote.join(' • ') : currentTask.endNote) : '?'}
+                                                    {showTarget ? (
+                                                        Array.isArray(currentTask.endNote) 
+                                                        ? <div className="flex gap-4">{currentTask.endNote.map((n, i) => <NoteDisplay key={i} note={n} />)}</div> 
+                                                        : <NoteDisplay note={currentTask.endNote} />
+                                                    ) : '?'}
                                                 </div>
                                                 <div className="text-[10px] md:text-xs font-black text-slate-500 uppercase tracking-[0.3em] mt-1 opacity-70 italic">TARGET</div>
                                             </div>
@@ -436,7 +461,7 @@
                                                     className={`group relative inline-flex items-center gap-4 px-10 py-4 md:px-12 md:py-5 rounded-2xl font-black text-lg md:text-xl transition-all shadow-xl active:scale-95 z-20 ${timerEnabled && timerRunning ? 'bg-rose-500 text-white' : 'bg-white text-slate-950 hover:bg-indigo-500 hover:text-white'}`}>
                                                     {timerEnabled ? (timerRunning ? <><Square size={24} fill="currentColor" className="mr-2" />STOP TIMER</> : <><Play size={24} fill="currentColor" className="mr-2" />START TIMER</>) : <><RefreshCw size={24} className="mr-2" />NEXT INTERVAL</>}
                                                 </button>
-                                                {timerEnabled && <button onClick={nextTask} title="Skip to next" className="p-4 md:p-5 bg-slate-800 text-white border border-slate-800 rounded-2xl hover:bg-slate-700 active:scale-95 group z-20"><ChevronRight size={24} /></button>}
+                                                {timerEnabled && <button onClick={() => nextTask()} title="Skip to next" className="p-4 md:p-5 bg-slate-800 text-white border border-slate-800 rounded-2xl hover:bg-slate-700 active:scale-95 group z-20"><ChevronRight size={24} /></button>}
                                             </div>
                                             <div className="flex gap-4 opacity-40"><span className="text-[9px] font-bold border border-slate-700 px-2 py-0.5 rounded uppercase">{timerEnabled ? "Space: Start/Stop • →: Skip" : "Space: Next"}</span></div>
                                         </div>
@@ -449,11 +474,7 @@
                                     <div className="flex flex-wrap justify-center gap-1">
                                         {currentScale.map((note, i) => {
                                             const displayDegree = scaleDegree === 'random' ? currentTask?.activeDegree : scaleDegree;
-                                            return (
-                                                <span key={i} className={`text-[10px] font-black px-2 py-0.5 rounded border transition-colors ${displayDegree === i+1 ? 'bg-indigo-500 border-indigo-400 text-white' : 'bg-slate-800 border-slate-700 text-slate-500'}`}>
-                                                    {note}
-                                                </span>
-                                            );
+                                            return <span key={i} className={`text-[10px] font-black px-2 py-0.5 rounded border transition-colors ${displayDegree === i+1 ? 'bg-indigo-500 border-indigo-400 text-white' : 'bg-slate-800 border-slate-700 text-slate-500'}`}><NoteDisplay note={note} /></span>
                                         })}
                                     </div>
                                 </div>
@@ -466,6 +487,255 @@
                             </div>
                         </div>
                     </main>
+                </div>
+            );
+        }
+
+        // --- Note Flasher Practice Component ---
+        function NoteFlasher() {
+            const [noteType, setNoteType] = useState('mixed');
+            const [noRepeats, setNoRepeats] = useState(false);
+            const [timerEnabled, setTimerEnabled] = useState(false);
+            const [timerRunning, setTimerRunning] = useState(false);
+            const [timerSeconds, setTimerSeconds] = useState(30);
+            const [timeLeft, setTimeLeft] = useState(30);
+            const [currentNote, setCurrentNote] = useState('');
+            const [pool, setPool] = useState([]);
+            const [sessionComplete, setSessionComplete] = useState(false);
+
+            const resetPool = useCallback(() => {
+                const currentPool = NOTE_POOLS[noteType];
+                setPool(Array.from({ length: currentPool.length }, (_, i) => i));
+                setSessionComplete(false);
+                setTimerRunning(false);
+                setTimeLeft(timerSeconds);
+            }, [noteType, timerSeconds]);
+
+            useEffect(() => { resetPool(); }, [resetPool, noteType, noRepeats]);
+
+            const nextNote = useCallback((shouldMute = false) => {
+                const currentPool = NOTE_POOLS[noteType];
+                setTimeLeft(timerSeconds);
+                if (!shouldMute) playTing();
+
+                let index;
+                let newPool = [...pool];
+                if (noRepeats) {
+                    if (newPool.length === 0) {
+                        setSessionComplete(true);
+                        setTimerRunning(false);
+                        return;
+                    }
+                    const poolIdx = Math.floor(Math.random() * newPool.length);
+                    index = newPool[poolIdx];
+                    newPool.splice(poolIdx, 1);
+                    setPool(newPool);
+                } else {
+                    index = Math.floor(Math.random() * currentPool.length);
+                }
+                setCurrentNote(currentPool[index]);
+            }, [noteType, noRepeats, pool, timerSeconds]);
+
+            useEffect(() => {
+                let intervalId;
+                if (timerEnabled && timerRunning && !sessionComplete) {
+                    intervalId = setInterval(() => {
+                        setTimeLeft((prev) => {
+                            if (prev <= 4 && prev > 1) playBeep();
+                            if (prev <= 1) { nextNote(); return timerSeconds; }
+                            return prev - 1;
+                        });
+                    }, 1000);
+                }
+                return () => clearInterval(intervalId);
+            }, [timerEnabled, timerRunning, timerSeconds, nextNote, sessionComplete]);
+
+            useEffect(() => { if (!sessionComplete) nextNote(true); }, [noteType]);
+
+            const handleMainAction = () => {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                if (sessionComplete) resetPool();
+                else if (timerEnabled) setTimerRunning(!timerRunning);
+                else nextNote();
+            };
+
+            useEffect(() => {
+                const handleKeyDown = (e) => {
+                    if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); handleMainAction(); }
+                    if (e.code === 'ArrowRight' && timerEnabled) nextNote();
+                };
+                window.addEventListener('keydown', handleKeyDown);
+                return () => window.removeEventListener('keydown', handleKeyDown);
+            }, [handleMainAction, timerEnabled, nextNote]);
+
+            return (
+                <div className="min-h-screen pt-14 md:p-6 md:pt-20 overflow-hidden flex flex-col md:flex-row gap-6 animate-in">
+                    <aside className="w-full md:w-[380px] bg-slate-900/50 border-b md:border border-slate-800 md:rounded-3xl p-6 overflow-y-auto custom-scrollbar flex flex-col gap-8 shrink-0 z-20">
+                        <header className="flex items-center gap-3">
+                            <div className="p-2 bg-rose-500 rounded-xl"><Zap className="text-white" size={24} /></div>
+                            <div>
+                                <h2 className="text-lg font-black tracking-tight leading-tight uppercase">Note Flasher</h2>
+                                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Identification Practice</p>
+                            </div>
+                        </header>
+                        <section className="space-y-8">
+                            <div className="space-y-3">
+                                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">Focus Mode</label>
+                                <div className="grid grid-cols-3 gap-2">
+                                    {['sharps', 'flats', 'mixed'].map(m => (
+                                        <button key={m} onClick={() => setNoteType(m)} className={`py-3 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border-2 ${noteType === m ? 'bg-white text-slate-950 border-white' : 'bg-slate-800/50 border-slate-800 text-slate-500 hover:border-slate-700'}`}>{m}</button>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="flex flex-col gap-3 pt-2">
+                                <label className="flex items-center gap-3 group cursor-pointer">
+                                    <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${noRepeats ? 'bg-amber-500 border-amber-400' : 'border-slate-700'}`}>{noRepeats && <div className="w-2 h-2 bg-white rounded-sm" />}</div>
+                                    <input type="checkbox" className="hidden" checked={noRepeats} onChange={e => setNoRepeats(e.target.checked)} />
+                                    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 group-hover:text-slate-200 transition-colors">No Repeats</span>
+                                </label>
+                            </div>
+                            <div className="space-y-3 pt-2 border-t border-slate-800/50">
+                                <div className="flex justify-between items-center">
+                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2"><Clock size={12} /> Auto-Cycle Timer</label>
+                                    <label className="flex items-center gap-2 cursor-pointer group">
+                                        <div className={`w-8 h-4 rounded-full relative transition-all border ${timerEnabled ? 'bg-indigo-500 border-indigo-400' : 'bg-slate-800 border-slate-700'}`}><div className={`absolute top-0.5 w-[10px] h-[10px] bg-white rounded-full transition-all ${timerEnabled ? 'left-[14px]' : 'left-0.5'}`} /></div>
+                                        <input type="checkbox" className="hidden" checked={timerEnabled} onChange={e => { setTimerEnabled(e.target.checked); if (!e.target.checked) setTimerRunning(false); }} />
+                                    </label>
+                                </div>
+                                <div className="relative group">
+                                    <select disabled={!timerEnabled || timerRunning} value={timerSeconds} onChange={e => { const val = Number(e.target.value); setTimerSeconds(val); setTimeLeft(val); }}
+                                        className="w-full bg-slate-800 border-2 border-slate-700 rounded-xl py-2.5 px-4 text-xs font-black uppercase tracking-widest outline-none appearance-none cursor-pointer">
+                                        {[10, 20, 30, 40, 50, 60].map(s => <option key={s} value={s} className="bg-slate-900">{s} Seconds</option>)}
+                                    </select>
+                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500"><ChevronDown size={14} /></div>
+                                </div>
+                            </div>
+                        </section>
+                    </aside>
+                    <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 lg:p-12 h-full overflow-hidden z-10">
+                        <div className="w-full max-w-4xl max-h-full bg-slate-900 border border-slate-800 rounded-[2.5rem] md:rounded-[3rem] shadow-2xl flex flex-col relative overflow-hidden">
+                            {timerEnabled && !sessionComplete && (
+                                <div className="absolute top-0 left-0 right-0 h-1.5 bg-slate-800 z-30">
+                                    <div className={`h-full bg-rose-500 transition-all ${timerRunning ? 'duration-1000 ease-linear' : 'duration-300'}`} style={{ width: `${(timeLeft / timerSeconds) * 100}%` }} />
+                                </div>
+                            )}
+                            <div className="absolute inset-0 opacity-[0.03] pointer-events-none overflow-hidden text-white font-black text-[25vw] leading-none p-10 flex flex-col items-center justify-center select-none uppercase">
+                                {noteType}
+                            </div>
+                            <div className="flex-1 flex flex-col items-center justify-center p-6 md:p-10 lg:p-12 text-center z-10 relative overflow-y-auto custom-scrollbar">
+                                {sessionComplete ? (
+                                    <div className="space-y-8 animate-in duration-500">
+                                        <div className="w-24 h-24 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-500/20"><RotateCcw className="text-emerald-500" size={48} /></div>
+                                        <h2 className="text-4xl md:text-6xl font-black text-white italic tracking-tighter">SESSION COMPLETE</h2>
+                                        <button onClick={resetPool} className="bg-emerald-500 text-white px-10 py-4 rounded-2xl font-black text-xl hover:bg-emerald-600 active:scale-95 shadow-xl">START AGAIN</button>
+                                    </div>
+                                ) : (
+                                    <div className="w-full flex flex-col items-center gap-12">
+                                        <div className="space-y-4">
+                                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.5em]">Identify the Note</p>
+                                            <div className="text-[10rem] md:text-[14rem] lg:text-[16rem] font-black text-white leading-none tracking-tighter drop-shadow-2xl">
+                                                <NoteDisplay note={currentNote} />
+                                            </div>
+                                        </div>
+                                        <div className="flex flex-col items-center gap-4">
+                                            <div className="flex items-center gap-4">
+                                                <button onClick={handleMainAction} 
+                                                    className={`group relative inline-flex items-center gap-4 px-10 py-4 md:px-12 md:py-5 rounded-2xl font-black text-lg md:text-xl transition-all shadow-xl active:scale-95 z-20 ${timerEnabled && timerRunning ? 'bg-rose-500 text-white' : 'bg-white text-slate-950 hover:bg-rose-500 hover:text-white'}`}>
+                                                    {timerEnabled ? (timerRunning ? <><Square size={24} fill="currentColor" className="mr-2" />STOP TIMER</> : <><Play size={24} fill="currentColor" className="mr-2" />START TIMER</>) : <><RefreshCw size={24} className="mr-2" />NEXT NOTE</>}
+                                                </button>
+                                                {timerEnabled && <button onClick={() => nextNote()} className="p-4 md:p-5 bg-slate-800 text-white border border-slate-800 rounded-2xl hover:bg-slate-700 active:scale-95 group z-20"><ChevronRight size={24} /></button>}
+                                            </div>
+                                            <div className="flex gap-4 opacity-40"><span className="text-[9px] font-bold border border-slate-700 px-2 py-0.5 rounded uppercase">{timerEnabled ? "Space: Start/Stop • →: Skip" : "Space: Next"}</span></div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                            {noRepeats && (
+                                <div className="p-6 bg-slate-950/40 border-t border-slate-800 flex justify-center items-center gap-4">
+                                    <span className="text-[9px] font-bold text-amber-500 uppercase tracking-widest flex items-center gap-1.5"><Layers size={10} /> Progress: {NOTE_POOLS[noteType].length - pool.length} / {NOTE_POOLS[noteType].length}</span>
+                                </div>
+                            )}
+                        </div>
+                    </main>
+                </div>
+            );
+        }
+
+        // --- Home/Navigation Component ---
+        function HomePage({ onSelect }) {
+            return (
+                <div className="min-h-screen flex flex-col items-center justify-center p-6 md:p-12 animate-in pt-24">
+                    <div className="max-w-4xl w-full text-center space-y-16">
+                        <header className="space-y-4">
+                            <h1 className="text-5xl md:text-7xl font-black tracking-tighter text-white uppercase italic">
+                                Practice <span className="text-indigo-500 underline decoration-indigo-500/30 underline-offset-8">Suite</span>
+                            </h1>
+                            <p className="text-slate-500 font-medium tracking-widest uppercase text-xs md:text-sm">Choose your training exercise</p>
+                        </header>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <button 
+                                onClick={() => onSelect('degreeJump')}
+                                className="group relative bg-slate-900 border-2 border-slate-800 hover:border-indigo-500 rounded-[2.5rem] p-8 text-left transition-all hover:scale-[1.02] hover:shadow-2xl hover:shadow-indigo-500/10 overflow-hidden"
+                            >
+                                <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+                                    <Footprints size={120} />
+                                </div>
+                                <div className="relative z-10 space-y-4">
+                                    <div className="w-12 h-12 bg-indigo-500 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                                        <Footprints className="text-white" size={24} />
+                                    </div>
+                                    <h3 className="text-2xl font-black text-white uppercase tracking-tight">Degree Jump</h3>
+                                    <p className="text-slate-500 text-sm font-medium leading-relaxed max-w-[220px]">Practice relative intervals within major scale key signatures.</p>
+                                    <div className="pt-4 flex items-center gap-2 text-xs font-bold text-indigo-400 group-hover:text-indigo-300">
+                                        ENTER SESSION <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                                    </div>
+                                </div>
+                            </button>
+
+                            <button 
+                                onClick={() => onSelect('noteFlasher')}
+                                className="group relative bg-slate-900 border-2 border-slate-800 hover:border-rose-500 rounded-[2.5rem] p-8 text-left transition-all hover:scale-[1.02] hover:shadow-2xl hover:shadow-rose-500/10 overflow-hidden"
+                            >
+                                <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+                                    <Zap size={120} />
+                                </div>
+                                <div className="relative z-10 space-y-4">
+                                    <div className="w-12 h-12 bg-rose-500 rounded-2xl flex items-center justify-center shadow-lg shadow-rose-500/20">
+                                        <Zap className="text-white" size={24} />
+                                    </div>
+                                    <h3 className="text-2xl font-black text-white uppercase tracking-tight">Note Flasher</h3>
+                                    <p className="text-slate-500 text-sm font-medium leading-relaxed max-w-[220px]">Focus on sharp/flat identification and speed training.</p>
+                                    <div className="pt-4 flex items-center gap-2 text-xs font-bold text-rose-400 group-hover:text-rose-300">
+                                        ENTER SESSION <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                                    </div>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // --- Main App Router ---
+        function App() {
+            const [currentView, setCurrentView] = useState('home');
+
+            const renderView = () => {
+                switch (currentView) {
+                    case 'degreeJump':
+                        return <DegreeJump />;
+                    case 'noteFlasher':
+                        return <NoteFlasher />;
+                    default:
+                        return <HomePage onSelect={setCurrentView} />;
+                }
+            };
+
+            return (
+                <div className="min-h-screen bg-slate-950">
+                    <Navbar activeView={currentView} onNavigate={setCurrentView} />
+                    {renderView()}
                 </div>
             );
         }
