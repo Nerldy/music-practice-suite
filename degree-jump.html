@@ -143,7 +143,7 @@
         function App() {
             const [mode, setMode] = useState('diatonic');
             const [selectedKey, setSelectedKey] = useState('C');
-            const [scaleDegree, setScaleDegree] = useState(1);
+            const [scaleDegree, setScaleDegree] = useState(1); // 1-7 or 'random'
             const [directionPref, setDirectionPref] = useState('up'); 
             const [lockStartNote, setLockStartNote] = useState(true);
             const [noRepeats, setNoRepeats] = useState(false);
@@ -177,7 +177,13 @@
                 if (!shouldMute) playTing();
 
                 let direction = directionPref === 'random' ? (Math.random() > 0.5 ? 'up' : 'down') : directionPref;
-                const startNote = lockStartNote ? currentScale[scaleDegree - 1] : currentScale[Math.floor(Math.random() * 7)];
+                
+                // Randomize degree if mode is set to random
+                const effectiveDegree = scaleDegree === 'random' 
+                    ? Math.floor(Math.random() * 7) + 1 
+                    : scaleDegree;
+
+                const startNote = lockStartNote ? currentScale[effectiveDegree - 1] : currentScale[Math.floor(Math.random() * 7)];
 
                 let intervalIndex;
                 let newPool = [...pool];
@@ -199,22 +205,22 @@
                 if (mode === 'diatonic') {
                     const label = DIATONIC_INTERVAL_NAMES[intervalIndex];
                     if (direction === 'both') {
-                        const noteUp = calculateDiatonic(currentScale, scaleDegree, intervalIndex, 'up');
-                        const noteDown = calculateDiatonic(currentScale, scaleDegree, intervalIndex, 'down');
-                        setCurrentTask({ startNote, endNote: [noteDown, noteUp], label, direction: 'both' });
+                        const noteUp = calculateDiatonic(currentScale, effectiveDegree, intervalIndex, 'up');
+                        const noteDown = calculateDiatonic(currentScale, effectiveDegree, intervalIndex, 'down');
+                        setCurrentTask({ startNote, endNote: [noteDown, noteUp], label, direction: 'both', activeDegree: effectiveDegree });
                     } else {
-                        const note = calculateDiatonic(currentScale, scaleDegree, intervalIndex, direction);
-                        setCurrentTask({ startNote, endNote: note, label, direction });
+                        const note = calculateDiatonic(currentScale, effectiveDegree, intervalIndex, direction);
+                        setCurrentTask({ startNote, endNote: note, label, direction, activeDegree: effectiveDegree });
                     }
                 } else {
                     const interval = CHROMATIC_INTERVALS[intervalIndex];
                     if (direction === 'both') {
                         const noteUp = calculateChromatic(startNote, interval.semitones, 'up');
                         const noteDown = calculateChromatic(startNote, interval.semitones, 'down');
-                        setCurrentTask({ startNote, endNote: [noteDown, noteUp], label: interval.name, direction: 'both' });
+                        setCurrentTask({ startNote, endNote: [noteDown, noteUp], label: interval.name, direction: 'both', activeDegree: effectiveDegree });
                     } else {
                         const note = calculateChromatic(startNote, interval.semitones, direction);
-                        setCurrentTask({ startNote, endNote: note, label: interval.name, direction });
+                        setCurrentTask({ startNote, endNote: note, label: interval.name, direction, activeDegree: effectiveDegree });
                     }
                 }
             }, [mode, currentScale, scaleDegree, lockStartNote, directionPref, noRepeats, pool, timerSeconds, totalPossible]);
@@ -303,12 +309,24 @@
                             <div className="space-y-3">
                                 <div className="flex justify-between items-end">
                                     <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Starting Degree</label>
-                                    <span className="text-xs font-black text-indigo-400">{currentScale[scaleDegree-1]}</span>
+                                    <span className="text-xs font-black text-indigo-400">{scaleDegree === 'random' ? 'Mixed' : currentScale[scaleDegree-1]}</span>
                                 </div>
-                                <div className="grid grid-cols-7 gap-1">
+                                <div className="grid grid-cols-4 gap-1">
                                     {[1, 2, 3, 4, 5, 6, 7].map(deg => (
                                         <button key={deg} onClick={() => setScaleDegree(deg)} className={`py-3 text-xs font-black rounded-lg transition-all border-2 ${scaleDegree === deg ? 'bg-indigo-500 border-indigo-400 text-white shadow-lg shadow-indigo-500/20' : 'bg-slate-800/50 border-slate-800 text-slate-500 hover:border-slate-700'}`}>{deg}</button>
                                     ))}
+                                    <button 
+                                        onClick={() => {
+                                            if (scaleDegree === 'random') {
+                                                nextTask(); // Force a manual update if already in random mode
+                                            } else {
+                                                setScaleDegree('random');
+                                            }
+                                        }} 
+                                        className={`py-3 rounded-lg border-2 flex items-center justify-center transition-all ${scaleDegree === 'random' ? 'bg-indigo-500 border-indigo-400 text-white shadow-lg shadow-indigo-500/20' : 'bg-slate-800/50 border-slate-800 text-slate-500 hover:border-slate-700'}`}
+                                    >
+                                        <Dices size={14} />
+                                    </button>
                                 </div>
                                 <div className="flex flex-col gap-3 pt-2">
                                     <label className="flex items-center gap-3 group cursor-pointer">
@@ -354,7 +372,7 @@
                                 {timerRunning && <p className="text-[9px] font-bold text-indigo-400 uppercase tracking-wider text-center animate-pulse">Running: {timeLeft}s remaining</p>}
                             </div>
                         </section>
-                        <div className="mt-auto pt-6 border-t border-slate-800 flex justify-between items-center opacity-40"><p className="text-[9px] font-bold uppercase tracking-widest">Degree Jump v3.6</p></div>
+                        <div className="mt-auto pt-6 border-t border-slate-800 flex justify-between items-center opacity-40"><p className="text-[9px] font-bold uppercase tracking-widest">Degree Jump v3.7</p></div>
                     </aside>
                     <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 lg:p-12 h-full overflow-hidden z-10">
                         <div className="w-full max-w-4xl max-h-full bg-slate-900 border border-slate-800 rounded-[2.5rem] md:rounded-[3rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.6)] flex flex-col relative overflow-hidden">
@@ -378,12 +396,15 @@
                                         <div className="flex flex-col items-center gap-3 opacity-90">
                                             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.4em] mb-1">{formatNote(selectedKey)} Major Context</span>
                                             <div className="flex gap-4">
-                                                {currentScale.map((note, i) => (
-                                                    <div key={i} className="flex flex-col items-center">
-                                                        <span className={`text-xs md:text-sm font-black transition-all ${scaleDegree === i+1 ? 'text-indigo-400 scale-125' : 'text-slate-600'}`}>{note}</span>
-                                                        {scaleDegree === i+1 && <div className="w-1 h-1 bg-indigo-500 rounded-full mt-1 animate-pulse" />}
-                                                    </div>
-                                                ))}
+                                                {currentScale.map((note, i) => {
+                                                    const displayDegree = scaleDegree === 'random' ? currentTask.activeDegree : scaleDegree;
+                                                    return (
+                                                        <div key={i} className="flex flex-col items-center">
+                                                            <span className={`text-xs md:text-sm font-black transition-all ${displayDegree === i+1 ? 'text-indigo-400 scale-125' : 'text-slate-600'}`}>{note}</span>
+                                                            {displayDegree === i+1 && <div className="w-1 h-1 bg-indigo-500 rounded-full mt-1 animate-pulse" />}
+                                                        </div>
+                                                    );
+                                                })}
                                             </div>
                                         </div>
                                         <div className="flex items-center justify-center gap-6 md:gap-16 w-full pt-4">
@@ -417,7 +438,14 @@
                                 <div className="flex flex-col items-center text-center z-10">
                                     <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 opacity-60">Scale Map</span>
                                     <div className="flex flex-wrap justify-center gap-1">
-                                        {currentScale.map((note, i) => <span key={i} className={`text-[10px] font-black px-2 py-0.5 rounded border transition-colors ${scaleDegree === i+1 ? 'bg-indigo-500 border-indigo-400 text-white' : 'bg-slate-800 border-slate-700 text-slate-500'}`}>{note}</span>)}
+                                        {currentScale.map((note, i) => {
+                                            const displayDegree = scaleDegree === 'random' ? currentTask?.activeDegree : scaleDegree;
+                                            return (
+                                                <span key={i} className={`text-[10px] font-black px-2 py-0.5 rounded border transition-colors ${displayDegree === i+1 ? 'bg-indigo-500 border-indigo-400 text-white' : 'bg-slate-800 border-slate-700 text-slate-500'}`}>
+                                                    {note}
+                                                </span>
+                                            );
+                                        })}
                                     </div>
                                 </div>
                                 {noRepeats && (
