@@ -96,9 +96,9 @@
             'B': ['B', 'C♯', 'D♯', 'E', 'F♯', 'G♯', 'A♯'],
             'F#': ['F♯', 'G♯', 'A♯', 'B', 'C♯', 'D♯', 'E♯'],
             'C#': ['C♯', 'D♯', 'E♯', 'F♯', 'G♯', 'A♯', 'B♯'],
-            'G#': ['G♯', 'A♯', 'B♯', 'C♯', 'D♯', 'E♯', 'F𝄪'],
-            'D#': ['D♯', 'E♯', 'F𝄪', 'G♯', 'A♯', 'B♯', 'C𝄪'],
-            'A#': ['A♯', 'B♯', 'C𝄪', 'D♯', 'E♯', 'F𝄪', 'G𝄪'],
+            'G#': ['G♯', 'A♯', 'B♯', 'C♯', 'D♯', 'E♯', 'F♯♯'],
+            'D#': ['D♯', 'E♯', 'F♯♯', 'G♯', 'A♯', 'B♯', 'C♯♯'],
+            'A#': ['A♯', 'B♯', 'C♯♯', 'D♯', 'E♯', 'F♯♯', 'G♯♯'],
             'Gb': ['G♭', 'A♭', 'B♭', 'C♭', 'D♭', 'E♭', 'F'],
             'Db': ['D♭', 'E♭', 'F', 'G♭', 'A♭', 'B♭', 'C'],
             'Ab': ['A♭', 'B♭', 'C', 'D♭', 'E♭', 'F', 'G'],
@@ -107,7 +107,6 @@
             'F': ['F', 'G', 'A', 'B♭', 'C', 'D', 'E'],
         };
         const NOTES_REF = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-        
         const COF_FLATS = ['C', 'G', 'D', 'A', 'E', 'B', 'Gb', 'Db', 'Ab', 'Eb', 'Bb', 'F'];
         const COF_SHARPS = ['C', 'G', 'D', 'A', 'E', 'B', 'F#', 'C#', 'G#', 'D#', 'A#', 'F'];
 
@@ -127,20 +126,18 @@
 
         const formatNote = (note) => note ? note.replace('#', '♯').replace('b', '♭') : '';
 
-        // --- Shared Note Formatter (Exponent style) ---
+        // --- Shared Note Formatter ---
         const NoteDisplay = ({ note, className = "" }) => {
             if (!note) return null;
-            // Handle internal calculation symbols temporarily
             const displayNote = formatNote(note);
-            // Split note into base letter and accidental
-            const match = displayNote.match(/^([A-G])([♯♭]?)$/);
-            if (!match) return <span className={className}>{displayNote}</span>;
-            
+            // Regex to match Note letter + any combination of accidentals
+            const match = displayNote.match(/^([A-G])([♯♭]+)?$/) || [null, displayNote, null];
             const [_, letter, accidental] = match;
+            
             return (
                 <span className={className}>
                     {letter}
-                    {accidental && <sup className="text-[0.45em] -top-[0.6em] ml-1 opacity-90">{accidental}</sup>}
+                    {accidental && <sup className="text-[0.45em] -top-[0.6em] ml-0.5 opacity-90 tracking-tighter">{accidental}</sup>}
                 </span>
             );
         };
@@ -150,25 +147,15 @@
             return (
                 <nav className="fixed top-0 left-0 right-0 bg-slate-900 border-b border-slate-800 z-50 px-4">
                     <div className="max-w-7xl mx-auto flex items-center justify-between h-14">
-                        <button 
-                            onClick={() => onNavigate('home')}
-                            className="flex items-center gap-2 text-white font-black text-sm tracking-tighter uppercase italic hover:opacity-80 transition-all active:scale-95"
-                        >
+                        <button onClick={() => onNavigate('home')} className="flex items-center gap-2 text-white font-black text-sm tracking-tighter uppercase italic hover:opacity-80 transition-all active:scale-95">
                             <Music size={18} className="text-indigo-500" />
                             <span>Practice <span className="text-slate-500 font-bold">Suite</span></span>
                         </button>
-                        
                         <div className="flex items-center gap-1 md:gap-4">
-                            <button 
-                                onClick={() => onNavigate('degreeJump')}
-                                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${activeView === 'degreeJump' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 shadow-[0_0_15px_rgba(99,102,241,0.1)]' : 'text-slate-500 hover:text-white'}`}
-                            >
+                            <button onClick={() => onNavigate('degreeJump')} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${activeView === 'degreeJump' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 shadow-[0_0_15px_rgba(99,102,241,0.1)]' : 'text-slate-500 hover:text-white'}`}>
                                 <Footprints size={14} /> <span className="hidden md:inline">Degree Jump</span>
                             </button>
-                            <button 
-                                onClick={() => onNavigate('noteFlasher')}
-                                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${activeView === 'noteFlasher' ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20 shadow-[0_0_15px_rgba(244,63,94,0.1)]' : 'text-slate-500 hover:text-white'}`}
-                            >
+                            <button onClick={() => onNavigate('noteFlasher')} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${activeView === 'noteFlasher' ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20 shadow-[0_0_15px_rgba(244,63,94,0.1)]' : 'text-slate-500 hover:text-white'}`}>
                                 <Zap size={14} /> <span className="hidden md:inline">Note Flasher</span>
                             </button>
                         </div>
@@ -181,8 +168,8 @@
         function DegreeJump() {
             const [mode, setMode] = useState('diatonic');
             const [selectedKey, setSelectedKey] = useState('C');
-            const [accidentalMode, setAccidentalMode] = useState('flats'); // 'flats' or 'sharps'
-            const [scaleDegree, setScaleDegree] = useState(1);
+            const [accidentalMode, setAccidentalMode] = useState('flats');
+            const [scaleDegree, setScaleDegree] = useState(1); 
             const [directionPref, setDirectionPref] = useState('up');
             const [lockStartNote, setLockStartNote] = useState(true);
             const [noRepeats, setNoRepeats] = useState(false);
@@ -190,14 +177,42 @@
             const [timerRunning, setTimerRunning] = useState(false);
             const [timerSeconds, setTimerSeconds] = useState(30);
             const [timeLeft, setTimeLeft] = useState(30);
+            
+            const [enabledIntervals, setEnabledIntervals] = useState([0, 1, 2, 3, 4, 5, 6, 7]);
             const [currentTask, setCurrentTask] = useState(null);
             const [showTarget, setShowTarget] = useState(false);
             const [pool, setPool] = useState([]);
             const [sessionComplete, setSessionComplete] = useState(false);
 
+            // Scoped constants defined early
+            const totalPossible = useMemo(() => mode === 'diatonic' ? 8 : CHROMATIC_INTERVALS.length, [mode]);
+            const sessionTotal = useMemo(() => {
+                const multiplier = (scaleDegree === 'random') ? 7 : 1;
+                return enabledIntervals.length * multiplier;
+            }, [enabledIntervals, scaleDegree]);
+
             const currentCOF = useMemo(() => accidentalMode === 'flats' ? COF_FLATS : COF_SHARPS, [accidentalMode]);
             const currentScale = useMemo(() => SCALE_SPELLINGS[selectedKey] || SCALE_SPELLINGS['C'], [selectedKey]);
-            const totalPossible = useMemo(() => mode === 'diatonic' ? 8 : CHROMATIC_INTERVALS.length, [mode]);
+            
+            const availableIntervals = useMemo(() => {
+                return mode === 'diatonic' 
+                    ? Object.keys(DIATONIC_INTERVAL_NAMES).map(k => ({ id: parseInt(k), name: DIATONIC_INTERVAL_NAMES[k] }))
+                    : CHROMATIC_INTERVALS.map((int, i) => ({ id: i, name: int.name }));
+            }, [mode]);
+
+            // Helper for Chromatic Indexing
+            const getNoteChromaticIndex = (note) => {
+                const normalized = note.replace('♯♯', '##').replace('♯', '#').replace('♭♭', 'bb').replace('♭', 'b');
+                const baseMap = { 'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11 };
+                const base = normalized[0];
+                let idx = baseMap[base];
+                const accidentals = normalized.slice(1);
+                for (const char of accidentals) {
+                    if (char === '#') idx++;
+                    if (char === 'b') idx--;
+                }
+                return (idx % 12 + 12) % 12;
+            };
 
             const calculateDiatonic = (scale, startDegree, intervalSteps, direction) => {
                 const startIndex = startDegree - 1;
@@ -205,82 +220,117 @@
                 if (direction === 'up') targetIndex = (startIndex + intervalSteps) % 7;
                 else {
                     targetIndex = (startIndex - intervalSteps) % 7;
-                    if (targetIndex < 0) targetIndex += 7;
+                    while (targetIndex < 0) targetIndex += 7;
                 }
-                return scale[targetIndex];
+                return scale[targetIndex % 7];
             };
 
             const calculateChromatic = (startNote, semitones, direction) => {
-                const normalizedStart = startNote.replace('♯', '#').replace('♭', 'b');
-                let sIdx = NOTES_REF.indexOf(normalizedStart);
-                if (sIdx === -1) {
-                    if (normalizedStart === 'Cb') sIdx = 11;
-                    if (normalizedStart === 'E#') sIdx = 5;
-                    if (normalizedStart === 'Fb') sIdx = 4;
-                    if (normalizedStart === 'B#') sIdx = 0;
-                }
-                let eIdx = direction === 'up' ? (sIdx + semitones) % 12 : (sIdx - semitones) % 12;
-                while (eIdx < 0) eIdx += 12;
-                return formatNote(NOTES_REF[eIdx % 12]);
+                let sIdx = getNoteChromaticIndex(startNote);
+                let eIdx = direction === 'up' ? (sIdx + semitones) : (sIdx - semitones);
+                const resultIdx = (eIdx % 12 + 12) % 12;
+                return formatNote(NOTES_REF[resultIdx]);
             };
 
-            const resetPool = useCallback(() => {
-                const size = mode === 'diatonic' ? 8 : CHROMATIC_INTERVALS.length;
-                setPool(Array.from({ length: size }, (_, i) => i));
-                setSessionComplete(false);
-                setTimerRunning(false);
-                setTimeLeft(timerSeconds);
-            }, [mode, timerSeconds]);
+            // Defining UI helpers before useEffect/JSX
+            const renderIntervalDisplay = () => {
+                if (!currentTask || sessionComplete) return null;
+                const showLeft = currentTask.direction === 'down' || currentTask.direction === 'both';
+                const showRight = currentTask.direction === 'up' || currentTask.direction === 'both';
+                return (
+                    <div className="flex items-center justify-center gap-4 text-5xl md:text-7xl lg:text-8xl font-black">
+                        {showLeft && <span className="text-rose-500 transition-all">&larr;</span>}
+                        <span className="text-white drop-shadow-2xl">{currentTask.label}</span>
+                        {showRight && <span className="text-emerald-500 transition-all">&rarr;</span>}
+                    </div>
+                );
+            };
 
-            useEffect(() => { resetPool(); }, [resetPool, directionPref, selectedKey, scaleDegree, lockStartNote, noRepeats]);
+            // Main task generator logic
+            const generateTaskFromPool = useCallback((inputPool) => {
+                if (!inputPool || inputPool.length === 0) {
+                    if (noRepeats) setSessionComplete(true);
+                    return null;
+                }
 
-            const nextTask = useCallback((shouldMute = false) => {
                 setShowTarget(false);
                 setTimeLeft(timerSeconds);
-                if (!shouldMute) playTing();
 
                 let direction = directionPref === 'random' ? (Math.random() > 0.5 ? 'up' : 'down') : directionPref;
-                const effectiveDegree = scaleDegree === 'random' ? Math.floor(Math.random() * 7) + 1 : scaleDegree;
-                const startNote = lockStartNote ? currentScale[effectiveDegree - 1] : currentScale[Math.floor(Math.random() * 7)];
+                let effectiveDegree, intervalIndex;
 
-                let intervalIndex;
-                let newPool = [...pool];
                 if (noRepeats) {
-                    if (newPool.length === 0) {
-                        setSessionComplete(true);
-                        setTimerRunning(false);
-                        return;
-                    }
-                    const poolIdx = Math.floor(Math.random() * newPool.length);
-                    intervalIndex = newPool[poolIdx];
+                    const poolIdx = Math.floor(Math.random() * inputPool.length);
+                    const pair = inputPool[poolIdx];
+                    effectiveDegree = pair.degree;
+                    intervalIndex = pair.interval;
+                    const newPool = [...inputPool];
                     newPool.splice(poolIdx, 1);
                     setPool(newPool);
                 } else {
-                    intervalIndex = Math.floor(Math.random() * totalPossible);
+                    effectiveDegree = scaleDegree === 'random' ? Math.floor(Math.random() * 7) + 1 : scaleDegree;
+                    intervalIndex = enabledIntervals[Math.floor(Math.random() * enabledIntervals.length)];
                 }
 
+                const startNote = lockStartNote ? currentScale[effectiveDegree - 1] : currentScale[Math.floor(Math.random() * 7)];
+
+                let task;
                 if (mode === 'diatonic') {
                     const label = DIATONIC_INTERVAL_NAMES[intervalIndex];
                     if (direction === 'both') {
                         const noteUp = calculateDiatonic(currentScale, effectiveDegree, intervalIndex, 'up');
                         const noteDown = calculateDiatonic(currentScale, effectiveDegree, intervalIndex, 'down');
-                        setCurrentTask({ startNote, endNote: [noteDown, noteUp], label, direction: 'both', activeDegree: effectiveDegree });
+                        task = { startNote, endNote: [noteDown, noteUp], label, direction: 'both', activeDegree: effectiveDegree };
                     } else {
                         const note = calculateDiatonic(currentScale, effectiveDegree, intervalIndex, direction);
-                        setCurrentTask({ startNote, endNote: note, label, direction, activeDegree: effectiveDegree });
+                        task = { startNote, endNote: note, label, direction, activeDegree: effectiveDegree };
                     }
                 } else {
                     const interval = CHROMATIC_INTERVALS[intervalIndex];
                     if (direction === 'both') {
                         const noteUp = calculateChromatic(startNote, interval.semitones, 'up');
                         const noteDown = calculateChromatic(startNote, interval.semitones, 'down');
-                        setCurrentTask({ startNote, endNote: [noteDown, noteUp], label: interval.name, direction: 'both', activeDegree: effectiveDegree });
+                        task = { startNote, endNote: [noteDown, noteUp], label: interval.name, direction: 'both', activeDegree: effectiveDegree };
                     } else {
                         const note = calculateChromatic(startNote, interval.semitones, direction);
-                        setCurrentTask({ startNote, endNote: note, label: interval.name, direction, activeDegree: effectiveDegree });
+                        task = { startNote, endNote: note, label: interval.name, direction, activeDegree: effectiveDegree };
                     }
                 }
-            }, [mode, currentScale, scaleDegree, lockStartNote, directionPref, noRepeats, pool, timerSeconds, totalPossible]);
+                setCurrentTask(task);
+                return task;
+            }, [mode, currentScale, scaleDegree, lockStartNote, directionPref, noRepeats, timerSeconds, enabledIntervals]);
+
+            const nextTask = useCallback((shouldMute = false) => {
+                if (!shouldMute) playTing();
+                generateTaskFromPool(pool);
+            }, [generateTaskFromPool, pool]);
+
+            const resetPool = useCallback(() => {
+                let newPool = [];
+                if (scaleDegree === 'random') {
+                    for (let d = 1; d <= 7; d++) {
+                        for (const intervalId of enabledIntervals) {
+                            newPool.push({ degree: d, interval: intervalId });
+                        }
+                    }
+                } else {
+                    for (const intervalId of enabledIntervals) {
+                        newPool.push({ degree: scaleDegree, interval: intervalId });
+                    }
+                }
+                
+                setPool(newPool);
+                setSessionComplete(false);
+                setTimerRunning(false);
+                setTimeLeft(timerSeconds);
+                // Trigger first task from the local newPool immediately
+                generateTaskFromPool(newPool); 
+            }, [enabledIntervals, timerSeconds, scaleDegree, generateTaskFromPool]);
+
+            // Sync setup effects
+            useEffect(() => { 
+                resetPool(); 
+            }, [selectedKey, scaleDegree, mode, accidentalMode, lockStartNote, noRepeats]);
 
             useEffect(() => {
                 let intervalId;
@@ -296,36 +346,15 @@
                 return () => clearInterval(intervalId);
             }, [timerEnabled, timerRunning, timerSeconds, nextTask, sessionComplete]);
 
-            useEffect(() => { if (!sessionComplete) nextTask(true); }, [selectedKey, scaleDegree, mode, directionPref]);
+            const toggleInterval = (id) => {
+                setEnabledIntervals(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+            };
 
             const handleMainAction = () => {
                 if (audioCtx.state === 'suspended') audioCtx.resume();
                 if (sessionComplete) resetPool();
                 else if (timerEnabled) setTimerRunning(!timerRunning);
                 else nextTask();
-            };
-
-            useEffect(() => {
-                const handleKeyDown = (e) => {
-                    if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); handleMainAction(); }
-                    if (e.code === 'KeyS') setShowTarget(prev => !prev);
-                    if (e.code === 'ArrowRight' && timerEnabled) nextTask();
-                };
-                window.addEventListener('keydown', handleKeyDown);
-                return () => window.removeEventListener('keydown', handleKeyDown);
-            }, [handleMainAction, timerEnabled, nextTask]);
-
-            const renderIntervalDisplay = () => {
-                if (!currentTask || sessionComplete) return null;
-                const showLeft = currentTask.direction === 'down' || currentTask.direction === 'both';
-                const showRight = currentTask.direction === 'up' || currentTask.direction === 'both';
-                return (
-                    <div className="flex items-center justify-center gap-4 text-5xl md:text-7xl lg:text-8xl font-black">
-                        {showLeft && <span className="text-rose-500">&larr;</span>}
-                        <span className="text-white drop-shadow-2xl">{currentTask.label}</span>
-                        {showRight && <span className="text-emerald-500">&rarr;</span>}
-                    </div>
-                );
             };
 
             return (
@@ -339,23 +368,15 @@
                             </div>
                         </header>
                         <section className="space-y-8">
-                            {/* Circle of Fifths Section */}
                             <div className="relative flex flex-col items-center">
                                 <div className="flex justify-between items-center w-full mb-10 px-2">
                                     <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Circle of Fifths</label>
                                     <div className="flex bg-slate-800 p-1 rounded-lg">
-                                        <button 
-                                            onClick={() => setAccidentalMode('flats')}
-                                            className={`px-2 py-0.5 rounded text-[10px] font-black transition-all ${accidentalMode === 'flats' ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/20' : 'text-slate-500 hover:text-slate-300'}`}
-                                        >
-                                            ♭
-                                        </button>
-                                        <button 
-                                            onClick={() => setAccidentalMode('sharps')}
-                                            className={`px-2 py-0.5 rounded text-[10px] font-black transition-all ${accidentalMode === 'sharps' ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/20' : 'text-slate-500 hover:text-slate-300'}`}
-                                        >
-                                            ♯
-                                        </button>
+                                        {['flats', 'sharps'].map(m => (
+                                            <button key={m} onClick={() => setAccidentalMode(m)} className={`px-2 py-0.5 rounded text-[10px] font-black transition-all ${accidentalMode === m ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/20' : 'text-slate-500 hover:text-slate-300'}`}>
+                                                {m === 'flats' ? '♭' : '♯'}
+                                            </button>
+                                        ))}
                                     </div>
                                 </div>
                                 <div className="relative w-48 h-48 border-2 border-slate-800 rounded-full flex items-center justify-center">
@@ -372,6 +393,7 @@
                                     })}
                                 </div>
                             </div>
+
                             <div className="space-y-3">
                                 <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">Practice Mode</label>
                                 <div className="grid grid-cols-2 gap-2">
@@ -380,31 +402,49 @@
                                     ))}
                                 </div>
                             </div>
+
                             <div className="space-y-3">
                                 <div className="flex justify-between items-end">
-                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Starting Degree</label>
-                                    <span className="text-xs font-black text-indigo-400">{scaleDegree === 'random' ? 'Mixed' : currentScale[scaleDegree-1]}</span>
+                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Start Degree (Anchor)</label>
+                                    <span className="text-xs font-black text-indigo-400">{scaleDegree === 'random' ? 'Dynamic' : currentScale[scaleDegree-1]}</span>
                                 </div>
                                 <div className="grid grid-cols-4 gap-1">
                                     {[1, 2, 3, 4, 5, 6, 7].map(deg => (
                                         <button key={deg} onClick={() => setScaleDegree(deg)} className={`py-3 text-xs font-black rounded-lg transition-all border-2 ${scaleDegree === deg ? 'bg-indigo-500 border-indigo-400 text-white shadow-lg shadow-indigo-500/20' : 'bg-slate-800/50 border-slate-800 text-slate-500 hover:border-slate-700'}`}>{deg}</button>
                                     ))}
-                                    <button onClick={() => { if(scaleDegree === 'random') nextTask(); else setScaleDegree('random'); }} className={`py-3 rounded-lg border-2 flex items-center justify-center transition-all bg-violet-900/30 border-violet-800/50 text-violet-300 hover:bg-violet-900/50 active:bg-indigo-500 active:text-white`}><Dices size={14} /></button>
-                                </div>
-                                <div className="flex flex-col gap-3 pt-2">
-                                    <label className="flex items-center gap-3 group cursor-pointer">
-                                        <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${lockStartNote ? 'bg-indigo-500 border-indigo-400' : 'border-slate-700'}`}>{lockStartNote && <div className="w-2 h-2 bg-white rounded-sm" />}</div>
-                                        <input type="checkbox" className="hidden" checked={lockStartNote} onChange={e => setLockStartNote(e.target.checked)} />
-                                        <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 group-hover:text-slate-200 transition-colors">Lock Start Note</span>
-                                    </label>
-                                    <label className="flex items-center gap-3 group cursor-pointer">
-                                        <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${noRepeats ? 'bg-amber-500 border-amber-400' : 'border-slate-700'}`}>{noRepeats && <div className="w-2 h-2 bg-white rounded-sm" />}</div>
-                                        <input type="checkbox" className="hidden" checked={noRepeats} onChange={e => setNoRepeats(e.target.checked)} />
-                                        <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 group-hover:text-slate-200 transition-colors">No Repeats</span>
-                                    </label>
+                                    <button onClick={() => { if(scaleDegree === 'random') nextTask(); else setScaleDegree('random'); }} className={`py-3 rounded-lg border-2 flex items-center justify-center transition-all bg-violet-900/30 border-violet-800/50 text-violet-300 hover:bg-violet-900/50 active:bg-indigo-500 active:text-white`} title="Randomize Start Every Turn"><Dices size={14} /></button>
                                 </div>
                             </div>
-                            <div className="space-y-3">
+
+                            <div className="space-y-3 pt-2">
+                                <div className="flex justify-between items-center px-1">
+                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Practice These Jumps</label>
+                                    <div className="flex gap-2">
+                                        <button onClick={() => setEnabledIntervals(availableIntervals.map(i => i.id))} className="text-[9px] font-black text-indigo-400 hover:text-white uppercase">All</button>
+                                        <button onClick={() => setEnabledIntervals([])} className="text-[9px] font-black text-slate-500 hover:text-white uppercase">None</button>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-3 gap-1">
+                                    {availableIntervals.map((int) => (
+                                        <button key={int.id} onClick={() => toggleInterval(int.id)} className={`py-2 text-[10px] font-black rounded-lg border-2 transition-all ${enabledIntervals.includes(int.id) ? 'bg-indigo-500 border-indigo-400 text-white' : 'bg-slate-800/50 border-slate-700 text-slate-500 hover:border-slate-600'}`}>{int.name}</button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col gap-3 pt-2">
+                                <label className="flex items-center gap-3 group cursor-pointer">
+                                    <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${lockStartNote ? 'bg-indigo-500 border-indigo-400' : 'border-slate-700'}`}>{lockStartNote && <div className="w-2 h-2 bg-white rounded-sm" />}</div>
+                                    <input type="checkbox" className="hidden" checked={lockStartNote} onChange={e => setLockStartNote(e.target.checked)} />
+                                    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 group-hover:text-slate-200 transition-colors">Lock Anchor to Scale</span>
+                                </label>
+                                <label className="flex items-center gap-3 group cursor-pointer">
+                                    <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${noRepeats ? 'bg-amber-500 border-amber-400' : 'border-slate-700'}`}>{noRepeats && <div className="w-2 h-2 bg-white rounded-sm" />}</div>
+                                    <input type="checkbox" className="hidden" checked={noRepeats} onChange={e => setNoRepeats(e.target.checked)} />
+                                    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 group-hover:text-slate-200 transition-colors">No Repeats (Per Set)</span>
+                                </label>
+                            </div>
+
+                            <div className="space-y-3 pt-2">
                                 <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">Interval Direction</label>
                                 <div className="grid grid-cols-2 gap-2">
                                     {[{id:'up',icon:<ChevronUp size={14}/>,label:'UP'},{id:'down',icon:<ChevronDown size={14}/>,label:'DOWN'},{id:'both',icon:<Shuffle size={14}/>,label:'BOTH'},{id:'random',icon:<Dices size={14}/>,label:'RAND'}].map(dir => (
@@ -412,6 +452,7 @@
                                     ))}
                                 </div>
                             </div>
+
                             <div className="space-y-3 pt-2 border-t border-slate-800/50">
                                 <div className="flex justify-between items-center">
                                     <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2"><Clock size={12} /> Auto-Cycle Timer</label>
@@ -422,7 +463,7 @@
                                 </div>
                                 <div className="relative group">
                                     <select disabled={!timerEnabled || timerRunning} value={timerSeconds} onChange={e => { const val = Number(e.target.value); setTimerSeconds(val); setTimeLeft(val); }}
-                                        className="w-full bg-slate-800 border-2 border-slate-700 rounded-xl py-2.5 px-4 text-xs font-black uppercase tracking-widest outline-none focus:border-indigo-500 disabled:opacity-30 appearance-none cursor-pointer">
+                                        className="w-full bg-slate-800 border-2 border-slate-700 rounded-xl py-2.5 px-4 text-xs font-black uppercase tracking-widest outline-none appearance-none cursor-pointer">
                                         {[10, 20, 30, 40, 50, 60].map(s => <option key={s} value={s} className="bg-slate-900">{s} Seconds</option>)}
                                     </select>
                                     <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500"><ChevronDown size={14} /></div>
@@ -430,6 +471,7 @@
                             </div>
                         </section>
                     </aside>
+
                     <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 lg:p-12 h-full overflow-hidden z-10">
                         <div className="w-full max-w-4xl max-h-full bg-slate-900 border border-slate-800 rounded-[2.5rem] md:rounded-[3rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.6)] flex flex-col relative overflow-hidden">
                             {timerEnabled && !sessionComplete && (
@@ -444,7 +486,7 @@
                                 {sessionComplete ? (
                                     <div className="space-y-8 animate-in duration-500">
                                         <div className="w-24 h-24 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-500/20"><RotateCcw className="text-emerald-500" size={48} /></div>
-                                        <h2 className="text-4xl md:text-6xl font-black text-white italic tracking-tighter">SESSION COMPLETE</h2>
+                                        <h2 className="text-4xl md:text-6xl font-black text-white italic tracking-tighter uppercase italic">Session Complete</h2>
                                         <button onClick={resetPool} className="bg-emerald-500 text-white px-10 py-4 rounded-2xl font-black text-xl hover:bg-emerald-600 active:scale-95 shadow-xl">START AGAIN</button>
                                     </div>
                                 ) : currentTask && (
@@ -453,7 +495,7 @@
                                             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.4em] mb-1">{formatNote(selectedKey)} Major Context</span>
                                             <div className="flex gap-4">
                                                 {currentScale.map((note, i) => {
-                                                    const displayDegree = scaleDegree === 'random' ? currentTask.activeDegree : scaleDegree;
+                                                    const displayDegree = currentTask.activeDegree;
                                                     return (
                                                         <div key={i} className="flex flex-col items-center">
                                                             <span className={`text-xs md:text-sm font-black transition-all ${displayDegree === i+1 ? 'text-indigo-400 scale-125' : 'text-slate-600'}`}>{note}</span>
@@ -465,7 +507,7 @@
                                         </div>
                                         <div className="flex items-center justify-center gap-6 md:gap-16 w-full pt-4">
                                             <div className="flex flex-col items-center">
-                                                <div className="text-7xl md:text-9xl lg:text-[10rem] font-black text-white leading-none tracking-tighter">
+                                                <div className="text-7xl md:text-9xl lg:text-[10rem] font-black text-white leading-none tracking-tighter transition-all">
                                                     <NoteDisplay note={currentTask.startNote} />
                                                 </div>
                                                 <div className="text-[10px] md:text-xs font-black text-indigo-400 uppercase tracking-[0.3em] mt-1 opacity-70 italic">ANCHOR</div>
@@ -484,13 +526,16 @@
                                         </div>
                                         <div className="flex flex-col items-center gap-2">{renderIntervalDisplay()}</div>
                                         <div className="flex flex-col items-center gap-4 pt-2">
-                                            <div className="flex items-center gap-4">
-                                                <button onClick={handleMainAction} 
-                                                    className={`group relative inline-flex items-center gap-4 px-10 py-4 md:px-12 md:py-5 rounded-2xl font-black text-lg md:text-xl transition-all shadow-xl active:scale-95 z-20 ${timerEnabled && timerRunning ? 'bg-rose-500 text-white' : 'bg-white text-slate-950 hover:bg-indigo-500 hover:text-white'}`}>
-                                                    {timerEnabled ? (timerRunning ? <><Square size={24} fill="currentColor" className="mr-2" />STOP TIMER</> : <><Play size={24} fill="currentColor" className="mr-2" />START TIMER</>) : <><RefreshCw size={24} className="mr-2" />NEXT INTERVAL</>}
-                                                </button>
-                                                {timerEnabled && <button onClick={() => nextTask()} title="Skip to next" className="p-4 md:p-5 bg-slate-800 text-white border border-slate-800 rounded-2xl hover:bg-slate-700 active:scale-95 group z-20"><ChevronRight size={24} /></button>}
-                                            </div>
+                                            {enabledIntervals.length === 0 ? (
+                                                <div className="bg-rose-500/10 border border-rose-500/20 px-6 py-3 rounded-2xl text-rose-400 text-xs font-bold uppercase tracking-widest text-center">Select jumps to practice</div>
+                                            ) : (
+                                                <div className="flex items-center gap-4">
+                                                    <button onClick={handleMainAction} className={`group relative inline-flex items-center gap-4 px-10 py-4 md:px-12 md:py-5 rounded-2xl font-black text-lg md:text-xl transition-all shadow-xl active:scale-95 z-20 ${timerEnabled && timerRunning ? 'bg-rose-500 text-white hover:bg-rose-600' : 'bg-white text-slate-950 hover:bg-indigo-500 hover:text-white'}`}>
+                                                        {timerEnabled ? (timerRunning ? <><Square size={24} fill="currentColor" />STOP TIMER</> : <><Play size={24} fill="currentColor" />START TIMER</>) : <><RefreshCw size={24} />NEXT INTERVAL</>}
+                                                    </button>
+                                                    {timerEnabled && <button onClick={() => nextTask()} title="Skip to next" className="p-4 md:p-5 bg-slate-800 text-white border border-slate-800 rounded-2xl hover:bg-slate-700 active:scale-95 group z-20"><ChevronRight size={24} /></button>}
+                                                </div>
+                                            )}
                                             <div className="flex gap-4 opacity-40"><span className="text-[9px] font-bold border border-slate-700 px-2 py-0.5 rounded uppercase">{timerEnabled ? "Space: Start/Stop • →: Skip" : "Space: Next"}</span></div>
                                         </div>
                                     </div>
@@ -501,17 +546,15 @@
                                     <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 opacity-60">Scale Map</span>
                                     <div className="flex flex-wrap justify-center gap-1">
                                         {currentScale.map((note, i) => {
-                                            const displayDegree = scaleDegree === 'random' ? currentTask?.activeDegree : scaleDegree;
+                                            const displayDegree = currentTask?.activeDegree;
                                             return <span key={i} className={`text-[10px] font-black px-2 py-0.5 rounded border transition-colors ${displayDegree === i+1 ? 'bg-indigo-500 border-indigo-400 text-white' : 'bg-slate-800 border-slate-700 text-slate-500'}`}><NoteDisplay note={note} /></span>
                                         })}
                                     </div>
                                 </div>
-                                {noRepeats && (
-                                    <div className="flex flex-col items-center text-center border-l border-slate-800 pl-12 relative z-10">
-                                        <span className="text-[9px] font-bold text-amber-500 uppercase tracking-widest mb-1.5 flex items-center gap-1.5"><Layers size={10} /> Remaining</span>
-                                        <div className="flex items-center gap-2"><span className="text-xl font-black text-white">{pool.length}</span><span className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">/ {totalPossible}</span></div>
-                                    </div>
-                                )}
+                                <div className="flex flex-col items-center text-center border-l border-slate-800 pl-12 relative z-10">
+                                    <span className="text-[9px] font-bold text-amber-500 uppercase tracking-widest mb-1.5 flex items-center gap-1.5"><Layers size={10} /> {noRepeats ? 'Remaining' : 'Total Jumps'}</span>
+                                    <div className="flex items-center gap-2"><span className="text-xl font-black text-white">{noRepeats ? pool.length : sessionTotal}</span><span className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">/ {sessionTotal}</span></div>
+                                </div>
                             </div>
                         </div>
                     </main>
@@ -654,7 +697,7 @@
                                 {sessionComplete ? (
                                     <div className="space-y-8 animate-in duration-500">
                                         <div className="w-24 h-24 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-500/20"><RotateCcw className="text-emerald-500" size={48} /></div>
-                                        <h2 className="text-4xl md:text-6xl font-black text-white italic tracking-tighter">SESSION COMPLETE</h2>
+                                        <h2 className="text-4xl md:text-6xl font-black text-white italic tracking-tighter uppercase italic">Session Complete</h2>
                                         <button onClick={resetPool} className="bg-emerald-500 text-white px-10 py-4 rounded-2xl font-black text-xl hover:bg-emerald-600 active:scale-95 shadow-xl">START AGAIN</button>
                                     </div>
                                 ) : (
@@ -668,7 +711,7 @@
                                         <div className="flex flex-col items-center gap-4">
                                             <div className="flex items-center gap-4">
                                                 <button onClick={handleMainAction} 
-                                                    className={`group relative inline-flex items-center gap-4 px-10 py-4 md:px-12 md:py-5 rounded-2xl font-black text-lg md:text-xl transition-all shadow-xl active:scale-95 z-20 ${timerEnabled && timerRunning ? 'bg-rose-500 text-white' : 'bg-white text-slate-950 hover:bg-rose-500 hover:text-white'}`}>
+                                                    className={`group relative inline-flex items-center gap-4 px-10 py-4 md:px-12 md:py-5 rounded-2xl font-black text-lg md:text-xl transition-all shadow-xl active:scale-95 z-20 ${timerEnabled && timerRunning ? 'bg-rose-500 text-white hover:bg-rose-600' : 'bg-white text-slate-950 hover:bg-rose-500 hover:text-white'}`}>
                                                     {timerEnabled ? (timerRunning ? <><Square size={24} fill="currentColor" className="mr-2" />STOP TIMER</> : <><Play size={24} fill="currentColor" className="mr-2" />START TIMER</>) : <><RefreshCw size={24} className="mr-2" />NEXT NOTE</>}
                                                 </button>
                                                 {timerEnabled && <button onClick={() => nextNote()} className="p-4 md:p-5 bg-slate-800 text-white border border-slate-800 rounded-2xl hover:bg-slate-700 active:scale-95 group z-20"><ChevronRight size={24} /></button>}
@@ -751,12 +794,9 @@
 
             const renderView = () => {
                 switch (currentView) {
-                    case 'degreeJump':
-                        return <DegreeJump />;
-                    case 'noteFlasher':
-                        return <NoteFlasher />;
-                    default:
-                        return <HomePage onSelect={setCurrentView} />;
+                    case 'degreeJump': return <DegreeJump />;
+                    case 'noteFlasher': return <NoteFlasher />;
+                    default: return <HomePage onSelect={setCurrentView} />;
                 }
             };
 
