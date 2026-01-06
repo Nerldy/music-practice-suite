@@ -87,7 +87,7 @@
         const playTing = () => playTone(1200, 0.3, 'sine', 0.1);
 
         // --- Constants & Data ---
-        const SCALE_SPELLINGS = {
+        const MAJOR_SCALES = {
             'C': ['C', 'D', 'E', 'F', 'G', 'A', 'B'],
             'G': ['G', 'A', 'B', 'C', 'D', 'E', 'F♯'],
             'D': ['D', 'E', 'F♯', 'G', 'A', 'B', 'C♯'],
@@ -106,6 +106,27 @@
             'Bb': ['B♭', 'C', 'D', 'E♭', 'F', 'G', 'A'],
             'F': ['F', 'G', 'A', 'B♭', 'C', 'D', 'E'],
         };
+
+        const MINOR_SCALES = {
+            'C': ['C', 'D', 'E♭', 'F', 'G', 'A♭', 'B♭'],
+            'G': ['G', 'A', 'B♭', 'C', 'D', 'E♭', 'F'],
+            'D': ['D', 'E', 'F', 'G', 'A', 'B♭', 'C'],
+            'A': ['A', 'B', 'C', 'D', 'E', 'F', 'G'],
+            'E': ['E', 'F♯', 'G', 'A', 'B', 'C', 'D'],
+            'B': ['B', 'C♯', 'D', 'E', 'F♯', 'G', 'A'],
+            'F#': ['F♯', 'G♯', 'A', 'B', 'C♯', 'D', 'E'],
+            'C#': ['C♯', 'D♯', 'E', 'F♯', 'G♯', 'A', 'B'],
+            'G#': ['G♯', 'A♯', 'B', 'C♯', 'D♯', 'E', 'F♯'],
+            'D#': ['D♯', 'E♯', 'F♯', 'G♯', 'A♯', 'B', 'C♯'],
+            'A#': ['A♯', 'B♯', 'C♯', 'D♯', 'E♯', 'F♯', 'G♯'],
+            'Gb': ['G♭', 'A♭', 'B♭♭', 'C♭', 'D♭', 'E♭♭', 'F♭'], // Rare
+            'Db': ['D♭', 'E♭', 'F♭', 'G♭', 'A♭', 'B♭♭', 'C♭'], // Rare
+            'Ab': ['A♭', 'B♭', 'C♭', 'D♭', 'E♭', 'F♭', 'G♭'],
+            'Eb': ['E♭', 'F', 'G♭', 'A♭', 'B♭', 'C♭', 'D♭'],
+            'Bb': ['B♭', 'C', 'D♭', 'E♭', 'F', 'G♭', 'A♭'],
+            'F': ['F', 'G', 'A♭', 'B♭', 'C', 'D♭', 'E♭'],
+        };
+
         const NOTES_REF = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
         const COF_FLATS = ['C', 'G', 'D', 'A', 'E', 'B', 'Gb', 'Db', 'Ab', 'Eb', 'Bb', 'F'];
         const COF_SHARPS = ['C', 'G', 'D', 'A', 'E', 'B', 'F#', 'C#', 'G#', 'D#', 'A#', 'F'];
@@ -118,6 +139,7 @@
             { name: 'P8', semitones: 12 },
         ];
         const DIATONIC_INTERVAL_NAMES = { 0: '1st', 1: '2nd', 2: '3rd', 3: '4th', 4: '5th', 5: '6th', 6: '7th', 7: '8th' };
+        
         const NOTE_POOLS = {
             'sharps': ['C', 'C♯', 'D', 'D♯', 'E', 'E♯', 'F', 'F♯', 'G', 'G♯', 'A', 'A♯', 'B', 'B♯'],
             'flats': ['C', 'C♭', 'D', 'D♭', 'E', 'E♭', 'F', 'F♭', 'G', 'G♭', 'A', 'A♭', 'B', 'B♭'],
@@ -131,7 +153,7 @@
             if (!note) return null;
             const displayNote = formatNote(note);
             // Regex to match Note letter + any combination of accidentals
-            const match = displayNote.match(/^([A-G])([♯♭]+)?$/) || [null, displayNote, null];
+            const match = displayNote.match(/^([A-G])([♯♭\+𝄪]+)?$/) || [null, displayNote, null];
             const [_, letter, accidental] = match;
             
             return (
@@ -168,6 +190,7 @@
         function DegreeJump() {
             const [mode, setMode] = useState('diatonic');
             const [selectedKey, setSelectedKey] = useState('C');
+            const [scaleType, setScaleType] = useState('major'); // 'major' or 'minor'
             const [accidentalMode, setAccidentalMode] = useState('flats');
             const [scaleDegree, setScaleDegree] = useState(1); 
             const [directionPref, setDirectionPref] = useState('up');
@@ -184,7 +207,7 @@
             const [pool, setPool] = useState([]);
             const [sessionComplete, setSessionComplete] = useState(false);
 
-            // Scoped constants defined early
+            // Scoped constants
             const totalPossible = useMemo(() => mode === 'diatonic' ? 8 : CHROMATIC_INTERVALS.length, [mode]);
             const sessionTotal = useMemo(() => {
                 const multiplier = (scaleDegree === 'random') ? 7 : 1;
@@ -192,7 +215,10 @@
             }, [enabledIntervals, scaleDegree]);
 
             const currentCOF = useMemo(() => accidentalMode === 'flats' ? COF_FLATS : COF_SHARPS, [accidentalMode]);
-            const currentScale = useMemo(() => SCALE_SPELLINGS[selectedKey] || SCALE_SPELLINGS['C'], [selectedKey]);
+            const currentScale = useMemo(() => {
+                const library = scaleType === 'major' ? MAJOR_SCALES : MINOR_SCALES;
+                return library[selectedKey] || library['C'];
+            }, [selectedKey, scaleType]);
             
             const availableIntervals = useMemo(() => {
                 return mode === 'diatonic' 
@@ -232,7 +258,6 @@
                 return formatNote(NOTES_REF[resultIdx]);
             };
 
-            // Defining UI helpers before useEffect/JSX
             const renderIntervalDisplay = () => {
                 if (!currentTask || sessionComplete) return null;
                 const showLeft = currentTask.direction === 'down' || currentTask.direction === 'both';
@@ -246,7 +271,6 @@
                 );
             };
 
-            // Main task generator logic
             const generateTaskFromPool = useCallback((inputPool) => {
                 if (!inputPool || inputPool.length === 0) {
                     if (noRepeats) setSessionComplete(true);
@@ -323,14 +347,12 @@
                 setSessionComplete(false);
                 setTimerRunning(false);
                 setTimeLeft(timerSeconds);
-                // Trigger first task from the local newPool immediately
                 generateTaskFromPool(newPool); 
             }, [enabledIntervals, timerSeconds, scaleDegree, generateTaskFromPool]);
 
-            // Sync setup effects
             useEffect(() => { 
                 resetPool(); 
-            }, [selectedKey, scaleDegree, mode, accidentalMode, lockStartNote, noRepeats]);
+            }, [selectedKey, scaleDegree, mode, scaleType, accidentalMode, lockStartNote, noRepeats]);
 
             useEffect(() => {
                 let intervalId;
@@ -394,12 +416,22 @@
                                 </div>
                             </div>
 
-                            <div className="space-y-3">
-                                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">Practice Mode</label>
-                                <div className="grid grid-cols-2 gap-2">
-                                    {['diatonic', 'chromatic'].map(m => (
-                                        <button key={m} onClick={() => setMode(m)} className={`py-3 rounded-xl text-xs font-black uppercase tracking-wider transition-all border-2 ${mode === m ? 'bg-white text-slate-950 border-white' : 'bg-slate-800/50 border-slate-800 text-slate-500 hover:border-slate-700'}`}>{m}</button>
-                                    ))}
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">Scale Type</label>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {['major', 'minor'].map(t => (
+                                            <button key={t} onClick={() => setScaleType(t)} className={`py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border-2 ${scaleType === t ? 'bg-indigo-500 border-indigo-400 text-white' : 'bg-slate-800/50 border-slate-800 text-slate-500'}`}>{t}</button>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">Practice Mode</label>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {['diatonic', 'chromatic'].map(m => (
+                                            <button key={m} onClick={() => setMode(m)} className={`py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border-2 ${mode === m ? 'bg-white text-slate-950 border-white' : 'bg-slate-800/50 border-slate-800 text-slate-500'}`}>{m}</button>
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
 
@@ -492,7 +524,7 @@
                                 ) : currentTask && (
                                     <div className="w-full flex flex-col items-center gap-8 md:gap-12 lg:gap-14">
                                         <div className="flex flex-col items-center gap-3 opacity-90">
-                                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.4em] mb-1">{formatNote(selectedKey)} Major Context</span>
+                                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.4em] mb-1">{formatNote(selectedKey)} {scaleType === 'major' ? 'Major' : 'Natural Minor'} Context</span>
                                             <div className="flex gap-4">
                                                 {currentScale.map((note, i) => {
                                                     const displayDegree = currentTask.activeDegree;
@@ -712,7 +744,7 @@
                                             <div className="flex items-center gap-4">
                                                 <button onClick={handleMainAction} 
                                                     className={`group relative inline-flex items-center gap-4 px-10 py-4 md:px-12 md:py-5 rounded-2xl font-black text-lg md:text-xl transition-all shadow-xl active:scale-95 z-20 ${timerEnabled && timerRunning ? 'bg-rose-500 text-white hover:bg-rose-600' : 'bg-white text-slate-950 hover:bg-rose-500 hover:text-white'}`}>
-                                                    {timerEnabled ? (timerRunning ? <><Square size={24} fill="currentColor" className="mr-2" />STOP TIMER</> : <><Play size={24} fill="currentColor" className="mr-2" />START TIMER</>) : <><RefreshCw size={24} className="mr-2" />NEXT NOTE</>}
+                                                    {timerEnabled ? (timerRunning ? <><Square size={24} fill="currentColor" />STOP TIMER</> : <><Play size={24} fill="currentColor" />START TIMER</>) : <><RefreshCw size={24} className="mr-2" />NEXT NOTE</>}
                                                 </button>
                                                 {timerEnabled && <button onClick={() => nextNote()} className="p-4 md:p-5 bg-slate-800 text-white border border-slate-800 rounded-2xl hover:bg-slate-700 active:scale-95 group z-20"><ChevronRight size={24} /></button>}
                                             </div>
@@ -757,7 +789,7 @@
                                         <Footprints className="text-white" size={24} />
                                     </div>
                                     <h3 className="text-2xl font-black text-white uppercase tracking-tight">Degree Jump</h3>
-                                    <p className="text-slate-500 text-sm font-medium leading-relaxed max-w-[220px]">Practice relative intervals within major scale key signatures.</p>
+                                    <p className="text-slate-500 text-sm font-medium leading-relaxed max-w-[220px]">Practice relative intervals within major and minor key signatures.</p>
                                     <div className="pt-4 flex items-center gap-2 text-xs font-bold text-indigo-400 group-hover:text-indigo-300">
                                         ENTER SESSION <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
                                     </div>
