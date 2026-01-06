@@ -119,8 +119,8 @@
             'G#': ['G♯', 'A♯', 'B', 'C♯', 'D♯', 'E', 'F♯'],
             'D#': ['D♯', 'E♯', 'F♯', 'G♯', 'A♯', 'B', 'C♯'],
             'A#': ['A♯', 'B♯', 'C♯', 'D♯', 'E♯', 'F♯', 'G♯'],
-            'Gb': ['G♭', 'A♭', 'B♭♭', 'C♭', 'D♭', 'E♭♭', 'F♭'], // Rare
-            'Db': ['D♭', 'E♭', 'F♭', 'G♭', 'A♭', 'B♭♭', 'C♭'], // Rare
+            'Gb': ['G♭', 'A♭', 'B♭♭', 'C♭', 'D♭', 'E♭♭', 'F♭'],
+            'Db': ['D♭', 'E♭', 'F♭', 'G♭', 'A♭', 'B♭♭', 'C♭'],
             'Ab': ['A♭', 'B♭', 'C♭', 'D♭', 'E♭', 'F♭', 'G♭'],
             'Eb': ['E♭', 'F', 'G♭', 'A♭', 'B♭', 'C♭', 'D♭'],
             'Bb': ['B♭', 'C', 'D♭', 'E♭', 'F', 'G♭', 'A♭'],
@@ -152,8 +152,8 @@
         const NoteDisplay = ({ note, className = "" }) => {
             if (!note) return null;
             const displayNote = formatNote(note);
-            // Regex to match Note letter + any combination of accidentals
-            const match = displayNote.match(/^([A-G])([♯♭\+𝄪]+)?$/) || [null, displayNote, null];
+            // Updated regex to handle more complex accidental suffixes like b6 or #2 as well as notes
+            const match = displayNote.match(/^([A-G1-8])([♯♭\+𝄪]+)?$/) || [null, displayNote, null];
             const [_, letter, accidental] = match;
             
             return (
@@ -191,6 +191,7 @@
             const [mode, setMode] = useState('diatonic');
             const [selectedKey, setSelectedKey] = useState('C');
             const [scaleType, setScaleType] = useState('major'); // 'major' or 'minor'
+            const [anchorDisplay, setAnchorDisplay] = useState('note'); // 'note' or 'degree'
             const [accidentalMode, setAccidentalMode] = useState('flats');
             const [scaleDegree, setScaleDegree] = useState(1); 
             const [directionPref, setDirectionPref] = useState('up');
@@ -207,26 +208,32 @@
             const [pool, setPool] = useState([]);
             const [sessionComplete, setSessionComplete] = useState(false);
 
-            // Scoped constants
-            const totalPossible = useMemo(() => mode === 'diatonic' ? 8 : CHROMATIC_INTERVALS.length, [mode]);
-            const sessionTotal = useMemo(() => {
-                const multiplier = (scaleDegree === 'random') ? 7 : 1;
-                return enabledIntervals.length * multiplier;
-            }, [enabledIntervals, scaleDegree]);
-
+            // Helpers for logic
             const currentCOF = useMemo(() => accidentalMode === 'flats' ? COF_FLATS : COF_SHARPS, [accidentalMode]);
             const currentScale = useMemo(() => {
                 const library = scaleType === 'major' ? MAJOR_SCALES : MINOR_SCALES;
                 return library[selectedKey] || library['C'];
             }, [selectedKey, scaleType]);
             
+            const sessionTotal = useMemo(() => {
+                const multiplier = (scaleDegree === 'random') ? 7 : 1;
+                return enabledIntervals.length * multiplier;
+            }, [enabledIntervals, scaleDegree]);
+
             const availableIntervals = useMemo(() => {
                 return mode === 'diatonic' 
                     ? Object.keys(DIATONIC_INTERVAL_NAMES).map(k => ({ id: parseInt(k), name: DIATONIC_INTERVAL_NAMES[k] }))
                     : CHROMATIC_INTERVALS.map((int, i) => ({ id: i, name: int.name }));
             }, [mode]);
 
-            // Helper for Chromatic Indexing
+            // Degree labeling logic (e.g., b3 for minor)
+            const getDegreeLabel = useCallback((degIndex) => {
+                if (scaleType === 'major') return (degIndex + 1).toString();
+                // For natural minor relative to parallel major
+                const minorLabels = ['1', '2', 'b3', '4', '5', 'b6', 'b7'];
+                return minorLabels[degIndex];
+            }, [scaleType]);
+
             const getNoteChromaticIndex = (note) => {
                 const normalized = note.replace('♯♯', '##').replace('♯', '#').replace('♭♭', 'bb').replace('♭', 'b');
                 const baseMap = { 'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11 };
@@ -417,12 +424,22 @@
                             </div>
 
                             <div className="space-y-4">
-                                <div className="space-y-2">
-                                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">Scale Type</label>
-                                    <div className="grid grid-cols-2 gap-2">
-                                        {['major', 'minor'].map(t => (
-                                            <button key={t} onClick={() => setScaleType(t)} className={`py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border-2 ${scaleType === t ? 'bg-indigo-500 border-indigo-400 text-white' : 'bg-slate-800/50 border-slate-800 text-slate-500'}`}>{t}</button>
-                                        ))}
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">Scale</label>
+                                        <div className="grid grid-cols-1 gap-1">
+                                            {['major', 'minor'].map(t => (
+                                                <button key={t} onClick={() => setScaleType(t)} className={`py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border-2 ${scaleType === t ? 'bg-indigo-500 border-indigo-400 text-white' : 'bg-slate-800/50 border-slate-800 text-slate-500'}`}>{t}</button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">Anchor</label>
+                                        <div className="grid grid-cols-1 gap-1">
+                                            {['note', 'degree'].map(m => (
+                                                <button key={m} onClick={() => setAnchorDisplay(m)} className={`py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border-2 ${anchorDisplay === m ? 'bg-indigo-500 border-indigo-400 text-white' : 'bg-slate-800/50 border-slate-800 text-slate-500'}`}>{m}</button>
+                                            ))}
+                                        </div>
                                     </div>
                                 </div>
                                 <div className="space-y-2">
@@ -437,8 +454,10 @@
 
                             <div className="space-y-3">
                                 <div className="flex justify-between items-end">
-                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Start Degree (Anchor)</label>
-                                    <span className="text-xs font-black text-indigo-400">{scaleDegree === 'random' ? 'Dynamic' : currentScale[scaleDegree-1]}</span>
+                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Start Position</label>
+                                    <span className="text-xs font-black text-indigo-400">
+                                        {scaleDegree === 'random' ? 'Dynamic' : (anchorDisplay === 'note' ? currentScale[scaleDegree-1] : getDegreeLabel(scaleDegree-1))}
+                                    </span>
                                 </div>
                                 <div className="grid grid-cols-4 gap-1">
                                     {[1, 2, 3, 4, 5, 6, 7].map(deg => (
@@ -524,7 +543,7 @@
                                 ) : currentTask && (
                                     <div className="w-full flex flex-col items-center gap-8 md:gap-12 lg:gap-14">
                                         <div className="flex flex-col items-center gap-3 opacity-90">
-                                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.4em] mb-1">{formatNote(selectedKey)} {scaleType === 'major' ? 'Major' : 'Natural Minor'} Context</span>
+                                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.4em] mb-1">{formatNote(selectedKey)} {scaleType === 'major' ? 'Major' : 'Minor'} Context</span>
                                             <div className="flex gap-4">
                                                 {currentScale.map((note, i) => {
                                                     const displayDegree = currentTask.activeDegree;
@@ -540,7 +559,11 @@
                                         <div className="flex items-center justify-center gap-6 md:gap-16 w-full pt-4">
                                             <div className="flex flex-col items-center">
                                                 <div className="text-7xl md:text-9xl lg:text-[10rem] font-black text-white leading-none tracking-tighter transition-all">
-                                                    <NoteDisplay note={currentTask.startNote} />
+                                                    {anchorDisplay === 'note' ? (
+                                                        <NoteDisplay note={currentTask.startNote} />
+                                                    ) : (
+                                                        <NoteDisplay note={getDegreeLabel(currentTask.activeDegree - 1)} />
+                                                    )}
                                                 </div>
                                                 <div className="text-[10px] md:text-xs font-black text-indigo-400 uppercase tracking-[0.3em] mt-1 opacity-70 italic">ANCHOR</div>
                                             </div>
@@ -744,7 +767,7 @@
                                             <div className="flex items-center gap-4">
                                                 <button onClick={handleMainAction} 
                                                     className={`group relative inline-flex items-center gap-4 px-10 py-4 md:px-12 md:py-5 rounded-2xl font-black text-lg md:text-xl transition-all shadow-xl active:scale-95 z-20 ${timerEnabled && timerRunning ? 'bg-rose-500 text-white hover:bg-rose-600' : 'bg-white text-slate-950 hover:bg-rose-500 hover:text-white'}`}>
-                                                    {timerEnabled ? (timerRunning ? <><Square size={24} fill="currentColor" />STOP TIMER</> : <><Play size={24} fill="currentColor" />START TIMER</>) : <><RefreshCw size={24} className="mr-2" />NEXT NOTE</>}
+                                                    {timerEnabled ? (timerRunning ? <><Square size={24} fill="currentColor" className="mr-2" />STOP TIMER</> : <><Play size={24} fill="currentColor" className="mr-2" />START TIMER</>) : <><RefreshCw size={24} className="mr-2" />NEXT NOTE</>}
                                                 </button>
                                                 {timerEnabled && <button onClick={() => nextNote()} className="p-4 md:p-5 bg-slate-800 text-white border border-slate-800 rounded-2xl hover:bg-slate-700 active:scale-95 group z-20"><ChevronRight size={24} /></button>}
                                             </div>
