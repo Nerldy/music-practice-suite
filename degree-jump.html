@@ -26,68 +26,12 @@
     <script type="text/babel">
         const { useState, useEffect, useCallback, useMemo, useRef } = React;
 
-        // --- Inline SVG Icons ---
-        const Icon = ({ children, size = 24, className = "", fill = "none" }) => (
-            <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                width={size} 
-                height={size} 
-                viewBox="0 0 24 24" 
-                fill={fill} 
-                stroke="currentColor" 
-                strokeWidth="2" 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                className={className}
-            >
-                {children}
-            </svg>
-        );
+        // --- GLOBAL CONSTANTS & DATA ---
+        const NOTES_REF = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+        const COF_FLATS = ['C', 'G', 'D', 'A', 'E', 'B', 'Gb', 'Db', 'Ab', 'Eb', 'Bb', 'F'];
+        const COF_SHARPS = ['C', 'G', 'D', 'A', 'E', 'B', 'F#', 'C#', 'G#', 'D#', 'A#', 'F'];
 
-        const Footprints = (props) => (
-            <Icon {...props}>
-                <path d="M4 17.5c0-1.4 1.1-2.5 2.5-2.5s2.5 1.1 2.5 2.5c0 1.9-1.1 2.5-2.5 2.5S4 19.4 4 17.5z" opacity="0.4" />
-                <path d="M15 6.5c0-1.4 1.1-2.5 2.5-2.5s2.5 1.1 2.5 2.5c0 1.9-1.1 2.5-2.5 2.5s-2.5-.6-2.5-2.5z" />
-                <path d="M7 14c1.5-4 5-6 9-7" />
-                <path d="m13 7 3-1-1 3" />
-            </Icon>
-        );
-        const Music = (props) => <Icon {...props}><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></Icon>;
-        const Keyboard = (props) => <Icon {...props}><rect width="20" height="16" x="2" y="4" rx="2"/><path d="M6 8h.01"/><path d="M10 8h.01"/><path d="M14 8h.01"/><path d="M18 8h.01"/><path d="M8 12h.01"/><path d="M12 12h.01"/><path d="M16 12h.01"/><path d="M7 16h10"/></Icon>;
-        const ChevronUp = (props) => <Icon {...props}><path d="m18 15-6-6-6 6"/></Icon>;
-        const ChevronDown = (props) => <Icon {...props}><path d="m6 9 6 6 6-6"/></Icon>;
-        const Shuffle = (props) => <Icon {...props}><path d="M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l6.1-8.6c.7-1.1 2-1.7 3.3-1.7H22"/><path d="m18 2 4 4-4 4"/><path d="M2 6h1.9c1.2 0 2.3.6 3 1.5l3.8 5"/><path d="M22 18h-5.9c-1.3 0-2.6-.7-3.3-1.8l-.5-.8"/><path d="m18 14 4 4-4 4"/></Icon>;
-        const Dices = (props) => <Icon {...props}><rect width="12" height="12" x="2" y="10" rx="2" ry="2"/><path d="m17.92 14 3.5-3.5a2.24 2.24 0 0 0 0-3.17l-3.5-3.5a2.24 2.24 0 0 0-3.17 0L12.75 5.58"/><circle cx="8" cy="16" r="1"/><path d="M15 10h.01"/><path d="M18 13h.01"/><path d="M18 7h.01"/></Icon>;
-        const Clock = (props) => <Icon {...props}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></Icon>;
-        const Play = (props) => <Icon {...props}><polygon points="5 3 19 12 5 21 5 3"/></Icon>;
-        const Square = (props) => <Icon {...props}><rect width="18" height="18" x="3" y="3" rx="2"/></Icon>;
-        const RefreshCw = (props) => <Icon {...props}><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></Icon>;
-        const ChevronRight = (props) => <Icon {...props}><path d="m9 18 6-6-6-6"/></Icon>;
-        const RotateCcw = (props) => <Icon {...props}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></Icon>;
-        const Layers = (props) => <Icon {...props}><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></Icon>;
-        const Zap = (props) => <Icon {...props}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></Icon>;
-        const Home = (props) => <Icon {...props}><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></Icon>;
-
-        // --- Audio Synthesis Utility ---
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const playTone = (freq, duration, type = 'sine', volume = 0.1) => {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            const oscillator = audioCtx.createOscillator();
-            const gainNode = audioCtx.createGain();
-            oscillator.type = type;
-            oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime);
-            gainNode.gain.setValueAtTime(volume, audioCtx.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
-            oscillator.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
-            oscillator.start();
-            oscillator.stop(audioCtx.currentTime + duration);
-        };
-        const playBeep = () => playTone(440, 0.1, 'sine', 0.05);
-        const playTing = () => playTone(1200, 0.3, 'sine', 0.1);
-
-        // --- Constants & Data ---
-        const SCALE_SPELLINGS = {
+        const MAJOR_SCALES = {
             'C': ['C', 'D', 'E', 'F', 'G', 'A', 'B'],
             'G': ['G', 'A', 'B', 'C', 'D', 'E', 'F♯'],
             'D': ['D', 'E', 'F♯', 'G', 'A', 'B', 'C♯'],
@@ -106,9 +50,32 @@
             'Bb': ['B♭', 'C', 'D', 'E♭', 'F', 'G', 'A'],
             'F': ['F', 'G', 'A', 'B♭', 'C', 'D', 'E'],
         };
-        const NOTES_REF = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-        const COF_FLATS = ['C', 'G', 'D', 'A', 'E', 'B', 'Gb', 'Db', 'Ab', 'Eb', 'Bb', 'F'];
-        const COF_SHARPS = ['C', 'G', 'D', 'A', 'E', 'B', 'F#', 'C#', 'G#', 'D#', 'A#', 'F'];
+
+        const MINOR_SCALES = {
+            'C': ['C', 'D', 'E♭', 'F', 'G', 'A♭', 'B♭'],
+            'G': ['G', 'A', 'B♭', 'C', 'D', 'E♭', 'F'],
+            'D': ['D', 'E', 'F', 'G', 'A', 'B♭', 'C'],
+            'A': ['A', 'B', 'C', 'D', 'E', 'F', 'G'],
+            'E': ['E', 'F♯', 'G', 'A', 'B', 'C', 'D'],
+            'B': ['B', 'C♯', 'D', 'E', 'F♯', 'G', 'A'],
+            'F#': ['F♯', 'G♯', 'A', 'B', 'C♯', 'D', 'E'],
+            'C#': ['C♯', 'D♯', 'E', 'F♯', 'G♯', 'A', 'B'],
+            'G#': ['G♯', 'A♯', 'B', 'C♯', 'D♯', 'E', 'F♯'],
+            'D#': ['D♯', 'E♯', 'F♯', 'G♯', 'A♯', 'B', 'C♯'],
+            'A#': ['A♯', 'B♯', 'C♯', 'D♯', 'E♯', 'F♯', 'G♯'],
+            'Gb': ['G♭', 'A♭', 'B♭♭', 'C♭', 'D♭', 'E♭♭', 'F♭'],
+            'Db': ['D♭', 'E♭', 'F♭', 'G♭', 'A♭', 'B♭♭', 'C♭'],
+            'Ab': ['A♭', 'B♭', 'C♭', 'D♭', 'E♭', 'F♭', 'G♭'],
+            'Eb': ['E♭', 'F', 'G♭', 'A♭', 'B♭', 'C♭', 'D♭'],
+            'Bb': ['B♭', 'C', 'D♭', 'E♭', 'F', 'G♭', 'A♭'],
+            'F': ['F', 'G', 'A♭', 'B♭', 'C', 'D♭', 'E♭'],
+        };
+
+        const NOTE_POOLS = {
+            'sharps': ['C', 'C♯', 'D', 'D♯', 'E', 'E♯', 'F', 'F♯', 'G', 'G♯', 'A', 'A♯', 'B', 'B♯'],
+            'flats': ['C', 'C♭', 'D', 'D♭', 'E', 'E♭', 'F', 'F♭', 'G', 'G♭', 'A', 'A♭', 'B', 'B♭'],
+            'mixed': ['C', 'C♯', 'D♭', 'D', 'D♯', 'E♭', 'E', 'E♯', 'F', 'F♭', 'F♯', 'G♭', 'G', 'G♯', 'A♭', 'A', 'A♯', 'B♭', 'B', 'C♭', 'B♯']
+        };
 
         const CHROMATIC_INTERVALS = [
             { name: 'P1', semitones: 0 }, { name: 'Min 2', semitones: 1 }, { name: 'Maj 2', semitones: 2 },
@@ -118,37 +85,106 @@
             { name: 'P8', semitones: 12 },
         ];
         const DIATONIC_INTERVAL_NAMES = { 0: '1st', 1: '2nd', 2: '3rd', 3: '4th', 4: '5th', 5: '6th', 6: '7th', 7: '8th' };
-        const NOTE_POOLS = {
-            'sharps': ['C', 'C♯', 'D', 'D♯', 'E', 'E♯', 'F', 'F♯', 'G', 'G♯', 'A', 'A♯', 'B', 'B♯'],
-            'flats': ['C', 'C♭', 'D', 'D♭', 'E', 'E♭', 'F', 'F♭', 'G', 'G♭', 'A', 'A♭', 'B', 'B♭'],
-            'mixed': ['C', 'C♯', 'D♭', 'D', 'D♯', 'E♭', 'E', 'E♯', 'F', 'F♭', 'F♯', 'G♭', 'G', 'G♯', 'A♭', 'A', 'A♯', 'B♭', 'B', 'C♭', 'B♯']
+
+        // --- AUDIO ENGINE ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const playTone = (freq, duration, type = 'sine', volume = 0.1) => {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            oscillator.type = type;
+            oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gainNode.gain.setValueAtTime(volume, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + duration);
         };
+        const playBeep = () => playTone(440, 0.1, 'sine', 0.05);
+        const playTing = () => playTone(1200, 0.3, 'sine', 0.1);
 
-        const formatNote = (note) => note ? note.replace('#', '♯').replace('b', '♭') : '';
+        // --- UTILITY FUNCTIONS ---
+        function formatNote(note) {
+            return note ? note.replace('#', '♯').replace('b', '♭') : '';
+        }
 
-        // --- Shared Note Formatter ---
-        const NoteDisplay = ({ note, className = "" }) => {
+        function getNoteChromaticIndex(note) {
+            const normalized = note.replace('♯♯', '##').replace('♯', '#').replace('♭♭', 'bb').replace('♭', 'b');
+            const baseMap = { 'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11 };
+            const base = normalized[0];
+            let idx = baseMap[base];
+            const rest = normalized.slice(1);
+            for (const char of rest) {
+                if (char === '#') idx++;
+                if (char === 'b') idx--;
+            }
+            return (idx % 12 + 12) % 12;
+        }
+
+        function calculateDiatonic(scale, startDegree, intervalSteps, direction) {
+            const startIndex = startDegree - 1;
+            let targetIndex;
+            if (direction === 'up') targetIndex = (startIndex + intervalSteps) % 7;
+            else {
+                targetIndex = (startIndex - intervalSteps) % 7;
+                while (targetIndex < 0) targetIndex += 7;
+            }
+            return scale[targetIndex % 7];
+        }
+
+        function calculateChromatic(startNote, semitones, direction) {
+            let sIdx = getNoteChromaticIndex(startNote);
+            let eIdx = direction === 'up' ? (sIdx + semitones) : (sIdx - semitones);
+            const resultIdx = (eIdx % 12 + 12) % 12;
+            return formatNote(NOTES_REF[resultIdx]);
+        }
+
+        // --- ICON SYSTEM ---
+        function Icon({ children, size = 24, className = "", fill = "none" }) {
+            return (
+                <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                    {children}
+                </svg>
+            );
+        }
+
+        function Footprints(props) { return <Icon {...props}><path d="M4 17.5c0-1.4 1.1-2.5 2.5-2.5s2.5 1.1 2.5 2.5c0 1.9-1.1 2.5-2.5 2.5S4 19.4 4 17.5z" opacity="0.4" /><path d="M15 6.5c0-1.4 1.1-2.5 2.5-2.5s2.5 1.1 2.5 2.5c0 1.9-1.1 2.5-2.5 2.5s-2.5-.6-2.5-2.5z" /><path d="M7 14c1.5-4 5-6 9-7" /><path d="m13 7 3-1-1 3" /></Icon>; }
+        function MusicIcon(props) { return <Icon {...props}><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></Icon>; }
+        function ChevronUp(props) { return <Icon {...props}><path d="m18 15-6-6-6 6"/></Icon>; }
+        function ChevronDown(props) { return <Icon {...props}><path d="m6 9 6 6 6-6"/></Icon>; }
+        function Shuffle(props) { return <Icon {...props}><path d="M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l6.1-8.6c.7-1.1 2-1.7 3.3-1.7H22"/><path d="m18 2 4 4-4 4"/><path d="M2 6h1.9c1.2 0 2.3.6 3 1.5l3.8 5"/><path d="M22 18h-5.9c-1.3 0-2.6-.7-3.3-1.8l-.5-.8"/><path d="m18 14 4 4-4 4"/></Icon>; }
+        function Dices(props) { return <Icon {...props}><rect width="12" height="12" x="2" y="10" rx="2" ry="2"/><path d="m17.92 14 3.5-3.5a2.24 2.24 0 0 0 0-3.17l-3.5-3.5a2.24 2.24 0 0 0-3.17 0L12.75 5.58"/><circle cx="8" cy="16" r="1"/><path d="M15 10h.01"/><path d="M18 13h.01"/><path d="M18 7h.01"/></Icon>; }
+        function Clock(props) { return <Icon {...props}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></Icon>; }
+        function Play(props) { return <Icon {...props}><polygon points="5 3 19 12 5 21 5 3"/></Icon>; }
+        function Square(props) { return <Icon {...props}><rect width="18" height="18" x="3" y="3" rx="2"/></Icon>; }
+        function RefreshCw(props) { return <Icon {...props}><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></Icon>; }
+        function ChevronRight(props) { return <Icon {...props}><path d="m9 18 6-6-6-6"/></Icon>; }
+        function RotateCcw(props) { return <Icon {...props}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></Icon>; }
+        function Layers(props) { return <Icon {...props}><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></Icon>; }
+        function Zap(props) { return <Icon {...props}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></Icon>; }
+        function HomeIcon(props) { return <Icon {...props}><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></Icon>; }
+
+        // --- SHARED UI COMPONENTS ---
+        function NoteDisplayComponent({ note, className = "" }) {
             if (!note) return null;
-            const displayNote = formatNote(note);
-            // Regex to match Note letter + any combination of accidentals
-            const match = displayNote.match(/^([A-G])([♯♭]+)?$/) || [null, displayNote, null];
+            const displayStr = formatNote(note);
+            const match = displayStr.match(/^([A-G1-8])([♯♭\+𝄪]+)?$/) || [null, displayStr, null];
             const [_, letter, accidental] = match;
-            
             return (
                 <span className={className}>
                     {letter}
                     {accidental && <sup className="text-[0.45em] -top-[0.6em] ml-0.5 opacity-90 tracking-tighter">{accidental}</sup>}
                 </span>
             );
-        };
+        }
 
-        // --- Navigation Component ---
         function Navbar({ activeView, onNavigate }) {
             return (
                 <nav className="fixed top-0 left-0 right-0 bg-slate-900 border-b border-slate-800 z-50 px-4">
                     <div className="max-w-7xl mx-auto flex items-center justify-between h-14">
                         <button onClick={() => onNavigate('home')} className="flex items-center gap-2 text-white font-black text-sm tracking-tighter uppercase italic hover:opacity-80 transition-all active:scale-95">
-                            <Music size={18} className="text-indigo-500" />
+                            <MusicIcon size={18} className="text-indigo-500" />
                             <span>Practice <span className="text-slate-500 font-bold">Suite</span></span>
                         </button>
                         <div className="flex items-center gap-1 md:gap-4">
@@ -164,13 +200,17 @@
             );
         }
 
-        // --- Degree Jump Component ---
+        // --- DEGREE JUMP MODULE ---
+
         function DegreeJump() {
             const [mode, setMode] = useState('diatonic');
             const [selectedKey, setSelectedKey] = useState('C');
+            const [randomizeKey, setRandomizeKey] = useState(false);
+            const [scaleType, setScaleType] = useState('major'); 
+            const [anchorDisplay, setAnchorDisplay] = useState('note');
             const [accidentalMode, setAccidentalMode] = useState('flats');
             const [scaleDegree, setScaleDegree] = useState(1); 
-            const [directionPref, setDirectionPref] = useState('up');
+            const [directionPref, setDirectionPref] = useState('up'); 
             const [lockStartNote, setLockStartNote] = useState(true);
             const [noRepeats, setNoRepeats] = useState(false);
             const [timerEnabled, setTimerEnabled] = useState(false);
@@ -184,15 +224,19 @@
             const [pool, setPool] = useState([]);
             const [sessionComplete, setSessionComplete] = useState(false);
 
-            // Scoped constants defined early
-            const totalPossible = useMemo(() => mode === 'diatonic' ? 8 : CHROMATIC_INTERVALS.length, [mode]);
+            const totalPossibleCount = useMemo(() => mode === 'diatonic' ? 8 : CHROMATIC_INTERVALS.length, [mode]);
             const sessionTotal = useMemo(() => {
-                const multiplier = (scaleDegree === 'random') ? 7 : 1;
-                return enabledIntervals.length * multiplier;
-            }, [enabledIntervals, scaleDegree]);
+                const degreeMultiplier = (scaleDegree === 'random') ? 7 : 1;
+                const keyMultiplier = randomizeKey ? 12 : 1;
+                const directionMultiplier = (directionPref === 'random') ? 2 : 1;
+                return enabledIntervals.length * degreeMultiplier * keyMultiplier * directionMultiplier;
+            }, [enabledIntervals, scaleDegree, randomizeKey, directionPref]);
 
             const currentCOF = useMemo(() => accidentalMode === 'flats' ? COF_FLATS : COF_SHARPS, [accidentalMode]);
-            const currentScale = useMemo(() => SCALE_SPELLINGS[selectedKey] || SCALE_SPELLINGS['C'], [selectedKey]);
+            const currentScale = useMemo(() => {
+                const library = scaleType === 'major' ? MAJOR_SCALES : MINOR_SCALES;
+                return library[selectedKey] || library['C'];
+            }, [selectedKey, scaleType]);
             
             const availableIntervals = useMemo(() => {
                 return mode === 'diatonic' 
@@ -200,54 +244,13 @@
                     : CHROMATIC_INTERVALS.map((int, i) => ({ id: i, name: int.name }));
             }, [mode]);
 
-            // Helper for Chromatic Indexing
-            const getNoteChromaticIndex = (note) => {
-                const normalized = note.replace('♯♯', '##').replace('♯', '#').replace('♭♭', 'bb').replace('♭', 'b');
-                const baseMap = { 'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11 };
-                const base = normalized[0];
-                let idx = baseMap[base];
-                const accidentals = normalized.slice(1);
-                for (const char of accidentals) {
-                    if (char === '#') idx++;
-                    if (char === 'b') idx--;
-                }
-                return (idx % 12 + 12) % 12;
-            };
+            const getDegreeLabel = useCallback((degIndex) => {
+                if (scaleType === 'major') return (degIndex + 1).toString();
+                const minorLabels = ['1', '2', 'b3', '4', '5', 'b6', 'b7'];
+                return minorLabels[degIndex] || (degIndex + 1).toString();
+            }, [scaleType]);
 
-            const calculateDiatonic = (scale, startDegree, intervalSteps, direction) => {
-                const startIndex = startDegree - 1;
-                let targetIndex;
-                if (direction === 'up') targetIndex = (startIndex + intervalSteps) % 7;
-                else {
-                    targetIndex = (startIndex - intervalSteps) % 7;
-                    while (targetIndex < 0) targetIndex += 7;
-                }
-                return scale[targetIndex % 7];
-            };
-
-            const calculateChromatic = (startNote, semitones, direction) => {
-                let sIdx = getNoteChromaticIndex(startNote);
-                let eIdx = direction === 'up' ? (sIdx + semitones) : (sIdx - semitones);
-                const resultIdx = (eIdx % 12 + 12) % 12;
-                return formatNote(NOTES_REF[resultIdx]);
-            };
-
-            // Defining UI helpers before useEffect/JSX
-            const renderIntervalDisplay = () => {
-                if (!currentTask || sessionComplete) return null;
-                const showLeft = currentTask.direction === 'down' || currentTask.direction === 'both';
-                const showRight = currentTask.direction === 'up' || currentTask.direction === 'both';
-                return (
-                    <div className="flex items-center justify-center gap-4 text-5xl md:text-7xl lg:text-8xl font-black">
-                        {showLeft && <span className="text-rose-500 transition-all">&larr;</span>}
-                        <span className="text-white drop-shadow-2xl">{currentTask.label}</span>
-                        {showRight && <span className="text-emerald-500 transition-all">&rarr;</span>}
-                    </div>
-                );
-            };
-
-            // Main task generator logic
-            const generateTaskFromPool = useCallback((inputPool) => {
+            const generateTaskFromPool = useCallback((inputPool, isSilent = false) => {
                 if (!inputPool || inputPool.length === 0) {
                     if (noRepeats) setSessionComplete(true);
                     return null;
@@ -255,82 +258,83 @@
 
                 setShowTarget(false);
                 setTimeLeft(timerSeconds);
+                if (!isSilent) playTing();
 
-                let direction = directionPref === 'random' ? (Math.random() > 0.5 ? 'up' : 'down') : directionPref;
-                let effectiveDegree, intervalIndex;
+                let effectiveDegree, intervalIndex, effectiveKey, direction;
 
                 if (noRepeats) {
                     const poolIdx = Math.floor(Math.random() * inputPool.length);
-                    const pair = inputPool[poolIdx];
-                    effectiveDegree = pair.degree;
-                    intervalIndex = pair.interval;
+                    const item = inputPool[poolIdx];
+                    effectiveDegree = item.degree;
+                    intervalIndex = item.interval;
+                    effectiveKey = item.key;
+                    direction = item.direction;
+                    
                     const newPool = [...inputPool];
                     newPool.splice(poolIdx, 1);
                     setPool(newPool);
                 } else {
                     effectiveDegree = scaleDegree === 'random' ? Math.floor(Math.random() * 7) + 1 : scaleDegree;
                     intervalIndex = enabledIntervals[Math.floor(Math.random() * enabledIntervals.length)];
+                    effectiveKey = randomizeKey ? currentCOF[Math.floor(Math.random() * currentCOF.length)] : selectedKey;
+                    direction = directionPref === 'random' ? (Math.random() > 0.5 ? 'up' : 'down') : directionPref;
                 }
 
-                const startNote = lockStartNote ? currentScale[effectiveDegree - 1] : currentScale[Math.floor(Math.random() * 7)];
+                if (randomizeKey && effectiveKey !== selectedKey) {
+                    setSelectedKey(effectiveKey);
+                }
+
+                const activeScale = scaleType === 'major' ? MAJOR_SCALES[effectiveKey] : MINOR_SCALES[effectiveKey];
+                const startNote = lockStartNote ? activeScale[effectiveDegree - 1] : activeScale[Math.floor(Math.random() * 7)];
 
                 let task;
                 if (mode === 'diatonic') {
                     const label = DIATONIC_INTERVAL_NAMES[intervalIndex];
-                    if (direction === 'both') {
-                        const noteUp = calculateDiatonic(currentScale, effectiveDegree, intervalIndex, 'up');
-                        const noteDown = calculateDiatonic(currentScale, effectiveDegree, intervalIndex, 'down');
-                        task = { startNote, endNote: [noteDown, noteUp], label, direction: 'both', activeDegree: effectiveDegree };
-                    } else {
-                        const note = calculateDiatonic(currentScale, effectiveDegree, intervalIndex, direction);
-                        task = { startNote, endNote: note, label, direction, activeDegree: effectiveDegree };
-                    }
+                    const note = calculateDiatonic(activeScale, effectiveDegree, intervalIndex, direction);
+                    task = { startNote, endNote: note, label, direction, activeDegree: effectiveDegree, key: effectiveKey };
                 } else {
                     const interval = CHROMATIC_INTERVALS[intervalIndex];
-                    if (direction === 'both') {
-                        const noteUp = calculateChromatic(startNote, interval.semitones, 'up');
-                        const noteDown = calculateChromatic(startNote, interval.semitones, 'down');
-                        task = { startNote, endNote: [noteDown, noteUp], label: interval.name, direction: 'both', activeDegree: effectiveDegree };
-                    } else {
-                        const note = calculateChromatic(startNote, interval.semitones, direction);
-                        task = { startNote, endNote: note, label: interval.name, direction, activeDegree: effectiveDegree };
-                    }
+                    const note = calculateChromatic(startNote, interval.semitones, direction);
+                    task = { startNote, endNote: note, label: interval.name, direction, activeDegree: effectiveDegree, key: effectiveKey };
                 }
                 setCurrentTask(task);
                 return task;
-            }, [mode, currentScale, scaleDegree, lockStartNote, directionPref, noRepeats, timerSeconds, enabledIntervals]);
+            }, [mode, selectedKey, scaleDegree, randomizeKey, lockStartNote, directionPref, noRepeats, timerSeconds, enabledIntervals, currentCOF, scaleType]);
 
             const nextTask = useCallback((shouldMute = false) => {
-                if (!shouldMute) playTing();
-                generateTaskFromPool(pool);
+                generateTaskFromPool(pool, shouldMute);
             }, [generateTaskFromPool, pool]);
 
-            const resetPool = useCallback(() => {
+            const resetPool = useCallback((keepTimerStatus = false) => {
                 let newPool = [];
-                if (scaleDegree === 'random') {
-                    for (let d = 1; d <= 7; d++) {
-                        for (const intervalId of enabledIntervals) {
-                            newPool.push({ degree: d, interval: intervalId });
+                const keysToUse = randomizeKey ? currentCOF : [selectedKey];
+                const degreesToUse = scaleDegree === 'random' ? [1,2,3,4,5,6,7] : [scaleDegree];
+                const directionsToUse = directionPref === 'random' ? ['up', 'down'] : [directionPref];
+
+                for (const k of keysToUse) {
+                    for (const d of degreesToUse) {
+                        for (const i of enabledIntervals) {
+                            for (const dir of directionsToUse) {
+                                newPool.push({ key: k, degree: d, interval: i, direction: dir });
+                            }
                         }
-                    }
-                } else {
-                    for (const intervalId of enabledIntervals) {
-                        newPool.push({ degree: scaleDegree, interval: intervalId });
                     }
                 }
                 
                 setPool(newPool);
                 setSessionComplete(false);
-                setTimerRunning(false);
+                if (!keepTimerStatus) setTimerRunning(false);
                 setTimeLeft(timerSeconds);
-                // Trigger first task from the local newPool immediately
-                generateTaskFromPool(newPool); 
-            }, [enabledIntervals, timerSeconds, scaleDegree, generateTaskFromPool]);
+                generateTaskFromPool(newPool, true); 
+            }, [enabledIntervals, timerSeconds, scaleDegree, randomizeKey, currentCOF, selectedKey, directionPref, generateTaskFromPool]);
 
-            // Sync setup effects
             useEffect(() => { 
-                resetPool(); 
-            }, [selectedKey, scaleDegree, mode, accidentalMode, lockStartNote, noRepeats]);
+                resetPool(timerRunning); 
+            }, [scaleDegree, mode, scaleType, accidentalMode, lockStartNote, noRepeats, randomizeKey, directionPref, enabledIntervals]);
+
+            useEffect(() => {
+                if (!randomizeKey) resetPool(timerRunning);
+            }, [selectedKey]);
 
             useEffect(() => {
                 let intervalId;
@@ -346,16 +350,26 @@
                 return () => clearInterval(intervalId);
             }, [timerEnabled, timerRunning, timerSeconds, nextTask, sessionComplete]);
 
-            const toggleInterval = (id) => {
-                setEnabledIntervals(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
-            };
-
+            const toggleInterval = (id) => setEnabledIntervals(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+            
             const handleMainAction = () => {
                 if (audioCtx.state === 'suspended') audioCtx.resume();
                 if (sessionComplete) resetPool();
                 else if (timerEnabled) setTimerRunning(!timerRunning);
                 else nextTask();
             };
+
+            function renderIntervalDisplay() {
+                if (!currentTask || sessionComplete) return null;
+                const isUp = currentTask.direction === 'up';
+                return (
+                    <div className="flex items-center justify-center gap-4 text-5xl md:text-7xl lg:text-8xl font-black">
+                        {!isUp && <span className="text-rose-500 animate-pulse">&larr;</span>}
+                        <span className="text-white drop-shadow-2xl">{currentTask.label}</span>
+                        {isUp && <span className="text-emerald-500 animate-pulse">&rarr;</span>}
+                    </div>
+                );
+            }
 
             return (
                 <div className="min-h-screen pt-14 md:p-6 md:pt-20 overflow-hidden flex flex-col md:flex-row gap-6 animate-in">
@@ -371,48 +385,71 @@
                             <div className="relative flex flex-col items-center">
                                 <div className="flex justify-between items-center w-full mb-10 px-2">
                                     <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Circle of Fifths</label>
-                                    <div className="flex bg-slate-800 p-1 rounded-lg">
-                                        {['flats', 'sharps'].map(m => (
-                                            <button key={m} onClick={() => setAccidentalMode(m)} className={`px-2 py-0.5 rounded text-[10px] font-black transition-all ${accidentalMode === m ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/20' : 'text-slate-500 hover:text-slate-300'}`}>
-                                                {m === 'flats' ? '♭' : '♯'}
-                                            </button>
-                                        ))}
+                                    <div className="flex bg-slate-800 p-1 rounded-lg gap-1">
+                                        <button onClick={() => setRandomizeKey(!randomizeKey)} className={`px-2 py-0.5 rounded text-[10px] font-black transition-all flex items-center gap-1 ${randomizeKey ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/20' : 'text-slate-500 hover:text-slate-300'}`}>
+                                            <Dices size={12}/> {randomizeKey ? 'RAND' : 'KEY'}
+                                        </button>
+                                        <div className="w-px h-3 bg-slate-700 my-auto mx-1"></div>
+                                        <button onClick={() => setAccidentalMode('flats')} className={`px-2 py-0.5 rounded text-[10px] font-black transition-all ${accidentalMode === 'flats' ? 'bg-indigo-500 text-white' : 'text-slate-500 hover:text-slate-300'}`}>♭</button>
+                                        <button onClick={() => setAccidentalMode('sharps')} className={`px-2 py-0.5 rounded text-[10px] font-black transition-all ${accidentalMode === 'sharps' ? 'bg-indigo-500 text-white' : 'text-slate-500 hover:text-slate-300'}`}>♯</button>
                                     </div>
                                 </div>
                                 <div className="relative w-48 h-48 border-2 border-slate-800 rounded-full flex items-center justify-center">
-                                    <div className="absolute inset-0 flex items-center justify-center text-slate-700 pointer-events-none"><Music size={40} className="opacity-10" /></div>
+                                    <div className="absolute inset-0 flex items-center justify-center text-slate-700 pointer-events-none"><MusicIcon size={40} className="opacity-10" /></div>
                                     {currentCOF.map((key, i) => {
                                         const angle = (i * (360 / currentCOF.length) - 90) * (Math.PI / 180);
                                         const x = Math.cos(angle) * 80; const y = Math.sin(angle) * 80;
                                         return (
-                                            <button key={key} onClick={() => { setSelectedKey(key); setTimerRunning(false); }} style={{ transform: `translate(${x}px, ${y}px)` }}
-                                                className={`absolute w-10 h-10 rounded-full flex items-center justify-center text-xs font-black transition-all border-2 ${selectedKey === key ? 'bg-indigo-500 border-indigo-400 text-white shadow-[0_0_15px_rgba(99,102,241,0.5)] z-10 scale-110' : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-500'}`}>
-                                                <NoteDisplay note={formatNote(key)} />
+                                            <button key={key} onClick={() => { setSelectedKey(key); setRandomizeKey(false); setTimerRunning(false); }} style={{ transform: `translate(${x}px, ${y}px)` }}
+                                                className={`absolute w-10 h-10 rounded-full flex items-center justify-center text-xs font-black transition-all border-2 ${selectedKey === key ? 'bg-indigo-500 border-indigo-400 text-white scale-110 shadow-lg shadow-indigo-500/20' : 'bg-slate-800 border-slate-700 text-slate-400'}`}>
+                                                <NoteDisplayComponent note={key} />
                                             </button>
                                         );
                                     })}
                                 </div>
                             </div>
 
-                            <div className="space-y-3">
-                                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">Practice Mode</label>
-                                <div className="grid grid-cols-2 gap-2">
-                                    {['diatonic', 'chromatic'].map(m => (
-                                        <button key={m} onClick={() => setMode(m)} className={`py-3 rounded-xl text-xs font-black uppercase tracking-wider transition-all border-2 ${mode === m ? 'bg-white text-slate-950 border-white' : 'bg-slate-800/50 border-slate-800 text-slate-500 hover:border-slate-700'}`}>{m}</button>
-                                    ))}
+                            <div className="space-y-4">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">Scale</label>
+                                        <div className="grid grid-cols-1 gap-1">
+                                            {['major', 'minor'].map(t => (
+                                                <button key={t} onClick={() => setScaleType(t)} className={`py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border-2 ${scaleType === t ? 'bg-indigo-500 border-indigo-400 text-white' : 'bg-slate-800/50 border-slate-800 text-slate-500'}`}>{t}</button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">Anchor</label>
+                                        <div className="grid grid-cols-1 gap-1">
+                                            {['note', 'degree'].map(m => (
+                                                <button key={m} onClick={() => setAnchorDisplay(m)} className={`py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border-2 ${anchorDisplay === m ? 'bg-indigo-500 border-indigo-400 text-white' : 'bg-slate-800/50 border-slate-800 text-slate-500'}`}>{m}</button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">Practice Mode</label>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {['diatonic', 'chromatic'].map(m => (
+                                            <button key={m} onClick={() => setMode(m)} className={`py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border-2 ${mode === m ? 'bg-white text-slate-950 border-white' : 'bg-slate-800/50 border-slate-800 text-slate-500'}`}>{m}</button>
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
 
                             <div className="space-y-3">
                                 <div className="flex justify-between items-end">
-                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Start Degree (Anchor)</label>
-                                    <span className="text-xs font-black text-indigo-400">{scaleDegree === 'random' ? 'Dynamic' : currentScale[scaleDegree-1]}</span>
+                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Start Position</label>
+                                    <span className="text-xs font-black text-indigo-400">
+                                        {scaleDegree === 'random' ? 'Dynamic' : (anchorDisplay === 'note' ? currentScale[scaleDegree-1] : getDegreeLabel(scaleDegree-1))}
+                                    </span>
                                 </div>
                                 <div className="grid grid-cols-4 gap-1">
                                     {[1, 2, 3, 4, 5, 6, 7].map(deg => (
-                                        <button key={deg} onClick={() => setScaleDegree(deg)} className={`py-3 text-xs font-black rounded-lg transition-all border-2 ${scaleDegree === deg ? 'bg-indigo-500 border-indigo-400 text-white shadow-lg shadow-indigo-500/20' : 'bg-slate-800/50 border-slate-800 text-slate-500 hover:border-slate-700'}`}>{deg}</button>
+                                        <button key={deg} onClick={() => setScaleDegree(deg)} className={`py-3 text-xs font-black rounded-lg transition-all border-2 ${scaleDegree === deg ? 'bg-indigo-500 border-indigo-400 text-white' : 'bg-slate-800 border-slate-700 text-slate-400'}`}>{deg}</button>
                                     ))}
-                                    <button onClick={() => { if(scaleDegree === 'random') nextTask(); else setScaleDegree('random'); }} className={`py-3 rounded-lg border-2 flex items-center justify-center transition-all bg-violet-900/30 border-violet-800/50 text-violet-300 hover:bg-violet-900/50 active:bg-indigo-500 active:text-white`} title="Randomize Start Every Turn"><Dices size={14} /></button>
+                                    <button onClick={() => { if(scaleDegree === 'random') nextTask(); else setScaleDegree('random'); }} className={`py-3 rounded-lg border-2 flex items-center justify-center transition-all bg-violet-900/30 border-violet-800/50 text-violet-300 hover:bg-violet-900/50 active:bg-indigo-500 active:text-white`}><Dices size={14} /></button>
                                 </div>
                             </div>
 
@@ -420,13 +457,28 @@
                                 <div className="flex justify-between items-center px-1">
                                     <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Practice These Jumps</label>
                                     <div className="flex gap-2">
-                                        <button onClick={() => setEnabledIntervals(availableIntervals.map(i => i.id))} className="text-[9px] font-black text-indigo-400 hover:text-white uppercase">All</button>
-                                        <button onClick={() => setEnabledIntervals([])} className="text-[9px] font-black text-slate-500 hover:text-white uppercase">None</button>
+                                        <button onClick={() => setEnabledIntervals(availableIntervals.map(i => i.id))} className="text-[9px] font-black text-indigo-400 uppercase">All</button>
+                                        <button onClick={() => setEnabledIntervals([])} className="text-[9px] font-black text-slate-500 uppercase">None</button>
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-3 gap-1">
                                     {availableIntervals.map((int) => (
-                                        <button key={int.id} onClick={() => toggleInterval(int.id)} className={`py-2 text-[10px] font-black rounded-lg border-2 transition-all ${enabledIntervals.includes(int.id) ? 'bg-indigo-500 border-indigo-400 text-white' : 'bg-slate-800/50 border-slate-700 text-slate-500 hover:border-slate-600'}`}>{int.name}</button>
+                                        <button key={int.id} onClick={() => toggleInterval(int.id)} className={`py-2 text-[10px] font-black rounded-lg border-2 transition-all ${enabledIntervals.includes(int.id) ? 'bg-indigo-500 border-indigo-400 text-white' : 'bg-slate-800/50 border-slate-800 text-slate-500 hover:border-slate-600'}`}>{int.name}</button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="space-y-3 pt-2">
+                                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">Direction</label>
+                                <div className="grid grid-cols-3 gap-1">
+                                    {[
+                                        {id: 'up', icon: <ChevronUp size={14}/>, label: 'UP'},
+                                        {id: 'down', icon: <ChevronDown size={14}/>, label: 'DOWN'},
+                                        {id: 'random', icon: <Shuffle size={14}/>, label: 'RAND'}
+                                    ].map(dir => (
+                                        <button key={dir.id} onClick={() => setDirectionPref(dir.id)} className={`flex items-center justify-center gap-2 py-2 rounded-xl border-2 transition-all ${directionPref === dir.id ? 'bg-indigo-500 border-indigo-400 text-white' : 'bg-slate-800/50 border-slate-800 text-slate-500'}`}>
+                                            {dir.icon} <span className="text-[10px] font-black">{dir.label}</span>
+                                        </button>
                                     ))}
                                 </div>
                             </div>
@@ -442,15 +494,6 @@
                                     <input type="checkbox" className="hidden" checked={noRepeats} onChange={e => setNoRepeats(e.target.checked)} />
                                     <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 group-hover:text-slate-200 transition-colors">No Repeats (Per Set)</span>
                                 </label>
-                            </div>
-
-                            <div className="space-y-3 pt-2">
-                                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">Interval Direction</label>
-                                <div className="grid grid-cols-2 gap-2">
-                                    {[{id:'up',icon:<ChevronUp size={14}/>,label:'UP'},{id:'down',icon:<ChevronDown size={14}/>,label:'DOWN'},{id:'both',icon:<Shuffle size={14}/>,label:'BOTH'},{id:'random',icon:<Dices size={14}/>,label:'RAND'}].map(dir => (
-                                        <button key={dir.id} onClick={() => setDirectionPref(dir.id)} className={`flex items-center justify-center gap-2 py-3 rounded-xl border-2 transition-all ${directionPref === dir.id ? 'bg-indigo-500 border-indigo-400 text-white' : 'bg-slate-800/50 border-slate-800 text-slate-500 hover:border-slate-700'}`}>{dir.icon}<span className="text-[10px] font-black ml-1">{dir.label}</span></button>
-                                    ))}
-                                </div>
                             </div>
 
                             <div className="space-y-3 pt-2 border-t border-slate-800/50">
@@ -473,7 +516,7 @@
                     </aside>
 
                     <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 lg:p-12 h-full overflow-hidden z-10">
-                        <div className="w-full max-w-4xl max-h-full bg-slate-900 border border-slate-800 rounded-[2.5rem] md:rounded-[3rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.6)] flex flex-col relative overflow-hidden">
+                        <div className="w-full max-w-4xl max-h-full bg-slate-900 border border-slate-800 rounded-[2.5rem] md:rounded-[3rem] shadow-2xl flex flex-col relative overflow-hidden">
                             {timerEnabled && !sessionComplete && (
                                 <div className="absolute top-0 left-0 right-0 h-1.5 bg-slate-800 z-30">
                                     <div className={`h-full bg-indigo-500 transition-all shadow-[0_0_10px_rgba(99,102,241,0.5)] ${timerRunning ? 'duration-1000 ease-linear' : 'duration-300'}`} style={{ width: `${(timeLeft / timerSeconds) * 100}%` }} />
@@ -482,23 +525,23 @@
                             <div className="absolute inset-0 opacity-[0.03] pointer-events-none overflow-hidden text-white font-black text-[15vw] leading-none p-10 flex flex-col">
                                 <span>{formatNote(selectedKey)}</span><span className="self-end">{mode === 'diatonic' ? 'DIA' : 'CHR'}</span>
                             </div>
-                            <div className="flex-1 flex flex-col items-center justify-center p-6 md:p-10 lg:p-12 text-center z-10 relative overflow-y-auto overflow-x-hidden custom-scrollbar">
+                            <div className="flex-1 flex flex-col items-center justify-center p-6 md:p-10 lg:p-12 text-center z-10 relative overflow-y-auto custom-scrollbar">
                                 {sessionComplete ? (
                                     <div className="space-y-8 animate-in duration-500">
                                         <div className="w-24 h-24 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-500/20"><RotateCcw className="text-emerald-500" size={48} /></div>
                                         <h2 className="text-4xl md:text-6xl font-black text-white italic tracking-tighter uppercase italic">Session Complete</h2>
-                                        <button onClick={resetPool} className="bg-emerald-500 text-white px-10 py-4 rounded-2xl font-black text-xl hover:bg-emerald-600 active:scale-95 shadow-xl">START AGAIN</button>
+                                        <button onClick={() => resetPool(false)} className="bg-emerald-500 text-white px-10 py-4 rounded-2xl font-black text-xl hover:bg-emerald-600 shadow-xl">START AGAIN</button>
                                     </div>
                                 ) : currentTask && (
                                     <div className="w-full flex flex-col items-center gap-8 md:gap-12 lg:gap-14">
                                         <div className="flex flex-col items-center gap-3 opacity-90">
-                                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.4em] mb-1">{formatNote(selectedKey)} Major Context</span>
+                                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.4em] mb-1"><NoteDisplayComponent note={currentTask.key} /> {scaleType === 'major' ? 'Major' : 'Minor'} Context</span>
                                             <div className="flex gap-4">
-                                                {currentScale.map((note, i) => {
+                                                { (scaleType === 'major' ? MAJOR_SCALES[currentTask.key] : MINOR_SCALES[currentTask.key]).map((note, i) => {
                                                     const displayDegree = currentTask.activeDegree;
                                                     return (
                                                         <div key={i} className="flex flex-col items-center">
-                                                            <span className={`text-xs md:text-sm font-black transition-all ${displayDegree === i+1 ? 'text-indigo-400 scale-125' : 'text-slate-600'}`}>{note}</span>
+                                                            <span className={`text-xs md:text-sm font-black transition-all ${displayDegree === i+1 ? 'text-indigo-400 scale-125' : 'text-slate-600'}`}><NoteDisplayComponent note={note} /></span>
                                                             {displayDegree === i+1 && <div className="w-1 h-1 bg-indigo-500 rounded-full mt-1 animate-pulse" />}
                                                         </div>
                                                     );
@@ -508,18 +551,14 @@
                                         <div className="flex items-center justify-center gap-6 md:gap-16 w-full pt-4">
                                             <div className="flex flex-col items-center">
                                                 <div className="text-7xl md:text-9xl lg:text-[10rem] font-black text-white leading-none tracking-tighter transition-all">
-                                                    <NoteDisplay note={currentTask.startNote} />
+                                                    {anchorDisplay === 'note' ? <NoteDisplayComponent note={currentTask.startNote} /> : <NoteDisplayComponent note={getDegreeLabel(currentTask.activeDegree - 1)} />}
                                                 </div>
                                                 <div className="text-[10px] md:text-xs font-black text-indigo-400 uppercase tracking-[0.3em] mt-1 opacity-70 italic">ANCHOR</div>
                                             </div>
                                             <div className="h-24 w-px bg-slate-800 opacity-50 shrink-0"></div>
                                             <div className="flex flex-col items-center relative">
                                                 <div className={`text-7xl md:text-9xl lg:text-[10rem] font-black leading-none tracking-tighter cursor-pointer select-none transition-all duration-300 ${showTarget ? 'text-emerald-400 scale-105' : 'text-slate-800 opacity-50 blur-[4px]'}`} onClick={() => setShowTarget(!showTarget)}>
-                                                    {showTarget ? (
-                                                        Array.isArray(currentTask.endNote) 
-                                                        ? <div className="flex gap-4">{currentTask.endNote.map((n, i) => <NoteDisplay key={i} note={n} />)}</div> 
-                                                        : <NoteDisplay note={currentTask.endNote} />
-                                                    ) : '?'}
+                                                    {showTarget ? <NoteDisplayComponent note={currentTask.endNote} /> : '?'}
                                                 </div>
                                                 <div className="text-[10px] md:text-xs font-black text-slate-500 uppercase tracking-[0.3em] mt-1 opacity-70 italic">TARGET</div>
                                             </div>
@@ -530,7 +569,7 @@
                                                 <div className="bg-rose-500/10 border border-rose-500/20 px-6 py-3 rounded-2xl text-rose-400 text-xs font-bold uppercase tracking-widest text-center">Select jumps to practice</div>
                                             ) : (
                                                 <div className="flex items-center gap-4">
-                                                    <button onClick={handleMainAction} className={`group relative inline-flex items-center gap-4 px-10 py-4 md:px-12 md:py-5 rounded-2xl font-black text-lg md:text-xl transition-all shadow-xl active:scale-95 z-20 ${timerEnabled && timerRunning ? 'bg-rose-500 text-white hover:bg-rose-600' : 'bg-white text-slate-950 hover:bg-indigo-500 hover:text-white'}`}>
+                                                    <button onClick={handleMainAction} className={`group relative inline-flex items-center gap-4 px-10 py-4 md:px-12 md:py-5 rounded-2xl font-black text-lg md:text-xl transition-all shadow-xl active:scale-95 z-20 ${timerEnabled && timerRunning ? 'bg-rose-500 text-white hover:bg-rose-600' : 'bg-white text-slate-950 hover:bg-rose-500 hover:text-white'}`}>
                                                         {timerEnabled ? (timerRunning ? <><Square size={24} fill="currentColor" />STOP TIMER</> : <><Play size={24} fill="currentColor" />START TIMER</>) : <><RefreshCw size={24} />NEXT INTERVAL</>}
                                                     </button>
                                                     {timerEnabled && <button onClick={() => nextTask()} title="Skip to next" className="p-4 md:p-5 bg-slate-800 text-white border border-slate-800 rounded-2xl hover:bg-slate-700 active:scale-95 group z-20"><ChevronRight size={24} /></button>}
@@ -545,10 +584,9 @@
                                 <div className="flex flex-col items-center text-center z-10">
                                     <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 opacity-60">Scale Map</span>
                                     <div className="flex flex-wrap justify-center gap-1">
-                                        {currentScale.map((note, i) => {
-                                            const displayDegree = currentTask?.activeDegree;
-                                            return <span key={i} className={`text-[10px] font-black px-2 py-0.5 rounded border transition-colors ${displayDegree === i+1 ? 'bg-indigo-500 border-indigo-400 text-white' : 'bg-slate-800 border-slate-700 text-slate-500'}`}><NoteDisplay note={note} /></span>
-                                        })}
+                                        {(scaleType === 'major' ? MAJOR_SCALES[selectedKey] : MINOR_SCALES[selectedKey]).map((note, i) => (
+                                            <span key={i} className={`text-[10px] font-black px-2 py-0.5 rounded border transition-colors ${currentTask?.activeDegree === i+1 ? 'bg-indigo-500 border-indigo-400 text-white' : 'bg-slate-800 border-slate-700 text-slate-400'}`}><NoteDisplayComponent note={note} /></span>
+                                        ))}
                                     </div>
                                 </div>
                                 <div className="flex flex-col items-center text-center border-l border-slate-800 pl-12 relative z-10">
@@ -562,7 +600,7 @@
             );
         }
 
-        // --- Note Flasher Practice Component ---
+        // --- Note Flasher Module ---
         function NoteFlasher() {
             const [noteType, setNoteType] = useState('mixed');
             const [noRepeats, setNoRepeats] = useState(false);
@@ -588,7 +626,6 @@
                 const currentPool = NOTE_POOLS[noteType];
                 setTimeLeft(timerSeconds);
                 if (!shouldMute) playTing();
-
                 let index;
                 let newPool = [...pool];
                 if (noRepeats) {
@@ -630,15 +667,6 @@
                 else nextNote();
             };
 
-            useEffect(() => {
-                const handleKeyDown = (e) => {
-                    if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); handleMainAction(); }
-                    if (e.code === 'ArrowRight' && timerEnabled) nextNote();
-                };
-                window.addEventListener('keydown', handleKeyDown);
-                return () => window.removeEventListener('keydown', handleKeyDown);
-            }, [handleMainAction, timerEnabled, nextNote]);
-
             return (
                 <div className="min-h-screen pt-14 md:p-6 md:pt-20 overflow-hidden flex flex-col md:flex-row gap-6 animate-in">
                     <aside className="w-full md:w-[380px] bg-slate-900/50 border-b md:border border-slate-800 md:rounded-3xl p-6 overflow-y-auto custom-scrollbar flex flex-col gap-8 shrink-0 z-20">
@@ -654,7 +682,7 @@
                                 <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">Focus Mode</label>
                                 <div className="grid grid-cols-3 gap-2">
                                     {['sharps', 'flats', 'mixed'].map(m => (
-                                        <button key={m} onClick={() => setNoteType(m)} className={`py-3 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border-2 ${noteType === m ? 'bg-white text-slate-950 border-white' : 'bg-slate-800/50 border-slate-800 text-slate-500 hover:border-slate-700'}`}>{m}</button>
+                                        <button key={m} onClick={() => setNoteType(m)} className={`py-3 rounded-xl text-[10px] font-black uppercase transition-all border-2 ${noteType === m ? 'bg-white text-slate-950 border-white' : 'bg-slate-800/50 border-slate-800 text-slate-500'}`}>{m}</button>
                                     ))}
                                 </div>
                             </div>
@@ -687,99 +715,67 @@
                         <div className="w-full max-w-4xl max-h-full bg-slate-900 border border-slate-800 rounded-[2.5rem] md:rounded-[3rem] shadow-2xl flex flex-col relative overflow-hidden">
                             {timerEnabled && !sessionComplete && (
                                 <div className="absolute top-0 left-0 right-0 h-1.5 bg-slate-800 z-30">
-                                    <div className={`h-full bg-rose-500 transition-all ${timerRunning ? 'duration-1000 ease-linear' : 'duration-300'}`} style={{ width: `${(timeLeft / timerSeconds) * 100}%` }} />
+                                    <div className={`h-full bg-rose-500 transition-all shadow-[0_0_10px_rgba(244,63,94,0.5)] ${timerRunning ? 'duration-1000 ease-linear' : 'duration-300'}`} style={{ width: `${(timeLeft / timerSeconds) * 100}%` }} />
                                 </div>
                             )}
-                            <div className="absolute inset-0 opacity-[0.03] pointer-events-none overflow-hidden text-white font-black text-[25vw] leading-none p-10 flex flex-col items-center justify-center select-none uppercase">
-                                {noteType}
-                            </div>
                             <div className="flex-1 flex flex-col items-center justify-center p-6 md:p-10 lg:p-12 text-center z-10 relative overflow-y-auto custom-scrollbar">
                                 {sessionComplete ? (
                                     <div className="space-y-8 animate-in duration-500">
                                         <div className="w-24 h-24 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-500/20"><RotateCcw className="text-emerald-500" size={48} /></div>
                                         <h2 className="text-4xl md:text-6xl font-black text-white italic tracking-tighter uppercase italic">Session Complete</h2>
-                                        <button onClick={resetPool} className="bg-emerald-500 text-white px-10 py-4 rounded-2xl font-black text-xl hover:bg-emerald-600 active:scale-95 shadow-xl">START AGAIN</button>
+                                        <button onClick={resetPool} className="bg-emerald-500 text-white px-10 py-4 rounded-2xl font-black text-xl hover:bg-emerald-600 shadow-xl">START AGAIN</button>
                                     </div>
                                 ) : (
                                     <div className="w-full flex flex-col items-center gap-12">
                                         <div className="space-y-4">
                                             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.5em]">Identify the Note</p>
                                             <div className="text-[10rem] md:text-[14rem] lg:text-[16rem] font-black text-white leading-none tracking-tighter drop-shadow-2xl">
-                                                <NoteDisplay note={currentNote} />
+                                                <NoteDisplayWidget note={currentNote} />
                                             </div>
                                         </div>
                                         <div className="flex flex-col items-center gap-4">
-                                            <div className="flex items-center gap-4">
-                                                <button onClick={handleMainAction} 
-                                                    className={`group relative inline-flex items-center gap-4 px-10 py-4 md:px-12 md:py-5 rounded-2xl font-black text-lg md:text-xl transition-all shadow-xl active:scale-95 z-20 ${timerEnabled && timerRunning ? 'bg-rose-500 text-white hover:bg-rose-600' : 'bg-white text-slate-950 hover:bg-rose-500 hover:text-white'}`}>
-                                                    {timerEnabled ? (timerRunning ? <><Square size={24} fill="currentColor" className="mr-2" />STOP TIMER</> : <><Play size={24} fill="currentColor" className="mr-2" />START TIMER</>) : <><RefreshCw size={24} className="mr-2" />NEXT NOTE</>}
-                                                </button>
-                                                {timerEnabled && <button onClick={() => nextNote()} className="p-4 md:p-5 bg-slate-800 text-white border border-slate-800 rounded-2xl hover:bg-slate-700 active:scale-95 group z-20"><ChevronRight size={24} /></button>}
-                                            </div>
-                                            <div className="flex gap-4 opacity-40"><span className="text-[9px] font-bold border border-slate-700 px-2 py-0.5 rounded uppercase">{timerEnabled ? "Space: Start/Stop • →: Skip" : "Space: Next"}</span></div>
+                                            <button onClick={handleMainAction} 
+                                                className={`group relative inline-flex items-center gap-4 px-10 py-4 md:px-12 md:py-5 rounded-2xl font-black text-lg md:text-xl transition-all shadow-xl active:scale-95 z-20 ${timerEnabled && timerRunning ? 'bg-rose-500 text-white hover:bg-rose-600' : 'bg-white text-slate-950 hover:bg-rose-500 hover:text-white'}`}>
+                                                {timerEnabled ? (timerRunning ? <><Square size={24} fill="currentColor" />STOP TIMER</> : <><Play size={24} fill="currentColor" />START TIMER</>) : <><RefreshCw size={24} />NEXT NOTE</>}
+                                            </button>
+                                            {timerEnabled && <button onClick={() => nextNote()} className="p-4 md:p-5 bg-slate-800 text-white border border-slate-800 rounded-2xl hover:bg-slate-700 active:scale-95 group z-20"><ChevronRight size={24} /></button>}
                                         </div>
                                     </div>
                                 )}
                             </div>
-                            {noRepeats && (
-                                <div className="p-6 bg-slate-950/40 border-t border-slate-800 flex justify-center items-center gap-4">
-                                    <span className="text-[9px] font-bold text-amber-500 uppercase tracking-widest flex items-center gap-1.5"><Layers size={10} /> Progress: {NOTE_POOLS[noteType].length - pool.length} / {NOTE_POOLS[noteType].length}</span>
-                                </div>
-                            )}
                         </div>
                     </main>
                 </div>
             );
         }
 
-        // --- Home/Navigation Component ---
+        // --- HOME PAGE MODULE ---
+
         function HomePage({ onSelect }) {
             return (
                 <div className="min-h-screen flex flex-col items-center justify-center p-6 md:p-12 animate-in pt-24">
                     <div className="max-w-4xl w-full text-center space-y-16">
                         <header className="space-y-4">
-                            <h1 className="text-5xl md:text-7xl font-black tracking-tighter text-white uppercase italic">
-                                Practice <span className="text-indigo-500 underline decoration-indigo-500/30 underline-offset-8">Suite</span>
-                            </h1>
+                            <h1 className="text-5xl md:text-7xl font-black tracking-tighter text-white uppercase italic">Practice <span className="text-indigo-500">Suite</span></h1>
                             <p className="text-slate-500 font-medium tracking-widest uppercase text-xs md:text-sm">Choose your training exercise</p>
                         </header>
-                        
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <button 
-                                onClick={() => onSelect('degreeJump')}
-                                className="group relative bg-slate-900 border-2 border-slate-800 hover:border-indigo-500 rounded-[2.5rem] p-8 text-left transition-all hover:scale-[1.02] hover:shadow-2xl hover:shadow-indigo-500/10 overflow-hidden"
-                            >
-                                <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
-                                    <Footprints size={120} />
-                                </div>
+                            <button onClick={() => onSelect('degreeJump')} className="group relative bg-slate-900 border-2 border-slate-800 hover:border-indigo-500 rounded-[2.5rem] p-8 text-left transition-all hover:scale-[1.02] shadow-2xl overflow-hidden">
+                                <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity"><Footprints size={120} /></div>
                                 <div className="relative z-10 space-y-4">
-                                    <div className="w-12 h-12 bg-indigo-500 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
-                                        <Footprints className="text-white" size={24} />
-                                    </div>
+                                    <div className="w-12 h-12 bg-indigo-500 rounded-2xl flex items-center justify-center shadow-lg"><Footprints className="text-white" size={24} /></div>
                                     <h3 className="text-2xl font-black text-white uppercase tracking-tight">Degree Jump</h3>
-                                    <p className="text-slate-500 text-sm font-medium leading-relaxed max-w-[220px]">Practice relative intervals within major scale key signatures.</p>
-                                    <div className="pt-4 flex items-center gap-2 text-xs font-bold text-indigo-400 group-hover:text-indigo-300">
-                                        ENTER SESSION <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
-                                    </div>
+                                    <p className="text-slate-500 text-sm font-medium leading-relaxed max-w-[220px]">Practice relative intervals within major and minor key signatures.</p>
+                                    <div className="pt-4 flex items-center gap-2 text-xs font-bold text-indigo-400 uppercase">Enter Session <ChevronRight size={14} /></div>
                                 </div>
                             </button>
-
-                            <button 
-                                onClick={() => onSelect('noteFlasher')}
-                                className="group relative bg-slate-900 border-2 border-slate-800 hover:border-rose-500 rounded-[2.5rem] p-8 text-left transition-all hover:scale-[1.02] hover:shadow-2xl hover:shadow-rose-500/10 overflow-hidden"
-                            >
-                                <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
-                                    <Zap size={120} />
-                                </div>
+                            <button onClick={() => onSelect('noteFlasher')} className="group relative bg-slate-900 border-2 border-slate-800 hover:border-rose-500 rounded-[2.5rem] p-8 text-left transition-all hover:scale-[1.02] shadow-2xl overflow-hidden">
+                                <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity"><Zap size={120} /></div>
                                 <div className="relative z-10 space-y-4">
-                                    <div className="w-12 h-12 bg-rose-500 rounded-2xl flex items-center justify-center shadow-lg shadow-rose-500/20">
-                                        <Zap className="text-white" size={24} />
-                                    </div>
+                                    <div className="w-12 h-12 bg-rose-500 rounded-2xl flex items-center justify-center shadow-lg"><Zap className="text-white" size={24} /></div>
                                     <h3 className="text-2xl font-black text-white uppercase tracking-tight">Note Flasher</h3>
                                     <p className="text-slate-500 text-sm font-medium leading-relaxed max-w-[220px]">Focus on sharp/flat identification and speed training.</p>
-                                    <div className="pt-4 flex items-center gap-2 text-xs font-bold text-rose-400 group-hover:text-rose-300">
-                                        ENTER SESSION <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
-                                    </div>
+                                    <div className="pt-4 flex items-center gap-2 text-xs font-bold text-rose-400 uppercase">Enter Session <ChevronRight size={14} /></div>
                                 </div>
                             </button>
                         </div>
@@ -788,22 +784,14 @@
             );
         }
 
-        // --- Main App Router ---
+        // --- ROOT APP ---
+
         function App() {
             const [currentView, setCurrentView] = useState('home');
-
-            const renderView = () => {
-                switch (currentView) {
-                    case 'degreeJump': return <DegreeJump />;
-                    case 'noteFlasher': return <NoteFlasher />;
-                    default: return <HomePage onSelect={setCurrentView} />;
-                }
-            };
-
             return (
                 <div className="min-h-screen bg-slate-950">
                     <Navbar activeView={currentView} onNavigate={setCurrentView} />
-                    {renderView()}
+                    {currentView === 'degreeJump' ? <DegreeJump /> : currentView === 'noteFlasher' ? <NoteFlasher /> : <HomePage onSelect={setCurrentView} />}
                 </div>
             );
         }
