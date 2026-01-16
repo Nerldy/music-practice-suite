@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Music Practice Suite</title>
+    
+    <!-- iPad/iOS Web App Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Practice Suite">
+    
     <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- React and Babel for standalone execution -->
@@ -20,7 +26,7 @@
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
-        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .animate-in { animation: fadeIn 0.4s ease-out forwards; }
         
         button:active { transform: scale(0.96); }
@@ -33,7 +39,7 @@
     <script type="text/babel">
         const { useState, useEffect, useCallback, useMemo, useRef } = React;
 
-        // --- GLOBAL CONSTANTS & DATA ---
+        // --- 1. GLOBAL CONSTANTS & DATA ---
         const NOTES_REF = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
         const COF_FLATS = ['C', 'G', 'D', 'A', 'E', 'B', 'Gb', 'Db', 'Ab', 'Eb', 'Bb', 'F'];
         const COF_SHARPS = ['C', 'G', 'D', 'A', 'E', 'B', 'F#', 'C#', 'G#', 'D#', 'A#', 'F'];
@@ -93,14 +99,15 @@
         ];
         const DIATONIC_INTERVAL_NAMES = { 0: '1st', 1: '2nd', 2: '3rd', 3: '4th', 4: '5th', 5: '6th', 6: '7th', 7: '8th' };
 
-        // --- UTILITY FUNCTIONS ---
+        // --- 2. UTILITY FUNCTIONS ---
         function formatNote(note) {
             if (!note) return '';
             return note.replace('#', '♯').replace('b', '♭');
         }
 
         function getNoteChromaticIndex(note) {
-            const normalized = note.replace('♯♯', '##').replace('♯', '#').replace('♭♭', 'bb').replace('♭', 'b');
+            const n = note.replace('♯', '#').replace('♭', 'b');
+            const normalized = n.replace('##', 'x').replace('bb', 'vv');
             const baseMap = { 'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11 };
             const base = normalized[0];
             let idx = baseMap[base];
@@ -130,9 +137,9 @@
             return formatNote(NOTES_REF[resultIdx]);
         }
 
-        // --- AUDIO ENGINE ---
+        // --- 3. AUDIO ENGINE ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const playTone = (freq, duration, type = 'sine', volume = 0.1) => {
+        function playTone(freq, duration, type = 'sine', volume = 0.1) {
             if (audioCtx.state === 'suspended') audioCtx.resume();
             const oscillator = audioCtx.createOscillator();
             const gainNode = audioCtx.createGain();
@@ -144,11 +151,11 @@
             gainNode.connect(audioCtx.destination);
             oscillator.start();
             oscillator.stop(audioCtx.currentTime + duration);
-        };
+        }
         const playBeep = () => playTone(440, 0.1, 'sine', 0.05);
         const playTing = () => playTone(1200, 0.3, 'sine', 0.1);
 
-        // --- ICON SYSTEM ---
+        // --- 4. ICON SYSTEM ---
         function Icon({ children, size = 24, className = "", fill = "none" }) {
             return (
                 <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -172,7 +179,7 @@
         const Layers = (props) => <Icon {...props}><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></Icon>;
         const Zap = (props) => <Icon {...props}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></Icon>;
 
-        // --- SHARED UI COMPONENTS ---
+        // --- 5. UI COMPONENTS ---
         function NoteDisplay({ note, className = "" }) {
             if (!note) return null;
             const displayStr = formatNote(note);
@@ -207,7 +214,7 @@
             );
         }
 
-        // --- DEGREE JUMP MODULE ---
+        // --- 6. CORE MODULES ---
 
         function DegreeJump() {
             const [mode, setMode] = useState('diatonic');
@@ -237,18 +244,18 @@
                 return library[selectedKey] || library['C'];
             }, [selectedKey, scaleType]);
             
+            const availableIntervals = useMemo(() => {
+                return mode === 'diatonic' 
+                    ? Object.keys(DIATONIC_INTERVAL_NAMES).map(k => ({ id: parseInt(k), name: DIATONIC_INTERVAL_NAMES[k] }))
+                    : CHROMATIC_INTERVALS.map((int, i) => ({ id: i, name: int.name }));
+            }, [mode]);
+
             const sessionTotal = useMemo(() => {
                 const degreeMultiplier = (scaleDegree === 'random') ? 7 : 1;
                 const keyMultiplier = randomizeKey ? currentCOF.length : 1;
                 const directionMultiplier = (directionPref === 'random') ? 2 : 1;
                 return enabledIntervals.length * degreeMultiplier * keyMultiplier * directionMultiplier;
             }, [enabledIntervals, scaleDegree, randomizeKey, directionPref, currentCOF.length]);
-
-            const availableIntervals = useMemo(() => {
-                return mode === 'diatonic' 
-                    ? Object.keys(DIATONIC_INTERVAL_NAMES).map(k => ({ id: parseInt(k), name: DIATONIC_INTERVAL_NAMES[k] }))
-                    : CHROMATIC_INTERVALS.map((int, i) => ({ id: i, name: int.name }));
-            }, [mode]);
 
             const getDegreeLabel = useCallback((degIndex) => {
                 if (scaleType === 'major') return (degIndex + 1).toString();
@@ -286,7 +293,6 @@
                     direction = directionPref === 'random' ? (Math.random() > 0.5 ? 'up' : 'down') : directionPref;
                 }
 
-                // If randomizeKey is on, we visually update the key if needed, but we must not reset the pool
                 if (randomizeKey && effectiveKey !== selectedKey) {
                     setSelectedKey(effectiveKey);
                 }
@@ -357,8 +363,6 @@
                 return () => clearInterval(intervalId);
             }, [timerEnabled, timerRunning, timerSeconds, nextTask, sessionComplete]);
 
-            const toggleInterval = (id) => setEnabledIntervals(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
-            
             const handleMainAction = () => {
                 if (audioCtx.state === 'suspended') audioCtx.resume();
                 if (sessionComplete) resetPool();
@@ -366,7 +370,7 @@
                 else nextTask();
             };
 
-            function renderIntervalDisplayUI() {
+            function renderIntervalUI() {
                 if (!currentTask || sessionComplete) return null;
                 const isUp = currentTask.direction === 'up';
                 return (
@@ -440,6 +444,16 @@
                                 </div>
                             </div>
 
+                            {/* RESTORED PRACTICE MODE TOGGLE */}
+                            <div className="space-y-2">
+                                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">Practice Mode</label>
+                                <div className="grid grid-cols-2 gap-2">
+                                    {['diatonic', 'chromatic'].map(m => (
+                                        <button key={m} onClick={() => setMode(m)} className={`py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border-2 ${mode === m ? 'bg-white text-slate-950 border-white' : 'bg-slate-800/50 border-slate-800 text-slate-500'}`}>{m}</button>
+                                    ))}
+                                </div>
+                            </div>
+
                             <div className="space-y-3">
                                 <div className="flex justify-between items-end">
                                     <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Anchor Position</label>
@@ -465,7 +479,7 @@
                                 </div>
                                 <div className="grid grid-cols-3 gap-1.5">
                                     {availableIntervals.map((int) => (
-                                        <button key={int.id} onClick={() => toggleInterval(int.id)} className={`py-2.5 text-[10px] font-black rounded-xl border-2 transition-all ${enabledIntervals.includes(int.id) ? 'bg-indigo-500 border-indigo-400 text-white' : 'bg-slate-800/50 border-slate-700 text-slate-500'}`}>{int.name}</button>
+                                        <button key={int.id} onClick={() => setEnabledIntervals(prev => prev.includes(int.id) ? prev.filter(i => i !== int.id) : [...prev, int.id])} className={`py-2.5 text-[10px] font-black rounded-xl border-2 transition-all ${enabledIntervals.includes(int.id) ? 'bg-indigo-500 border-indigo-400 text-white' : 'bg-slate-800/50 border-slate-700 text-slate-500'}`}>{int.name}</button>
                                     ))}
                                 </div>
                             </div>
@@ -535,7 +549,7 @@
                             <div className="absolute inset-0 opacity-[0.04] pointer-events-none overflow-hidden text-white font-black text-[15vw] leading-none p-10 flex flex-col">
                                 <span>{formatNote(selectedKey)}</span><span className="self-end">{mode === 'diatonic' ? 'DIA' : 'CHR'}</span>
                             </div>
-                            <div className="flex-1 flex flex-col items-center justify-center p-6 md:p-10 lg:p-12 text-center z-10 relative overflow-y-auto custom-scrollbar">
+                            <div className="flex-1 flex flex-col items-center justify-center p-6 md:p-10 lg:p-12 text-center z-10 relative overflow-y-auto overflow-x-hidden custom-scrollbar">
                                 {sessionComplete ? (
                                     <div className="space-y-8 animate-in">
                                         <div className="w-24 h-24 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-500/20"><RotateCcw className="text-emerald-500" size={48} /></div>
@@ -575,7 +589,7 @@
                                         </div>
                                         
                                         <div className="w-full flex flex-col items-center gap-8">
-                                            {renderIntervalDisplayUI()}
+                                            {renderIntervalUI()}
                                             <div className="flex items-center gap-5">
                                                 <button onClick={handleMainAction} className={`group relative inline-flex items-center gap-4 px-12 py-5 rounded-2xl font-black text-xl transition-all shadow-xl active:scale-95 z-20 ${timerEnabled && timerRunning ? 'bg-rose-500 text-white hover:bg-rose-600' : 'bg-white text-slate-950 hover:bg-indigo-500 hover:text-white'}`}>
                                                     {timerEnabled ? (timerRunning ? <><Square size={24} fill="currentColor" />STOP TIMER</> : <><Play size={24} fill="currentColor" />START TIMER</>) : <><RefreshCw size={24} />NEXT JUMP</>}
@@ -591,13 +605,13 @@
                                 <div className="flex flex-col items-center text-center z-10">
                                     <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 opacity-60">Scale Reference</span>
                                     <div className="flex flex-wrap justify-center gap-1.5">
-                                        {currentScale.map((note, i) => (
+                                        {(scaleType === 'major' ? MAJOR_SCALES[selectedKey] : MINOR_SCALES[selectedKey]).map((note, i) => (
                                             <span key={i} className={`text-[11px] font-black px-2.5 py-1 rounded border transition-colors ${currentTask?.activeDegree === i+1 ? 'bg-indigo-500 border-indigo-400 text-white' : 'bg-slate-800 border-slate-700 text-slate-400'}`}><NoteDisplay note={note} /></span>
                                         ))}
                                     </div>
                                 </div>
                                 <div className="flex flex-col items-center text-center border-l border-slate-800 pl-12 relative z-10">
-                                    <span className="text-[9px] font-bold text-amber-500 uppercase tracking-widest mb-2 flex items-center gap-2"><Layers size={12} /> {noRepeats ? 'Remaining' : 'Total Session'}</span>
+                                    <span className="text-[10px] font-bold text-amber-500 uppercase tracking-widest mb-2 flex items-center gap-2"><Layers size={12} /> {noRepeats ? 'Remaining' : 'Total Session'}</span>
                                     <div className="flex items-center gap-2"><span className="text-2xl font-black text-white">{noRepeats ? pool.length : sessionTotal}</span><span className="text-[11px] font-bold text-slate-600 uppercase tracking-widest">/ {sessionTotal}</span></div>
                                 </div>
                             </div>
@@ -760,8 +774,7 @@
             );
         }
 
-        // --- HOME PAGE MODULE ---
-
+        // --- 7. HOME PAGE MODULE ---
         function HomePage({ onSelect }) {
             return (
                 <div className="min-h-screen flex flex-col items-center justify-center p-6 md:p-12 animate-in pt-24">
@@ -795,8 +808,7 @@
             );
         }
 
-        // --- ROOT APP ---
-
+        // --- 8. ROOT APP ---
         function App() {
             const [currentView, setCurrentView] = useState('home');
             return (
