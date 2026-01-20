@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChordCompass - Visual Harmony Navigator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --fret-color: #d1d5db;
+            --wood-color: #2c1b0e;
+            --string-color: #9ca3af;
+            --active-note: #ef4444;
+            --active-piano: #3b82f6;
+            --scale-note: rgba(34, 197, 94, 0.4); /* Greenish for scales */
+            --hover-piano: rgba(59, 130, 246, 0.35);
+            --nut-color: #f3f4f6;
+        }
+
+        body {
+            background-color: #0f172a;
+            color: #f1f5f9;
+            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        /* Fretboard Styling */
+        .fretboard-container {
+            overflow-x: auto;
+            padding: 40px 0;
+            scrollbar-width: thin;
+        }
+
+        .fretboard {
+            display: grid;
+            grid-template-rows: repeat(6, 44px);
+            background: linear-gradient(to bottom, #3e2723, #2c1b0e, #3e2723);
+            border-bottom: 4px solid #1a0f0a;
+            position: relative;
+            min-width: 1200px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+        }
+
+        .string-line {
+            position: absolute;
+            left: 0;
+            right: 0;
+            background: linear-gradient(180deg, #666, #ddd, #666);
+            pointer-events: none;
+            z-index: 10;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .fret {
+            position: relative;
+            border-right: 3px solid #bdae93;
+            border-image: linear-gradient(to bottom, #7a6d55, #bdae93, #7a6d55) 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 20;
+        }
+
+        /* Nut (Zero Fret) */
+        .fret:first-child {
+            border-right: 12px solid var(--nut-color);
+            background-color: #000;
+            width: 70px;
+            border-image: none;
+        }
+
+        .note-marker {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.85rem;
+            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            opacity: 0;
+            transform: scale(0.6);
+            background-color: var(--active-note);
+            color: white;
+            z-index: 30;
+            border: 2px solid rgba(255,255,255,0.4);
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .fret.active .note-marker {
+            opacity: 1;
+            transform: scale(1);
+            box-shadow: 0 0 15px var(--active-note);
+        }
+
+        /* Scale Overlay State */
+        .fret.scale-highlight .note-marker {
+            opacity: 0.3;
+            transform: scale(0.85);
+            background-color: #22c55e;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        /* Hover effect for the fret itself */
+        .fret:hover:not(.active) .note-marker {
+            opacity: 0.6 !important;
+            transform: scale(0.9) !important;
+            background-color: #475569 !important;
+        }
+
+        /* Inlays */
+        .inlay {
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            background-color: rgba(229, 231, 235, 0.4);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .fret-number {
+            position: absolute;
+            top: -25px;
+            font-size: 11px;
+            color: #64748b;
+            font-family: monospace;
+            width: 100%;
+            text-align: center;
+        }
+
+        /* Piano Styling */
+        .piano-container {
+            display: flex;
+            justify-content: center;
+            padding: 20px 0;
+            overflow-x: auto;
+        }
+
+        .piano {
+            display: flex;
+            height: 160px;
+            user-select: none;
+        }
+
+        .key {
+            border: 1px solid #1e293b;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.1s, background-color 0.1s;
+        }
+
+        .key:active {
+            transform: translateY(2px);
+        }
+
+        .key.white {
+            width: 36px;
+            height: 100%;
+            background-color: #fff;
+            z-index: 1;
+            border-bottom-left-radius: 4px;
+            border-bottom-right-radius: 4px;
+        }
+
+        .key.black {
+            width: 24px;
+            height: 60%;
+            background-color: #1e293b;
+            margin-left: -12px;
+            margin-right: -12px;
+            z-index: 2;
+            border-bottom-left-radius: 2px;
+            border-bottom-right-radius: 2px;
+        }
+
+        .key.active {
+            background-color: var(--active-piano) !important;
+            box-shadow: inset 0 -4px 8px rgba(0,0,0,0.3);
+        }
+
+        .key.scale-highlight {
+            background-color: rgba(34, 197, 94, 0.25) !important;
+        }
+
+        .key.hover-faint {
+            background-color: var(--hover-piano) !important;
+        }
+
+        .chord-display {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border: 1px solid #334155;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        #scaleControls, #tuningControls {
+            display: none;
+        }
+
+        #clearAll {
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+
+        #clearAll.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-6xl mx-auto">
+        <!-- Brand Header with Logo -->
+        <header class="mb-10 flex flex-col items-center text-center">
+            <div class="mb-4 flex items-center justify-center space-x-4">
+                <div class="bg-blue-600 p-2.5 rounded-2xl shadow-xl shadow-blue-900/40 border border-blue-400/20">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>
+                        <circle cx="12" cy="12" r="1" fill="white"></circle>
+                    </svg>
+                </div>
+                <h1 class="text-5xl font-black tracking-tighter text-white">Chord<span class="text-blue-500">Compass</span></h1>
+            </div>
+            <p class="text-slate-400 text-xs font-bold uppercase tracking-[0.4em] ml-1">Harmony Navigation System</p>
+        </header>
+
+        <!-- Main Display Bar -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <!-- Mode Switcher -->
+            <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 flex items-center justify-between">
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Mode</span>
+                <div class="flex bg-slate-900 p-1 rounded-xl">
+                    <button id="chordModeBtn" class="px-4 py-1.5 text-xs font-bold rounded-lg transition-all toggle-active">CHORD</button>
+                    <button id="melodyModeBtn" class="px-4 py-1.5 text-xs font-bold rounded-lg transition-all text-slate-500 hover:text-white">MELODY</button>
+                </div>
+            </div>
+
+            <!-- Detected Chord/Interval -->
+            <div class="chord-display p-4 rounded-2xl flex flex-col items-center justify-center min-h-[80px]">
+                <span id="displayLabel" class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Detected Result</span>
+                <div id="chordNameDisplay" class="text-2xl font-black text-blue-400">---</div>
+            </div>
+
+            <!-- Selection Details -->
+            <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 flex items-center justify-between">
+                <div class="flex flex-col">
+                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Active Notes</span>
+                    <div id="noteList" class="text-sm font-bold text-slate-200">-</div>
+                </div>
+                <!-- Prominent Clear All Button -->
+                <button id="clearAll" class="flex items-center gap-2 px-3 py-2 bg-slate-900 hover:bg-slate-700 border border-slate-600 rounded-xl transition-all text-xs font-bold text-slate-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                    </svg>
+                    CLEAR
+                </button>
+            </div>
+        </div>
+
+        <!-- Tuning Explorer (Always Visible or Toggleable) -->
+        <div id="tuningControls" class="bg-slate-800 p-6 rounded-3xl border border-slate-700 mb-6 shadow-lg border-l-4 border-l-orange-500">
+            <div class="flex flex-wrap items-center gap-6">
+                <div class="flex flex-col">
+                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Preset Tuning</label>
+                    <select id="tuningPreset" class="bg-slate-900 text-white text-sm font-bold border border-slate-600 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-orange-500">
+                        <option value="standard">Standard (E A D G B E)</option>
+                        <option value="dropD">Drop D (D A D G B E)</option>
+                        <option value="dadgad">DADGAD</option>
+                        <option value="openG">Open G (D G D G B D)</option>
+                        <option value="openD">Open D (D A D F# A D)</option>
+                        <option value="halfStepDown">Half-Step Down (Eb Ab Db Gb Bb Eb)</option>
+                        <option value="custom">Custom Tuning...</option>
+                    </select>
+                </div>
+                <div class="flex flex-col flex-grow">
+                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Individual String Tunings (Low to High)</label>
+                    <div id="individualStrings" class="flex gap-2">
+                        <!-- 6 Selects for strings -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scale Explorer (Only in Melody Mode) -->
+        <div id="scaleControls" class="bg-slate-800 p-6 rounded-3xl border border-slate-700 mb-6 shadow-lg border-l-4 border-l-green-500">
+            <div class="flex flex-wrap items-center gap-6">
+                <div class="flex flex-col">
+                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Root Key</label>
+                    <select id="scaleRoot" class="bg-slate-900 text-white text-sm font-bold border border-slate-600 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-blue-500">
+                    </select>
+                </div>
+                <div class="flex flex-col">
+                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Scale Type</label>
+                    <select id="scaleType" class="bg-slate-900 text-white text-sm font-bold border border-slate-600 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="none">None (Hide Scale)</option>
+                        <option value="major">Major (Ionian)</option>
+                        <option value="minor">Natural Minor (Aeolian)</option>
+                        <option value="majorPentatonic">Major Pentatonic</option>
+                        <option value="minorPentatonic">Minor Pentatonic</option>
+                        <option value="blues">Blues Scale</option>
+                        <option value="dorian">Dorian</option>
+                        <option value="phrygian">Phrygian</option>
+                        <option value="lydian">Lydian</option>
+                        <option value="mixolydian">Mixolydian</option>
+                        <option value="locrian">Locrian</option>
+                    </select>
+                </div>
+                <div class="flex flex-col">
+                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Position</label>
+                    <select id="scalePosition" class="bg-slate-900 text-white text-sm font-bold border border-slate-600 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="all">Full Fretboard</option>
+                        <option value="0-4">Open / 1st Position (0-4)</option>
+                        <option value="2-6">2nd Position (2-6)</option>
+                        <option value="5-9">5th Position (5-9)</option>
+                        <option value="7-11">7th Position (7-11)</option>
+                        <option value="9-13">9th Position (9-13)</option>
+                        <option value="12-16">12th Position (12-16)</option>
+                        <option value="15-19">15th Position (15-19)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fretboard View -->
+        <div class="fretboard-container bg-slate-900/50 rounded-3xl border border-slate-800 shadow-inner p-8 mb-8">
+            <div class="fretboard" id="fretboard">
+            </div>
+        </div>
+
+        <!-- Piano Roll -->
+        <div class="bg-slate-900 rounded-3xl border border-slate-800 p-6 overflow-hidden shadow-2xl">
+            <div class="flex items-center justify-between mb-4 px-2">
+                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Piano Mapping</span>
+                <div class="h-px flex-grow mx-4 bg-slate-800"></div>
+                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right">Faint green notes belong to the selected scale</span>
+            </div>
+            <div class="piano-container">
+                <div class="piano" id="piano">
+                </div>
+            </div>
+        </div>
+
+        <footer class="mt-8 text-center text-slate-600">
+            <p class="text-[10px] uppercase tracking-[0.2em]">ChordCompass Navigator • Custom Tuning Support</p>
+        </footer>
+    </div>
+
+    <script>
+        const noteNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+        
+        // Tunings are MIDI values: E4(64), B3(59), G3(55), D3(50), A2(45), E2(40)
+        // Stored High to Low internally for easier rendering logic
+        const tuningPresets = {
+            standard: [64, 59, 55, 50, 45, 40],
+            dropD: [64, 59, 55, 50, 45, 38],
+            dadgad: [62, 57, 55, 50, 45, 38],
+            openG: [62, 59, 55, 50, 43, 38],
+            openD: [62, 57, 54, 50, 45, 38],
+            halfStepDown: [63, 58, 54, 49, 44, 39]
+        };
+
+        let guitarTuning = [...tuningPresets.standard]; 
+        const fretCount = 21;
+        
+        let isChordMode = true;
+        let activeFrets = []; 
+        let currentScaleNotes = []; // Indices 0-11
+
+        const fretboardEl = document.getElementById('fretboard');
+        const pianoEl = document.getElementById('piano');
+        const chordNameDisplay = document.getElementById('chordNameDisplay');
+        const displayLabel = document.getElementById('displayLabel');
+        const noteListDisplay = document.getElementById('noteList');
+        const chordBtn = document.getElementById('chordModeBtn');
+        const melodyBtn = document.getElementById('melodyModeBtn');
+        const clearBtn = document.getElementById('clearAll');
+        
+        const scaleControls = document.getElementById('scaleControls');
+        const scaleRoot = document.getElementById('scaleRoot');
+        const scaleType = document.getElementById('scaleType');
+        const scalePosition = document.getElementById('scalePosition');
+
+        const tuningControls = document.getElementById('tuningControls');
+        const tuningPreset = document.getElementById('tuningPreset');
+        const individualStringsContainer = document.getElementById('individualStrings');
+
+        const scaleFormulas = {
+            major: [0, 2, 4, 5, 7, 9, 11],
+            minor: [0, 2, 3, 5, 7, 8, 10],
+            majorPentatonic: [0, 2, 4, 7, 9],
+            minorPentatonic: [0, 3, 5, 7, 10],
+            blues: [0, 3, 5, 6, 7, 10],
+            dorian: [0, 2, 3, 5, 7, 9, 10],
+            phrygian: [0, 1, 3, 5, 7, 8, 10],
+            lydian: [0, 2, 4, 6, 7, 9, 11],
+            mixolydian: [0, 2, 4, 5, 7, 9, 10],
+            locrian: [0, 1, 3, 5, 6, 8, 10]
+        };
+
+        const chordDefinitions = [
+            { name: 'maj7', essential: [0, 11], optional: [4, 7], priority: 10 },
+            { name: 'maj9', essential: [0, 2, 11], optional: [4, 7], priority: 12 },
+            { name: '7', essential: [0, 10], optional: [4, 7], priority: 10 },
+            { name: '9', essential: [0, 2, 10], optional: [4, 7], priority: 12 },
+            { name: 'm7', essential: [0, 3, 10], optional: [7], priority: 10 },
+            { name: 'm9', essential: [0, 2, 3, 10], optional: [7], priority: 12 },
+            { name: 'm(maj7)', essential: [0, 3, 11], optional: [7], priority: 11 },
+            { name: '6', essential: [0, 4, 9], optional: [7], priority: 8 },
+            { name: 'm6', essential: [0, 3, 9], optional: [7], priority: 8 },
+            { name: 'sus4', essential: [0, 5], optional: [7], priority: 5 },
+            { name: 'sus2', essential: [0, 2], optional: [7], priority: 5 },
+            { name: '', essential: [0, 4], optional: [7], priority: 2 },
+            { name: 'm', essential: [0, 3], optional: [7], priority: 2 },
+            { name: 'dim', essential: [0, 3, 6], optional: [], priority: 5 },
+            { name: 'aug', essential: [0, 4, 8], optional: [], priority: 5 },
+            { name: '5', essential: [0, 7], optional: [], priority: 1 }
+        ];
+
+        const intervalNames = {
+            0: "Perfect Unison", 1: "Minor 2nd", 2: "Major 2nd", 3: "Minor 3rd",
+            4: "Major 3rd", 5: "Perfect 4th", 6: "Tritone", 7: "Perfect 5th",
+            8: "Minor 6th", 9: "Major 6th", 10: "Minor 7th", 11: "Major 7th", 12: "Octave"
+        };
+
+        function init() {
+            // Fill root key dropdown
+            noteNames.forEach((n, i) => {
+                const opt = document.createElement('option');
+                opt.value = i;
+                opt.innerText = n;
+                scaleRoot.appendChild(opt);
+            });
+
+            // Setup Individual String selectors
+            setupTuningUI();
+            
+            renderFretboard();
+            renderPiano();
+            setupEventListeners();
+            updateUI(); 
+        }
+
+        function setupTuningUI() {
+            individualStringsContainer.innerHTML = '';
+            // Strings: 5 (Low E) to 0 (High E)
+            for (let s = 5; s >= 0; s--) {
+                const select = document.createElement('select');
+                select.className = "bg-slate-900 text-white text-[10px] font-bold border border-slate-700 rounded-lg px-2 py-1 outline-none focus:ring-1 focus:ring-orange-500 w-16";
+                select.dataset.string = s;
+                
+                // Populate options (from C1 to B5 roughly)
+                for (let m = 24; m <= 72; m++) {
+                    const opt = document.createElement('option');
+                    opt.value = m;
+                    opt.innerText = noteNames[m % 12] + Math.floor(m / 12 - 1);
+                    if (m === guitarTuning[s]) opt.selected = true;
+                    select.appendChild(opt);
+                }
+                
+                select.onchange = (e) => {
+                    guitarTuning[s] = parseInt(e.target.value);
+                    tuningPreset.value = 'custom';
+                    activeFrets = []; // Clear notes when tuning changes to avoid mismatch
+                    renderFretboard();
+                    updateUI();
+                };
+                
+                individualStringsContainer.appendChild(select);
+            }
+        }
+
+        function renderFretboard() {
+            fretboardEl.innerHTML = '';
+            fretboardEl.style.gridTemplateColumns = `70px repeat(${fretCount}, 1fr)`;
+            for (let s = 0; s < 6; s++) {
+                const line = document.createElement('div');
+                line.className = 'string-line';
+                const thickness = 1 + (s * 0.5);
+                line.style.height = `${thickness}px`;
+                line.style.top = `${s * 44 + 22 - (thickness/2)}px`;
+                fretboardEl.appendChild(line);
+                for (let f = 0; f <= fretCount; f++) {
+                    const fretDiv = document.createElement('div');
+                    fretDiv.className = 'fret';
+                    fretDiv.dataset.string = s;
+                    fretDiv.dataset.fret = f;
+                    const midiNote = guitarTuning[s] + f;
+                    const noteName = noteNames[midiNote % 12];
+                    if (s === 2 || s === 3) {
+                        if ([3, 5, 7, 9, 15, 17, 19, 21].includes(f)) {
+                            const inlay = document.createElement('div');
+                            inlay.className = 'inlay';
+                            fretDiv.appendChild(inlay);
+                        }
+                    }
+                    if (f === 12 && (s === 1 || s === 4)) {
+                         const inlay = document.createElement('div');
+                         inlay.className = 'inlay';
+                         fretDiv.appendChild(inlay);
+                    }
+                    if (s === 0 && f > 0) {
+                        const num = document.createElement('div');
+                        num.className = 'fret-number';
+                        num.innerText = f;
+                        fretDiv.appendChild(num);
+                    }
+                    const marker = document.createElement('div');
+                    marker.className = 'note-marker';
+                    marker.innerText = noteName;
+                    fretDiv.appendChild(marker);
+                    fretDiv.onclick = () => handleFretClick(s, f, midiNote);
+                    fretDiv.onmouseenter = () => handleFretHover(midiNote, true);
+                    fretDiv.onmouseleave = () => handleFretHover(midiNote, false);
+                    fretboardEl.appendChild(fretDiv);
+                }
+            }
+        }
+
+        function renderPiano() {
+            pianoEl.innerHTML = '';
+            for (let m = 36; m <= 84; m++) {
+                const noteIndex = m % 12;
+                const isBlack = [1, 3, 6, 8, 10].includes(noteIndex);
+                const key = document.createElement('div');
+                key.className = `key ${isBlack ? 'black' : 'white'}`;
+                key.dataset.midi = m;
+                key.onclick = () => handlePianoClick(m);
+                pianoEl.appendChild(key);
+            }
+        }
+
+        function updateScaleOverlay() {
+            const root = parseInt(scaleRoot.value);
+            const type = scaleType.value;
+            if (type === 'none') {
+                currentScaleNotes = [];
+            } else {
+                const formula = scaleFormulas[type];
+                currentScaleNotes = formula.map(interval => (root + interval) % 12);
+            }
+            updateUI();
+        }
+
+        function handleFretHover(midiNote, isHovering) {
+            const key = document.querySelector(`.key[data-midi="${midiNote}"]`);
+            if (key) {
+                if (isHovering) key.classList.add('hover-faint');
+                else key.classList.remove('hover-faint');
+            }
+        }
+
+        function handleFretClick(stringIdx, fretIdx, midiNote) {
+            const existingIndex = activeFrets.findIndex(item => item.stringIndex === stringIdx && item.fretIndex === fretIdx);
+            if (existingIndex > -1) {
+                activeFrets.splice(existingIndex, 1);
+            } else {
+                if (isChordMode) activeFrets = activeFrets.filter(item => item.stringIndex !== stringIdx);
+                activeFrets.push({ stringIndex: stringIdx, fretIndex: fretIdx, midiNote: midiNote });
+            }
+            updateUI();
+        }
+
+        function handlePianoClick(midiNote) {
+            const fretPositions = [];
+            for (let s = 0; s < 6; s++) {
+                for (let f = 0; f <= fretCount; f++) {
+                    if (guitarTuning[s] + f === midiNote) fretPositions.push({ s, f });
+                }
+            }
+            const isActive = activeFrets.some(item => item.midiNote === midiNote);
+            if (isActive) {
+                activeFrets = activeFrets.filter(item => item.midiNote !== midiNote);
+            } else {
+                if (isChordMode) {
+                    const availablePos = fretPositions.find(pos => !activeFrets.some(af => af.stringIndex === pos.s));
+                    if (availablePos) {
+                        activeFrets.push({ stringIndex: availablePos.s, fretIndex: availablePos.f, midiNote: midiNote });
+                    } else if (fretPositions.length > 0) {
+                        const replacePos = fretPositions[fretPositions.length - 1]; 
+                        activeFrets = activeFrets.filter(af => af.stringIndex !== replacePos.s);
+                        activeFrets.push({ stringIndex: replacePos.s, fretIndex: replacePos.f, midiNote: midiNote });
+                    }
+                } else {
+                    fretPositions.forEach(pos => activeFrets.push({ stringIndex: pos.s, fretIndex: pos.f, midiNote: midiNote }));
+                }
+            }
+            updateUI();
+        }
+
+        function analyzeHarmony(notesArray) {
+            if (notesArray.length === 0) {
+                displayLabel.innerText = "Detected Result";
+                return "---";
+            }
+            const sorted = [...notesArray].sort((a, b) => a - b);
+            const bassMidi = sorted[0];
+            const bassNoteName = noteNames[bassMidi % 12];
+            if (notesArray.length === 2) {
+                displayLabel.innerText = "Detected Interval";
+                const diff = sorted[1] - sorted[0];
+                const normalizedInterval = diff % 12;
+                const octaves = Math.floor(diff / 12);
+                let name = intervalNames[normalizedInterval] || "Unknown";
+                if (octaves > 0) name = (normalizedInterval === 0) ? (octaves === 1 ? "Octave" : octaves + " Octaves") : name + " (+" + octaves + " Oct)";
+                return `${bassNoteName} → ${noteNames[sorted[1] % 12]} (${name})`;
+            }
+            displayLabel.innerText = "Detected Chord";
+            const pitchClasses = [...new Set(sorted.map(n => n % 12))];
+            let bestMatches = [];
+            for (let root of pitchClasses) {
+                const intervals = pitchClasses.map(pc => (pc - root + 12) % 12);
+                for (const def of chordDefinitions) {
+                    if (!def.essential.every(e => intervals.includes(e))) continue;
+                    const allowedIntervals = [...def.essential, ...def.optional];
+                    if (intervals.some(i => !allowedIntervals.includes(i))) continue;
+                    const rootName = noteNames[root];
+                    let chordName = rootName + def.name;
+                    if (root !== (bassMidi % 12)) chordName += "/" + bassNoteName;
+                    const matchedNotesCount = intervals.filter(i => allowedIntervals.includes(i)).length;
+                    bestMatches.push({ name: chordName, score: def.priority + matchedNotesCount, isRootBass: (root === (bassMidi % 12)) });
+                }
+            }
+            if (bestMatches.length > 0) {
+                bestMatches.sort((a, b) => (b.score !== a.score) ? (b.score - a.score) : (b.isRootBass - a.isRootBass));
+                return bestMatches[0].name;
+            }
+            return "Unknown Harmony";
+        }
+
+        function updateUI() {
+            const posVal = scalePosition.value;
+            let startFret = -1, endFret = 99;
+            if (posVal !== 'all') {
+                const parts = posVal.split('-').map(Number);
+                startFret = parts[0];
+                endFret = parts[1];
+            }
+
+            // Update Fretboard
+            document.querySelectorAll('.fret').forEach(el => {
+                const s = parseInt(el.dataset.string);
+                const f = parseInt(el.dataset.fret);
+                const midi = guitarTuning[s] + f;
+                const isActive = activeFrets.some(item => item.stringIndex === s && item.fretIndex === f);
+                const isInScale = currentScaleNotes.includes(midi % 12);
+                const isInPos = f >= startFret && f <= endFret;
+
+                el.classList.toggle('active', isActive);
+                el.classList.toggle('scale-highlight', isInScale && !isActive && isInPos);
+            });
+
+            // Update Piano
+            const activeMidis = [...new Set(activeFrets.map(item => item.midiNote))];
+            document.querySelectorAll('.key').forEach(el => {
+                const midi = parseInt(el.dataset.midi);
+                const isActive = activeMidis.includes(midi);
+                const isInScale = currentScaleNotes.includes(midi % 12);
+                el.classList.toggle('active', isActive);
+                el.classList.toggle('scale-highlight', isInScale && !isActive);
+            });
+
+            chordNameDisplay.innerText = analyzeHarmony(activeMidis);
+            const sortedNotes = [...activeMidis].sort((a, b) => a - b).map(m => noteNames[m % 12]);
+            noteListDisplay.innerText = sortedNotes.length > 0 ? sortedNotes.join(' • ') : '-';
+
+            // Hide or Show Clear All Button
+            if (activeFrets.length > 0) {
+                clearBtn.classList.add('visible');
+            } else {
+                clearBtn.classList.remove('visible');
+            }
+        }
+
+        function setupEventListeners() {
+            chordModeBtn.onclick = () => {
+                isChordMode = true;
+                chordModeBtn.classList.add('toggle-active', 'bg-blue-500', 'text-white');
+                chordModeBtn.classList.remove('text-slate-500');
+                melodyModeBtn.classList.remove('toggle-active', 'bg-blue-500', 'text-white');
+                melodyModeBtn.classList.add('text-slate-500');
+                scaleControls.style.display = 'none';
+                tuningControls.style.display = 'block'; // Keep tuning available
+                const seenStrings = new Set();
+                activeFrets = activeFrets.reverse().filter(item => {
+                    if (seenStrings.has(item.stringIndex)) return false;
+                    seenStrings.add(item.stringIndex);
+                    return true;
+                }).reverse();
+                updateUI();
+            };
+
+            melodyModeBtn.onclick = () => {
+                isChordMode = false;
+                melodyModeBtn.classList.add('toggle-active', 'bg-blue-500', 'text-white');
+                melodyModeBtn.classList.remove('text-slate-500');
+                chordModeBtn.classList.remove('toggle-active', 'bg-blue-500', 'text-white');
+                chordModeBtn.classList.add('text-slate-500');
+                scaleControls.style.display = 'block';
+                tuningControls.style.display = 'block';
+                updateUI();
+            };
+
+            tuningPreset.onchange = (e) => {
+                const val = e.target.value;
+                if (val !== 'custom') {
+                    guitarTuning = [...tuningPresets[val]];
+                    activeFrets = [];
+                    setupTuningUI();
+                    renderFretboard();
+                    updateUI();
+                }
+            };
+
+            scaleRoot.onchange = updateScaleOverlay;
+            scaleType.onchange = updateScaleOverlay;
+            scalePosition.onchange = updateUI;
+
+            clearBtn.onclick = () => {
+                activeFrets = [];
+                updateUI();
+            };
+            chordModeBtn.click();
+        }
+
+        init();
+    </script>
+</body>
+</html>
