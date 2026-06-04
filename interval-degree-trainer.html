@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Number Mapper - Multi-Interval</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+            overflow-x: hidden;
+        }
+        .glass {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .progress-bar {
+            transition: width 0.1s linear;
+        }
+        .active-int {
+            background-color: #10b981 !important;
+            border-color: #34d399 !important;
+            color: white !important;
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
+            transform: scale(1.05);
+        }
+        .badge {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            padding: 2px 8px;
+            border-radius: 99px;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen items-center justify-center p-4">
+
+    <div class="w-full max-w-md space-y-6">
+        
+        <div class="text-center space-y-2">
+            <h1 class="text-3xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">
+                Number Mapper
+            </h1>
+            <p class="text-slate-400 text-sm">Universal Scale Degree Practice</p>
+        </div>
+
+        <div class="glass p-6 rounded-3xl shadow-2xl space-y-6">
+            <div class="space-y-4">
+                <div class="flex justify-between items-center">
+                    <label class="text-xs font-semibold uppercase tracking-wider text-slate-500">Active Intervals</label>
+                    <div class="flex gap-2">
+                        <button onclick="bulkSelect(true)" class="text-[10px] bg-slate-800 hover:bg-slate-700 px-2 py-1 rounded-md border border-slate-700 transition uppercase font-bold text-slate-400">All</button>
+                        <button onclick="bulkSelect(false)" class="text-[10px] bg-slate-800 hover:bg-slate-700 px-2 py-1 rounded-md border border-slate-700 transition uppercase font-bold text-slate-400">Clear</button>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-3 gap-2">
+                    <button onclick="toggleInterval(2)" id="int-2" class="int-btn py-3 rounded-xl border border-slate-700 bg-slate-800/50 hover:bg-slate-700 transition font-bold">2nd</button>
+                    <button onclick="toggleInterval(3)" id="int-3" class="int-btn py-3 rounded-xl border border-slate-700 bg-slate-800/50 hover:bg-slate-700 transition font-bold">3rd</button>
+                    <button onclick="toggleInterval(4)" id="int-4" class="int-btn py-3 rounded-xl border border-slate-700 bg-slate-800/50 hover:bg-slate-700 transition font-bold">4th</button>
+                    <button onclick="toggleInterval(5)" id="int-5" class="int-btn py-3 rounded-xl border border-slate-700 bg-slate-800/50 hover:bg-slate-700 transition font-bold">5th</button>
+                    <button onclick="toggleInterval(6)" id="int-6" class="int-btn py-3 rounded-xl border border-slate-700 bg-slate-800/50 hover:bg-slate-700 transition font-bold">6th</button>
+                    <button onclick="toggleInterval(7)" id="int-7" class="int-btn py-3 rounded-xl border border-slate-700 bg-slate-800/50 hover:bg-slate-700 transition font-bold">7th</button>
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-4 pt-2 border-t border-slate-800">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-3 text-center">Auto-Advance Timer</label>
+                    <div class="flex justify-between items-center bg-slate-900/50 p-1 rounded-2xl border border-slate-700">
+                        <button onclick="setTimer(0)" id="t-0" class="time-btn flex-1 py-2 rounded-xl transition text-sm">Off</button>
+                        <button onclick="setTimer(10)" id="t-10" class="time-btn flex-1 py-2 rounded-xl transition text-sm">10s</button>
+                        <button onclick="setTimer(15)" id="t-15" class="time-btn flex-1 py-2 rounded-xl transition text-sm">15s</button>
+                        <button onclick="setTimer(20)" id="t-20" class="time-btn flex-1 py-2 rounded-xl transition text-sm">20s</button>
+                        <button onclick="setTimer(30)" id="t-30" class="time-btn flex-1 py-2 rounded-xl transition text-sm">30s</button>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between px-2">
+                    <div class="flex flex-col">
+                        <span class="text-sm text-slate-300">Cycle All Degrees</span>
+                        <span id="cycle-status" class="text-[9px] text-slate-500 uppercase font-bold hidden">Remaining in Set</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div id="cycle-counter" class="badge hidden">7 / 7</div>
+                        <button onclick="toggleNoRepeat()" id="repeat-toggle" class="w-12 h-6 rounded-full bg-slate-700 relative transition duration-300">
+                            <div id="toggle-circle" class="absolute w-4 h-4 bg-white rounded-full top-1 left-1 transition-transform duration-300"></div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass p-8 rounded-3xl shadow-2xl relative overflow-hidden flex flex-col items-center justify-center min-h-[350px]">
+            <div id="progress-container" class="absolute top-0 left-0 w-full h-1 bg-slate-800 hidden">
+                <div id="progress-bar" class="h-full bg-emerald-500 progress-bar w-0"></div>
+            </div>
+
+            <div id="prompt-container" class="text-center space-y-2">
+                <div id="display-interval-label" class="text-emerald-400 font-bold text-xl uppercase tracking-widest mb-2">Select an interval</div>
+                <p id="sub-label" class="text-slate-500 text-xs font-medium tracking-widest uppercase opacity-0">Start Degree</p>
+                <div id="display-degree" class="text-8xl font-black text-white leading-none">--</div>
+                
+                <div id="finish-overlay" class="hidden absolute inset-0 bg-slate-900/90 backdrop-blur-sm flex flex-col items-center justify-center z-10 animate-in fade-in duration-300">
+                    <div class="text-emerald-400 mb-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <h2 class="text-2xl font-black uppercase tracking-tighter">Session Complete</h2>
+                    <p class="text-slate-400 text-sm mb-6">You've cycled all degrees</p>
+                    <button onclick="restartSession()" class="bg-emerald-600 hover:bg-emerald-500 px-6 py-2 rounded-xl font-bold transition active:scale-95">Restart Set</button>
+                </div>
+
+                <div id="answer-container" class="opacity-0 transition-opacity duration-300 pt-4">
+                    <p class="text-slate-500 text-xs font-medium uppercase">Target Degree</p>
+                    <div id="display-answer" class="text-5xl font-bold text-emerald-400">-</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+            <button onclick="showAnswer()" id="btn-show" class="bg-slate-700 hover:bg-slate-600 py-4 rounded-2xl font-bold transition shadow-lg active:scale-95">
+                Show Answer
+            </button>
+            <button onclick="nextRound()" class="bg-emerald-600 hover:bg-emerald-500 py-4 rounded-2xl font-bold transition shadow-lg shadow-emerald-900/20 active:scale-95">
+                Next Prompt
+            </button>
+        </div>
+
+        <button onclick="resetApp()" class="w-full text-slate-500 text-sm hover:text-slate-300 transition mt-4">Reset Session</button>
+    </div>
+        <script>
+        let state = {
+            selectedIntervals: [],
+            timer: 0,
+            noRepeat: false,
+            currentDegree: 0,
+            currentInterval: 0,
+            pool: [1, 2, 3, 4, 5, 6, 7], 
+            timerInterval: null, // This will now store the setInterval ID
+            isShowingAnswer: false,
+            isStarted: false,
+            isFinished: false
+        };
+
+        window.onload = () => {
+            updateIntervalUI();
+            setTimer(0);
+            updateDisplay(); 
+        };
+
+        function startTimer() {
+            // Clear any existing timer to prevent overlaps
+            clearInterval(state.timerInterval);
+            
+            if (state.timer <= 0 || state.isFinished || !state.isStarted) {
+                document.getElementById('progress-bar').style.width = '0%';
+                return;
+            }
+
+            const progressBar = document.getElementById('progress-bar');
+            let elapsed = 0;
+            const duration = state.timer * 1000;
+            const step = 50; // Update every 50ms for smooth motion
+
+            state.timerInterval = setInterval(() => {
+                elapsed += step;
+                let progress = (elapsed / duration) * 100;
+                
+                if (progress >= 100) {
+                    progressBar.style.width = '100%';
+                    clearInterval(state.timerInterval);
+                    // Move to the next round automatically
+                    nextRound();
+                } else {
+                    progressBar.style.width = progress + '%';
+                }
+            }, step);
+        }
+
+        function updateIntervalUI() {
+            const buttons = document.querySelectorAll('.int-btn');
+            buttons.forEach(btn => {
+                const val = parseInt(btn.id.split('-')[1]);
+                if (state.selectedIntervals.includes(val)) {
+                    btn.classList.add('active-int');
+                } else {
+                    btn.classList.remove('active-int');
+                }
+            });
+        }
+
+        function setTimer(val) {
+            state.timer = val;
+            const buttons = document.querySelectorAll('.time-btn');
+            buttons.forEach(btn => {
+                const btnVal = parseInt(btn.id.split('-')[1]);
+                if (btnVal === val) {
+                    btn.classList.add('bg-emerald-500', 'text-white', 'shadow-lg');
+                    btn.classList.remove('text-slate-400');
+                } else {
+                    btn.classList.remove('bg-emerald-500', 'text-white', 'shadow-lg');
+                    btn.classList.add('text-slate-400');
+                }
+            });
+
+            const progressContainer = document.getElementById('progress-container');
+            if (val > 0) {
+                progressContainer.classList.remove('hidden');
+                if (state.isStarted && !state.isFinished) startTimer();
+            } else {
+                progressContainer.classList.add('hidden');
+                clearInterval(state.timerInterval);
+                document.getElementById('progress-bar').style.width = '0%';
+            }
+        }
+
+        function toggleNoRepeat() {
+            state.noRepeat = !state.noRepeat;
+            const circle = document.getElementById('toggle-circle');
+            const toggle = document.getElementById('repeat-toggle');
+            const counter = document.getElementById('cycle-counter');
+            const status = document.getElementById('cycle-status');
+
+            if (state.noRepeat) {
+                circle.style.transform = 'translateX(24px)';
+                toggle.classList.replace('bg-slate-700', 'bg-emerald-500');
+                counter.classList.remove('hidden');
+                status.classList.remove('hidden');
+                resetPool(); 
+            } else {
+                circle.style.transform = 'translateX(0px)';
+                toggle.classList.replace('bg-emerald-500', 'bg-slate-700');
+                counter.classList.add('hidden');
+                status.classList.add('hidden');
+            }
+            // If we are already mid-session, update the display to reflect the change
+            updateDisplay();
+        }
+
+        function resetPool() {
+            state.pool = [1, 2, 3, 4, 5, 6, 7];
+            // Shuffle the pool for a fresh cycle
+            for (let i = state.pool.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [state.pool[i], state.pool[j]] = [state.pool[j], state.pool[i]];
+            }
+        }
+
+        function calculateTarget() {
+            if (state.currentDegree === 0 || state.currentInterval === 0) return "-";
+            // Calculate 1-indexed diatonic jump
+            let target = state.currentDegree + (state.currentInterval - 1);
+            while (target > 7) target -= 7;
+            return target;
+        }
+
+        function toggleInterval(val) {
+            const index = state.selectedIntervals.indexOf(val);
+            if (index > -1) {
+                state.selectedIntervals.splice(index, 1);
+            } else {
+                state.selectedIntervals.push(val);
+            }
+            
+            updateIntervalUI();
+
+            if (state.selectedIntervals.length > 0) {
+                if (!state.isStarted || state.isFinished) {
+                    state.isStarted = true;
+                    state.isFinished = false;
+                    resetPool();
+                    nextRound();
+                }
+            } else {
+                state.isStarted = false;
+                resetStateUI();
+            }
+        }
+
+        function bulkSelect(shouldSelectAll) {
+            if (shouldSelectAll) {
+                state.selectedIntervals = [2, 3, 4, 5, 6, 7];
+                state.isStarted = true;
+                state.isFinished = false;
+                resetPool();
+                nextRound();
+            } else {
+                state.selectedIntervals = [];
+                state.isStarted = false;
+                resetStateUI();
+            }
+            updateIntervalUI();
+        }
+
+        function showAnswer() {
+            state.isShowingAnswer = true;
+            updateDisplay();
+        }
+
+        function resetStateUI() {
+            clearInterval(state.timerInterval);
+            document.getElementById('progress-bar').style.width = '0%';
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            const label = document.getElementById('display-interval-label');
+            const subLabel = document.getElementById('sub-label');
+            const deg = document.getElementById('display-degree');
+            const counter = document.getElementById('cycle-counter');
+            const overlay = document.getElementById('finish-overlay');
+            
+            if (state.isFinished) {
+                overlay.classList.remove('hidden');
+            } else {
+                overlay.classList.add('hidden');
+            }
+
+            if (state.selectedIntervals.length === 0) {
+                label.innerText = "Select Intervals";
+                label.classList.add('text-slate-500');
+                label.classList.remove('text-emerald-400');
+                subLabel.style.opacity = "0";
+                deg.innerText = "--";
+                state.isStarted = false;
+                counter.innerText = "7 / 7";
+            } else {
+                label.classList.remove('text-slate-500');
+                label.classList.add('text-emerald-400');
+                subLabel.style.opacity = "1";
+                deg.innerText = state.currentDegree || "--";
+                
+                if (state.currentInterval > 0) {
+                    const suffix = state.currentInterval === 2 ? 'nd' : state.currentInterval === 3 ? 'rd' : 'th';
+                    label.innerText = state.currentInterval + suffix;
+                }
+                
+                if (state.noRepeat) {
+                    // Show remaining count including the current displayed card
+                    const remaining = state.pool.length + (state.currentDegree && !state.isFinished ? 1 : 0);
+                    counter.innerText = `${remaining} / 7`;
+                }
+            }
+            
+            document.getElementById('display-answer').innerText = calculateTarget();
+            document.getElementById('answer-container').style.opacity = state.isShowingAnswer ? '1' : '0';
+        }
+
+        function nextRound() {
+            if (state.selectedIntervals.length === 0) return;
+            
+            // If No Repeat is on and we are out of numbers, finish the session
+            if (state.noRepeat && state.pool.length === 0) {
+                finishSession();
+                return;
+            }
+
+            state.isShowingAnswer = false;
+            state.isFinished = false;
+            
+            // Randomly pick from active intervals
+            const randomIdx = Math.floor(Math.random() * state.selectedIntervals.length);
+            state.currentInterval = state.selectedIntervals[randomIdx];
+
+            // Determine the next degree
+            if (state.noRepeat) {
+                state.currentDegree = state.pool.pop();
+            } else {
+                let newDegree;
+                do {
+                    newDegree = Math.floor(Math.random() * 7) + 1;
+                } while (newDegree === state.currentDegree);
+                state.currentDegree = newDegree;
+            }
+            
+            updateDisplay();
+            if(state.timer > 0) startTimer();
+        }
+
+        function finishSession() {
+            state.isFinished = true;
+            state.isStarted = false;
+            clearInterval(state.timerInterval);
+            document.getElementById('progress-bar').style.width = '100%';
+            updateDisplay();
+        }
+
+        function restartSession() {
+            state.isFinished = false;
+            state.isStarted = true;
+            resetPool();
+            nextRound();
+        }
+
+        function resetApp() {
+            state.currentDegree = 0;
+            state.currentInterval = 0;
+            state.isShowingAnswer = false;
+            state.selectedIntervals = [];
+            state.isStarted = false;
+            state.isFinished = false;
+            resetPool();
+            updateIntervalUI();
+            setTimer(0);
+            updateDisplay();
+        }
+    </script>
+</body>
+</html>
