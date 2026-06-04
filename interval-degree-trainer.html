@@ -74,6 +74,15 @@
 
             <div class="flex flex-col gap-4 pt-2 border-t border-slate-800">
                 <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-3 text-center">Direction</label>
+                    <div class="flex justify-between items-center bg-slate-900/50 p-1 rounded-2xl border border-slate-700">
+                        <button onclick="setDirection('up')" id="dir-up" class="dir-btn flex-1 py-2 rounded-xl transition text-sm">Up</button>
+                        <button onclick="setDirection('down')" id="dir-down" class="dir-btn flex-1 py-2 rounded-xl transition text-sm">Down</button>
+                        <button onclick="setDirection('random')" id="dir-random" class="dir-btn flex-1 py-2 rounded-xl transition text-sm">Random</button>
+                    </div>
+                </div>
+
+                <div>
                     <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-3 text-center">Auto-Advance Timer</label>
                     <div class="flex justify-between items-center bg-slate-900/50 p-1 rounded-2xl border border-slate-700">
                         <button onclick="setTimer(0)" id="t-0" class="time-btn flex-1 py-2 rounded-xl transition text-sm">Off</button>
@@ -105,7 +114,10 @@
             </div>
 
             <div id="prompt-container" class="text-center space-y-2">
-                <div id="display-interval-label" class="text-emerald-400 font-bold text-xl uppercase tracking-widest mb-2">Select an interval</div>
+                <div class="flex items-center justify-center gap-2 mb-2">
+                    <div id="display-interval-label" class="text-emerald-400 font-bold text-xl uppercase tracking-widest">Select an interval</div>
+                    <div id="direction-indicator" class="hidden px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-[10px] font-black uppercase tracking-tighter border border-emerald-500/30">UP</div>
+                </div>
                 <p id="sub-label" class="text-slate-500 text-xs font-medium tracking-widest uppercase opacity-0">Start Degree</p>
                 <div id="display-degree" class="text-8xl font-black text-white leading-none">--</div>
                 
@@ -143,10 +155,12 @@
             selectedIntervals: [],
             timer: 0,
             noRepeat: false,
+            direction: 'up', // 'up', 'down', or 'random'
+            activePromptDirection: 'up', // The actual direction for the current card
             currentDegree: 0,
             currentInterval: 0,
             pool: [1, 2, 3, 4, 5, 6, 7], 
-            timerInterval: null, // This will now store the setInterval ID
+            timerInterval: null,
             isShowingAnswer: false,
             isStarted: false,
             isFinished: false
@@ -155,8 +169,31 @@
         window.onload = () => {
             updateIntervalUI();
             setTimer(0);
+            setDirection('up');
             updateDisplay(); 
         };
+        
+        function setDirection(dir) {
+            state.direction = dir;
+            const buttons = document.querySelectorAll('.dir-btn');
+            buttons.forEach(btn => {
+                const btnDir = btn.id.split('-')[1];
+                if (btnDir === dir) {
+                    btn.classList.add('bg-emerald-500', 'text-white', 'shadow-lg');
+                    btn.classList.remove('text-slate-400');
+                } else {
+                    btn.classList.remove('bg-emerald-500', 'text-white', 'shadow-lg');
+                    btn.classList.add('text-slate-400');
+                }
+            });
+            
+            // If we're currently in a session and it's set to 'up' or 'down' (not random), 
+            // update the current prompt's direction immediately
+            if (state.isStarted && dir !== 'random') {
+                state.activePromptDirection = dir;
+                updateDisplay();
+            }
+        }
 
         function startTimer() {
             // Clear any existing timer to prevent overlaps
@@ -258,9 +295,18 @@
 
         function calculateTarget() {
             if (state.currentDegree === 0 || state.currentInterval === 0) return "-";
-            // Calculate 1-indexed diatonic jump
-            let target = state.currentDegree + (state.currentInterval - 1);
-            while (target > 7) target -= 7;
+            
+            const intervalOffset = state.currentInterval - 1;
+            let target;
+            
+            if (state.activePromptDirection === 'up') {
+                target = state.currentDegree + intervalOffset;
+                while (target > 7) target -= 7;
+            } else {
+                target = state.currentDegree - intervalOffset;
+                while (target < 1) target += 7;
+            }
+            
             return target;
         }
 
@@ -319,6 +365,7 @@
             const deg = document.getElementById('display-degree');
             const counter = document.getElementById('cycle-counter');
             const overlay = document.getElementById('finish-overlay');
+            const dirIndicator = document.getElementById('direction-indicator');
             
             if (state.isFinished) {
                 overlay.classList.remove('hidden');
@@ -334,6 +381,7 @@
                 deg.innerText = "--";
                 state.isStarted = false;
                 counter.innerText = "7 / 7";
+                dirIndicator.classList.add('hidden');
             } else {
                 label.classList.remove('text-slate-500');
                 label.classList.add('text-emerald-400');
@@ -343,10 +391,22 @@
                 if (state.currentInterval > 0) {
                     const suffix = state.currentInterval === 2 ? 'nd' : state.currentInterval === 3 ? 'rd' : 'th';
                     label.innerText = state.currentInterval + suffix;
+                    
+                    // Update Direction Indicator
+                    dirIndicator.classList.remove('hidden');
+                    dirIndicator.innerText = state.activePromptDirection;
+                    if (state.activePromptDirection === 'down') {
+                        dirIndicator.classList.replace('bg-emerald-500/20', 'bg-blue-500/20');
+                        dirIndicator.classList.replace('text-emerald-400', 'text-blue-400');
+                        dirIndicator.classList.replace('border-emerald-500/30', 'border-blue-500/30');
+                    } else {
+                        dirIndicator.classList.replace('bg-blue-500/20', 'bg-emerald-500/20');
+                        dirIndicator.classList.replace('text-blue-400', 'text-emerald-400');
+                        dirIndicator.classList.replace('border-blue-500/30', 'border-emerald-500/30');
+                    }
                 }
                 
                 if (state.noRepeat) {
-                    // Show remaining count including the current displayed card
                     const remaining = state.pool.length + (state.currentDegree && !state.isFinished ? 1 : 0);
                     counter.innerText = `${remaining} / 7`;
                 }
@@ -359,7 +419,6 @@
         function nextRound() {
             if (state.selectedIntervals.length === 0) return;
             
-            // If No Repeat is on and we are out of numbers, finish the session
             if (state.noRepeat && state.pool.length === 0) {
                 finishSession();
                 return;
@@ -368,6 +427,13 @@
             state.isShowingAnswer = false;
             state.isFinished = false;
             
+            // Handle Direction for this round
+            if (state.direction === 'random') {
+                state.activePromptDirection = Math.random() > 0.5 ? 'up' : 'down';
+            } else {
+                state.activePromptDirection = state.direction;
+            }
+
             // Randomly pick from active intervals
             const randomIdx = Math.floor(Math.random() * state.selectedIntervals.length);
             state.currentInterval = state.selectedIntervals[randomIdx];
