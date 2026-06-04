@@ -3,56 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Number Mapper - Multi-Interval</title>
+    <title>Number Mapper - Pro Deck</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #0f172a;
-            color: #f8fafc;
-            overflow-x: hidden;
-        }
-        .glass {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .progress-bar {
-            transition: width 0.1s linear;
-        }
-        .active-int {
-            background-color: #10b981 !important;
-            border-color: #34d399 !important;
-            color: white !important;
-            box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
-            transform: scale(1.05);
-        }
-        .badge {
-            background: rgba(16, 185, 129, 0.1);
-            color: #10b981;
-            border: 1px solid rgba(16, 185, 129, 0.3);
-            padding: 2px 8px;
-            border-radius: 99px;
-            font-size: 10px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
+        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #f8fafc; overflow-x: hidden; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .progress-bar { transition: width 0.1s linear; }
+        .active-int { background-color: #10b981 !important; border-color: #34d399 !important; color: white !important; box-shadow: 0 0 15px rgba(16, 185, 129, 0.3); transform: scale(1.05); }
+        .btn-up.active { background-color: #fbbf24 !important; color: #000 !important; box-shadow: 0 0 15px rgba(251, 191, 36, 0.4); }
+        .btn-down.active { background-color: #ef4444 !important; color: #fff !important; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+        .btn-random.active { background-color: #10b981 !important; color: #fff !important; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+        .btn-time.active { background-color: #6366f1 !important; color: #fff !important; border-color: #818cf8 !important; }
     </style>
 </head>
 <body class="flex flex-col min-h-screen items-center justify-center p-4">
 
     <div class="w-full max-w-md space-y-6">
-        
         <div class="text-center space-y-2">
-            <h1 class="text-3xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">
+            <h1 class="text-3xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-red-500">
                 Number Mapper
             </h1>
-            <p class="text-slate-400 text-sm">Universal Scale Degree Practice</p>
+            <p class="text-slate-400 text-sm">Full Permutation Interval Trainer</p>
         </div>
 
         <div class="glass p-6 rounded-3xl shadow-2xl space-y-6">
+            <!-- Interval Selection -->
             <div class="space-y-4">
                 <div class="flex justify-between items-center">
                     <label class="text-xs font-semibold uppercase tracking-wider text-slate-500">Active Intervals</label>
@@ -72,203 +48,187 @@
                 </div>
             </div>
 
-            <div class="flex flex-col gap-4 pt-2 border-t border-slate-800">
-                <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-3 text-center">Direction</label>
+            <!-- Direction & Session Settings -->
+            <div class="grid grid-cols-1 gap-6 pt-2 border-t border-slate-800">
+                <div class="space-y-3">
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 text-center">Direction</label>
                     <div class="flex justify-between items-center bg-slate-900/50 p-1 rounded-2xl border border-slate-700">
-                        <button onclick="setDirection('up')" id="dir-up" class="dir-btn flex-1 py-2 rounded-xl transition text-sm">Up</button>
-                        <button onclick="setDirection('down')" id="dir-down" class="dir-btn flex-1 py-2 rounded-xl transition text-sm">Down</button>
-                        <button onclick="setDirection('random')" id="dir-random" class="dir-btn flex-1 py-2 rounded-xl transition text-sm">Random</button>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-3 text-center">Auto-Advance Timer</label>
-                    <div class="flex justify-between items-center bg-slate-900/50 p-1 rounded-2xl border border-slate-700">
-                        <button onclick="setTimer(0)" id="t-0" class="time-btn flex-1 py-2 rounded-xl transition text-sm">Off</button>
-                        <button onclick="setTimer(10)" id="t-10" class="time-btn flex-1 py-2 rounded-xl transition text-sm">10s</button>
-                        <button onclick="setTimer(15)" id="t-15" class="time-btn flex-1 py-2 rounded-xl transition text-sm">15s</button>
-                        <button onclick="setTimer(20)" id="t-20" class="time-btn flex-1 py-2 rounded-xl transition text-sm">20s</button>
-                        <button onclick="setTimer(30)" id="t-30" class="time-btn flex-1 py-2 rounded-xl transition text-sm">30s</button>
+                        <button onclick="setDirection('up')" id="dir-up" class="dir-btn btn-up flex-1 py-2 rounded-xl transition text-sm font-bold">Up</button>
+                        <button onclick="setDirection('down')" id="dir-down" class="dir-btn btn-down flex-1 py-2 rounded-xl transition text-sm font-bold">Down</button>
+                        <button onclick="setDirection('random')" id="dir-random" class="dir-btn btn-random flex-1 py-2 rounded-xl transition text-sm font-bold">Random</button>
                     </div>
                 </div>
 
                 <div class="flex items-center justify-between px-2">
-                    <div class="flex flex-col">
-                        <span class="text-sm text-slate-300">Cycle All Degrees</span>
-                        <span id="cycle-status" class="text-[9px] text-slate-500 uppercase font-bold hidden">Remaining in Set</span>
-                    </div>
                     <div class="flex items-center gap-3">
-                        <div id="cycle-counter" class="badge hidden">7 / 7</div>
-                        <button onclick="toggleNoRepeat()" id="repeat-toggle" class="w-12 h-6 rounded-full bg-slate-700 relative transition duration-300">
-                            <div id="toggle-circle" class="absolute w-4 h-4 bg-white rounded-full top-1 left-1 transition-transform duration-300"></div>
-                        </button>
+                        <div onclick="toggleNoRepeat()" id="repeat-toggle" class="w-12 h-6 bg-slate-700 rounded-full p-1 cursor-pointer transition-colors duration-300 relative">
+                            <div id="toggle-circle" class="w-4 h-4 bg-white rounded-full transition-transform duration-300"></div>
+                        </div>
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-400">No Repeat</span>
+                    </div>
+                    <div id="cycle-status" class="hidden flex items-center gap-2">
+                        <span class="text-[10px] text-slate-500 font-bold uppercase">Progress:</span>
+                        <span id="cycle-counter" class="text-xs font-black text-emerald-400">0 / 0</span>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 text-center">Auto-Advance Timer</label>
+                    <div class="grid grid-cols-5 gap-2">
+                        <button onclick="setTimer(0)" id="time-0" class="time-btn btn-time py-2 rounded-lg bg-slate-800 text-[10px] font-bold border border-slate-700">OFF</button>
+                        <button onclick="setTimer(10)" id="time-10" class="time-btn btn-time py-2 rounded-lg bg-slate-800 text-[10px] font-bold border border-slate-700 text-slate-400">10s</button>
+                        <button onclick="setTimer(15)" id="time-15" class="time-btn btn-time py-2 rounded-lg bg-slate-800 text-[10px] font-bold border border-slate-700 text-slate-400">15s</button>
+                        <button onclick="setTimer(20)" id="time-20" class="time-btn btn-time py-2 rounded-lg bg-slate-800 text-[10px] font-bold border border-slate-700 text-slate-400">20s</button>
+                        <button onclick="setTimer(30)" id="time-30" class="time-btn btn-time py-2 rounded-lg bg-slate-800 text-[10px] font-bold border border-slate-700 text-slate-400">30s</button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="glass p-8 rounded-3xl shadow-2xl relative overflow-hidden flex flex-col items-center justify-center min-h-[350px]">
-            <div id="progress-container" class="absolute top-0 left-0 w-full h-1 bg-slate-800 hidden">
-                <div id="progress-bar" class="h-full bg-emerald-500 progress-bar w-0"></div>
+        <!-- Prompt Display Area -->
+        <div class="glass p-8 rounded-3xl shadow-2xl relative overflow-hidden flex flex-col items-center justify-center min-h-[300px]">
+            <div id="progress-container" class="absolute top-0 left-0 w-full h-1.5 bg-slate-800 hidden">
+                <div id="progress-bar" class="h-full bg-indigo-500 progress-bar w-0"></div>
             </div>
 
-            <div id="prompt-container" class="text-center space-y-2">
-                <div class="flex items-center justify-center gap-2 mb-2">
-                    <div id="display-interval-label" class="text-emerald-400 font-bold text-xl uppercase tracking-widest">Select an interval</div>
-                    <div id="direction-indicator" class="hidden px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-[10px] font-black uppercase tracking-tighter border border-emerald-500/30">UP</div>
+            <div id="prompt-container" class="text-center w-full">
+                <div id="main-prompt-ui" class="flex flex-col items-center justify-center gap-2">
+                    <div class="flex items-center gap-6">
+                        <span id="display-degree" class="text-9xl font-black text-white leading-none tracking-tighter">--</span>
+                        <div class="flex flex-col items-start gap-1">
+                            <span id="display-interval-label" class="text-4xl font-bold text-slate-500 uppercase leading-none">--</span>
+                            <span id="direction-indicator" class="hidden px-2 py-1 rounded text-xs font-black uppercase tracking-widest border border-transparent">UP</span>
+                        </div>
+                    </div>
                 </div>
-                <p id="sub-label" class="text-slate-500 text-xs font-medium tracking-widest uppercase opacity-0">Start Degree</p>
-                <div id="display-degree" class="text-8xl font-black text-white leading-none">--</div>
                 
-                <div id="finish-overlay" class="hidden absolute inset-0 bg-slate-900/90 backdrop-blur-sm flex flex-col items-center justify-center z-10 animate-in fade-in duration-300">
-                    <div class="text-emerald-400 mb-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <div id="finish-overlay" class="hidden absolute inset-0 bg-slate-900/95 backdrop-blur-md flex flex-col items-center justify-center z-10 p-6 text-center">
+                    <div class="text-emerald-400 mb-4 bg-emerald-400/10 p-4 rounded-full">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
                         </svg>
                     </div>
-                    <h2 class="text-2xl font-black uppercase tracking-tighter">Session Complete</h2>
-                    <p class="text-slate-400 text-sm mb-6">You've cycled all degrees</p>
-                    <button onclick="restartSession()" class="bg-emerald-600 hover:bg-emerald-500 px-6 py-2 rounded-xl font-bold transition active:scale-95">Restart Set</button>
+                    <h2 class="text-2xl font-black uppercase tracking-tighter text-white">Deck Cleared</h2>
+                    <p id="finish-message" class="text-slate-400 text-sm mb-6">Mastered all combinations.</p>
+                    <button onclick="restartSession()" class="w-full bg-emerald-600 hover:bg-emerald-500 py-4 rounded-2xl font-bold transition shadow-lg shadow-emerald-900/20 active:scale-95 text-white uppercase tracking-widest">Reshuffle Deck</button>
                 </div>
 
-                <div id="answer-container" class="opacity-0 transition-opacity duration-300 pt-4">
-                    <p class="text-slate-500 text-xs font-medium uppercase">Target Degree</p>
-                    <div id="display-answer" class="text-5xl font-bold text-emerald-400">-</div>
+                <div id="answer-container" class="opacity-0 transition-opacity duration-300 mt-8 flex flex-col items-center">
+                    <p class="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] mb-1">Target Degree</p>
+                    <div id="display-answer" class="text-6xl font-black text-emerald-400">?</div>
                 </div>
             </div>
         </div>
 
         <div class="grid grid-cols-2 gap-4">
-            <button onclick="showAnswer()" id="btn-show" class="bg-slate-700 hover:bg-slate-600 py-4 rounded-2xl font-bold transition shadow-lg active:scale-95">
+            <button onclick="showAnswer()" id="btn-show" class="bg-slate-700 hover:bg-slate-600 py-5 rounded-2xl font-bold transition shadow-lg active:scale-95 text-sm uppercase tracking-widest">
                 Show Answer
             </button>
-            <button onclick="nextRound()" class="bg-emerald-600 hover:bg-emerald-500 py-4 rounded-2xl font-bold transition shadow-lg shadow-emerald-900/20 active:scale-95">
+            <button onclick="nextRound()" class="bg-indigo-600 hover:bg-indigo-500 py-5 rounded-2xl font-bold transition shadow-lg active:scale-95 text-sm uppercase tracking-widest text-white">
                 Next Prompt
             </button>
         </div>
 
-        <button onclick="resetApp()" class="w-full text-slate-500 text-sm hover:text-slate-300 transition mt-4">Reset Session</button>
+        <button onclick="resetApp()" class="w-full text-slate-600 text-[10px] font-bold uppercase tracking-widest hover:text-slate-400 transition mt-2">Reset Session</button>
     </div>
-        <script>
-        let state = {
+
+    <script>
+        const state = {
             selectedIntervals: [],
             timer: 0,
-            noRepeat: false,
-            direction: 'up', // 'up', 'down', or 'random'
-            activePromptDirection: 'up', // The actual direction for the current card
+            direction: 'up', 
+            activePromptDirection: 'up',
             currentDegree: 0,
             currentInterval: 0,
-            pool: [1, 2, 3, 4, 5, 6, 7], 
-            timerInterval: null,
-            revealTimeout: null,            isShowingAnswer: false,
             isStarted: false,
-            isFinished: false
+            isFinished: false,
+            isShowingAnswer: false,
+            noRepeat: false,
+            pool: [],
+            totalInPool: 0,
+            timerInterval: null,
+            revealTimeout: null
         };
 
-        window.onload = () => {
-            updateIntervalUI();
-            setTimer(0);
-            setDirection('up');
-            updateDisplay(); 
-        };
-        
-        function setDirection(dir) {
-            state.direction = dir;
-            const buttons = document.querySelectorAll('.dir-btn');
-            buttons.forEach(btn => {
-                const btnDir = btn.id.split('-')[1];
-                if (btnDir === dir) {
-                    btn.classList.add('bg-emerald-500', 'text-white', 'shadow-lg');
-                    btn.classList.remove('text-slate-400');
-                } else {
-                    btn.classList.remove('bg-emerald-500', 'text-white', 'shadow-lg');
-                    btn.classList.add('text-slate-400');
-                }
+        function updateIntervalUI() {
+            document.querySelectorAll('.int-btn').forEach(btn => {
+                const val = parseInt(btn.id.split('-')[1]);
+                if (state.selectedIntervals.includes(val)) btn.classList.add('active-int');
+                else btn.classList.remove('active-int');
             });
-            
-            // If we're currently in a session and it's set to 'up' or 'down' (not random), 
-            // update the current prompt's direction immediately
-            if (state.isStarted && dir !== 'random') {
-                state.activePromptDirection = dir;
-                updateDisplay();
-            }
         }
 
-        function startTimer() {
-            // Clear any existing timer or reveal timeouts to prevent overlaps
-            clearInterval(state.timerInterval);
-            clearTimeout(state.revealTimeout);
+        function setDirection(dir) {
+            state.direction = dir;
+            document.querySelectorAll('.dir-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`dir-${dir}`).classList.add('active');
             
-            if (state.timer <= 0 || state.isFinished || !state.isStarted) {
-                document.getElementById('progress-bar').style.width = '0%';
+            if (state.noRepeat) resetPool();
+            if (state.isStarted && !state.isFinished) nextRound();
+            updateDisplay();
+        }
+
+        function toggleInterval(val) {
+            const index = state.selectedIntervals.indexOf(val);
+            if (index > -1) state.selectedIntervals.splice(index, 1);
+            else state.selectedIntervals.push(val);
+            
+            updateIntervalUI();
+            if (state.noRepeat) resetPool();
+
+            if (state.selectedIntervals.length > 0) {
+                if (!state.isStarted || state.isFinished) {
+                    state.isStarted = true;
+                    state.isFinished = false;
+                    nextRound();
+                }
+            } else {
+                state.isStarted = false;
+                resetStateUI();
+            }
+            updateDisplay();
+        }
+
+        function bulkSelect(shouldSelectAll) {
+            state.selectedIntervals = shouldSelectAll ? [2, 3, 4, 5, 6, 7] : [];
+            updateIntervalUI();
+            if (state.noRepeat) resetPool();
+            
+            if (shouldSelectAll) {
+                state.isStarted = true;
+                state.isFinished = false;
+                nextRound();
+            } else {
+                state.isStarted = false;
+                resetStateUI();
+            }
+            updateDisplay();
+        }
+
+        function resetPool() {
+            if (state.selectedIntervals.length === 0) {
+                state.pool = [];
+                state.totalInPool = 0;
                 return;
             }
 
-            const progressBar = document.getElementById('progress-bar');
-            let elapsed = 0;
-            const duration = state.timer * 1000;
-            const step = 50; 
+            const degrees = [1, 2, 3, 4, 5, 6, 7];
+            const directions = state.direction === 'random' ? ['up', 'down'] : [state.direction];
+            state.pool = [];
 
-            state.timerInterval = setInterval(() => {
-                elapsed += step;
-                let progress = (elapsed / duration) * 100;
-                
-                if (progress >= 100) {
-                    progressBar.style.width = '100%';
-                    clearInterval(state.timerInterval);
-                    
-                    if (!state.isShowingAnswer) {
-                        showAnswer();
-                        // Wait 2 seconds for the user to see the answer before moving on
-                        state.revealTimeout = setTimeout(() => {
-                            if (!state.isFinished && state.isStarted) {
-                                nextRound();
-                            }
-                        }, 2000);
-                    } else {
-                        nextRound();
-                    }
-                } else {
-                    progressBar.style.width = progress + '%';
-                }
-            }, step);
-        }
-
-        function updateIntervalUI() {
-            const buttons = document.querySelectorAll('.int-btn');
-            buttons.forEach(btn => {
-                const val = parseInt(btn.id.split('-')[1]);
-                if (state.selectedIntervals.includes(val)) {
-                    btn.classList.add('active-int');
-                } else {
-                    btn.classList.remove('active-int');
-                }
-            });
-        }
-
-        function setTimer(val) {
-            state.timer = val;
-            const buttons = document.querySelectorAll('.time-btn');
-            buttons.forEach(btn => {
-                const btnVal = parseInt(btn.id.split('-')[1]);
-                if (btnVal === val) {
-                    btn.classList.add('bg-emerald-500', 'text-white', 'shadow-lg');
-                    btn.classList.remove('text-slate-400');
-                } else {
-                    btn.classList.remove('bg-emerald-500', 'text-white', 'shadow-lg');
-                    btn.classList.add('text-slate-400');
-                }
+            state.selectedIntervals.forEach(intVal => {
+                degrees.forEach(deg => {
+                    directions.forEach(dir => {
+                        state.pool.push({ deg, int: intVal, dir });
+                    });
+                });
             });
 
-            const progressContainer = document.getElementById('progress-container');
-            if (val > 0) {
-                progressContainer.classList.remove('hidden');
-                if (state.isStarted && !state.isFinished) startTimer();
-            } else {
-                progressContainer.classList.add('hidden');
-                clearInterval(state.timerInterval);
-                document.getElementById('progress-bar').style.width = '0%';
+            state.totalInPool = state.pool.length;
+            // Shuffle
+            for (let i = state.pool.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [state.pool[i], state.pool[j]] = [state.pool[j], state.pool[i]];
             }
         }
 
@@ -276,87 +236,106 @@
             state.noRepeat = !state.noRepeat;
             const circle = document.getElementById('toggle-circle');
             const toggle = document.getElementById('repeat-toggle');
-            const counter = document.getElementById('cycle-counter');
-            const status = document.getElementById('cycle-status');
+            const counterSection = document.getElementById('cycle-status');
 
             if (state.noRepeat) {
                 circle.style.transform = 'translateX(24px)';
                 toggle.classList.replace('bg-slate-700', 'bg-emerald-500');
-                counter.classList.remove('hidden');
-                status.classList.remove('hidden');
+                counterSection.classList.remove('hidden');
                 resetPool(); 
             } else {
                 circle.style.transform = 'translateX(0px)';
                 toggle.classList.replace('bg-emerald-500', 'bg-slate-700');
-                counter.classList.add('hidden');
-                status.classList.add('hidden');
+                counterSection.classList.add('hidden');
             }
-            // If we are already mid-session, update the display to reflect the change
+            if (state.isStarted && !state.isFinished) nextRound();
             updateDisplay();
         }
 
-        function resetPool() {
-            state.pool = [1, 2, 3, 4, 5, 6, 7];
-            // Shuffle the pool for a fresh cycle
-            for (let i = state.pool.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [state.pool[i], state.pool[j]] = [state.pool[j], state.pool[i]];
+        function setTimer(val) {
+            state.timer = val;
+            document.querySelectorAll('.time-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`time-${val}`).classList.add('active');
+            if (state.isStarted && !state.isFinished) startTimer();
+        }
+
+        function updateDisplay() {
+            const label = document.getElementById('display-interval-label');
+            const deg = document.getElementById('display-degree');
+            const counter = document.getElementById('cycle-counter');
+            const overlay = document.getElementById('finish-overlay');
+            const dirIndicator = document.getElementById('direction-indicator');
+            const answerContainer = document.getElementById('answer-container');
+            
+            if (state.isFinished) overlay.classList.remove('hidden');
+            else overlay.classList.add('hidden');
+
+            if (state.selectedIntervals.length === 0) {
+                label.innerText = "--";
+                deg.innerText = "--";
+                dirIndicator.classList.add('hidden');
+                answerContainer.style.opacity = '0';
+            } else {
+                deg.innerText = state.currentDegree || "--";
+                const suffix = state.currentInterval === 2 ? 'nd' : state.currentInterval === 3 ? 'rd' : 'th';
+                label.innerText = state.currentInterval + suffix;
+                label.classList.remove('text-slate-500');
+                label.classList.add('text-white');
+
+                dirIndicator.classList.remove('hidden');
+                dirIndicator.innerText = state.activePromptDirection;
+                if (state.activePromptDirection === 'up') {
+                    dirIndicator.className = "px-2 py-1 rounded text-xs font-black uppercase tracking-widest border border-yellow-500/50 bg-yellow-500/10 text-yellow-400";
+                } else {
+                    dirIndicator.className = "px-2 py-1 rounded text-xs font-black uppercase tracking-widest border border-red-500/50 bg-red-500/10 text-red-400";
+                }
+                
+                if (state.noRepeat) {
+                    const completed = state.totalInPool - state.pool.length;
+                    counter.innerText = `${completed} / ${state.totalInPool}`;
+                }
             }
+            
+            document.getElementById('display-answer').innerText = calculateTarget();
+            answerContainer.style.opacity = state.isShowingAnswer ? '1' : '0';
         }
 
         function calculateTarget() {
-            if (state.currentDegree === 0 || state.currentInterval === 0) return "-";
-            
-            const intervalOffset = state.currentInterval - 1;
-            let target;
-            
-            if (state.activePromptDirection === 'up') {
-                target = state.currentDegree + intervalOffset;
-                while (target > 7) target -= 7;
-            } else {
-                target = state.currentDegree - intervalOffset;
-                while (target < 1) target += 7;
-            }
-            
+            if (state.currentDegree === 0 || state.currentInterval === 0) return "?";
+            const offset = state.currentInterval - 1;
+            let target = state.activePromptDirection === 'up' ? state.currentDegree + offset : state.currentDegree - offset;
+            while (target > 7) target -= 7;
+            while (target < 1) target += 7;
             return target;
         }
 
-        function toggleInterval(val) {
-            const index = state.selectedIntervals.indexOf(val);
-            if (index > -1) {
-                state.selectedIntervals.splice(index, 1);
-            } else {
-                state.selectedIntervals.push(val);
-            }
+        function startTimer() {
+            clearInterval(state.timerInterval);
+            clearTimeout(state.revealTimeout);
+            const progressBar = document.getElementById('progress-bar');
+            const container = document.getElementById('progress-container');
             
-            updateIntervalUI();
+            if (state.timer <= 0 || !state.isStarted || state.isFinished) {
+                container.classList.add('hidden');
+                return;
+            }
 
-            if (state.selectedIntervals.length > 0) {
-                if (!state.isStarted || state.isFinished) {
-                    state.isStarted = true;
-                    state.isFinished = false;
-                    resetPool();
-                    nextRound();
+            container.classList.remove('hidden');
+            let elapsed = 0;
+            const duration = state.timer * 1000;
+            const step = 50; 
+
+            state.timerInterval = setInterval(() => {
+                elapsed += step;
+                let progress = (elapsed / duration) * 100;
+                progressBar.style.width = Math.min(progress, 100) + '%';
+                
+                if (progress >= 100) {
+                    clearInterval(state.timerInterval);
+                    showAnswer();
+                    state.revealTimeout = setTimeout(() => nextRound(), 2000);
                 }
-            } else {
-                state.isStarted = false;
-                resetStateUI();
-            }
-        }
-
-        function bulkSelect(shouldSelectAll) {
-            if (shouldSelectAll) {
-                state.selectedIntervals = [2, 3, 4, 5, 6, 7];
-                state.isStarted = true;
-                state.isFinished = false;
-                resetPool();
-                nextRound();
-            } else {
-                state.selectedIntervals = [];
-                state.isStarted = false;
-                resetStateUI();
-            }
-            updateIntervalUI();
+            }, step);
         }
 
         function showAnswer() {
@@ -364,73 +343,8 @@
             updateDisplay();
         }
 
-        function resetStateUI() {
-            clearInterval(state.timerInterval);
-            document.getElementById('progress-bar').style.width = '0%';
-            updateDisplay();
-        }
-
-        function updateDisplay() {
-            const label = document.getElementById('display-interval-label');
-            const subLabel = document.getElementById('sub-label');
-            const deg = document.getElementById('display-degree');
-            const counter = document.getElementById('cycle-counter');
-            const overlay = document.getElementById('finish-overlay');
-            const dirIndicator = document.getElementById('direction-indicator');
-            
-            if (state.isFinished) {
-                overlay.classList.remove('hidden');
-            } else {
-                overlay.classList.add('hidden');
-            }
-
-            if (state.selectedIntervals.length === 0) {
-                label.innerText = "Select Intervals";
-                label.classList.add('text-slate-500');
-                label.classList.remove('text-emerald-400');
-                subLabel.style.opacity = "0";
-                deg.innerText = "--";
-                state.isStarted = false;
-                counter.innerText = "7 / 7";
-                dirIndicator.classList.add('hidden');
-            } else {
-                label.classList.remove('text-slate-500');
-                label.classList.add('text-emerald-400');
-                subLabel.style.opacity = "1";
-                deg.innerText = state.currentDegree || "--";
-                
-                if (state.currentInterval > 0) {
-                    const suffix = state.currentInterval === 2 ? 'nd' : state.currentInterval === 3 ? 'rd' : 'th';
-                    label.innerText = state.currentInterval + suffix;
-                    
-                    // Update Direction Indicator
-                    dirIndicator.classList.remove('hidden');
-                    dirIndicator.innerText = state.activePromptDirection;
-                    if (state.activePromptDirection === 'down') {
-                        dirIndicator.classList.replace('bg-emerald-500/20', 'bg-blue-500/20');
-                        dirIndicator.classList.replace('text-emerald-400', 'text-blue-400');
-                        dirIndicator.classList.replace('border-emerald-500/30', 'border-blue-500/30');
-                    } else {
-                        dirIndicator.classList.replace('bg-blue-500/20', 'bg-emerald-500/20');
-                        dirIndicator.classList.replace('text-blue-400', 'text-emerald-400');
-                        dirIndicator.classList.replace('border-blue-500/30', 'border-emerald-500/30');
-                    }
-                }
-                
-                if (state.noRepeat) {
-                    const remaining = state.pool.length + (state.currentDegree && !state.isFinished ? 1 : 0);
-                    counter.innerText = `${remaining} / 7`;
-                }
-            }
-            
-            document.getElementById('display-answer').innerText = calculateTarget();
-            document.getElementById('answer-container').style.opacity = state.isShowingAnswer ? '1' : '0';
-        }
-
         function nextRound() {
             if (state.selectedIntervals.length === 0) return;
-            
-            // Clear any pending reveal timeouts if user clicks manually
             clearTimeout(state.revealTimeout);
             
             if (state.noRepeat && state.pool.length === 0) {
@@ -440,60 +354,60 @@
 
             state.isShowingAnswer = false;
             state.isFinished = false;
-            
-            // Handle Direction for this round
-            if (state.direction === 'random') {
-                state.activePromptDirection = Math.random() > 0.5 ? 'up' : 'down';
-            } else {
-                state.activePromptDirection = state.direction;
-            }
 
-            // Randomly pick from active intervals
-            const randomIdx = Math.floor(Math.random() * state.selectedIntervals.length);
-            state.currentInterval = state.selectedIntervals[randomIdx];
-
-            // Determine the next degree
             if (state.noRepeat) {
-                state.currentDegree = state.pool.pop();
+                const item = state.pool.pop();
+                state.currentDegree = item.deg;
+                state.currentInterval = item.int;
+                state.activePromptDirection = item.dir;
             } else {
-                let newDegree;
-                do {
-                    newDegree = Math.floor(Math.random() * 7) + 1;
-                } while (newDegree === state.currentDegree);
-                state.currentDegree = newDegree;
+                state.activePromptDirection = state.direction === 'random' ? (Math.random() > 0.5 ? 'up' : 'down') : state.direction;
+                state.currentInterval = state.selectedIntervals[Math.floor(Math.random() * state.selectedIntervals.length)];
+                let newDeg;
+                do { newDeg = Math.floor(Math.random() * 7) + 1; } while (newDeg === state.currentDegree && state.selectedIntervals.length < 2);
+                state.currentDegree = newDeg;
             }
             
             updateDisplay();
-            if(state.timer > 0) startTimer();
+            if (state.timer > 0) startTimer();
         }
 
         function finishSession() {
             state.isFinished = true;
             state.isStarted = false;
             clearInterval(state.timerInterval);
-            document.getElementById('progress-bar').style.width = '100%';
             updateDisplay();
         }
 
         function restartSession() {
+            resetPool();
             state.isFinished = false;
             state.isStarted = true;
-            resetPool();
             nextRound();
         }
 
         function resetApp() {
-            state.currentDegree = 0;
-            state.currentInterval = 0;
-            state.isShowingAnswer = false;
             state.selectedIntervals = [];
             state.isStarted = false;
             state.isFinished = false;
-            resetPool();
+            state.currentDegree = 0;
+            state.currentInterval = 0;
+            clearInterval(state.timerInterval);
+            clearTimeout(state.revealTimeout);
             updateIntervalUI();
-            setTimer(0);
+            resetPool();
             updateDisplay();
         }
+
+        function resetStateUI() {
+            document.getElementById('progress-container').classList.add('hidden');
+            clearInterval(state.timerInterval);
+        }
+
+        window.onload = () => {
+            setDirection('up');
+            setTimer(0);
+        };
     </script>
 </body>
 </html>
