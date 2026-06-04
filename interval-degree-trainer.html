@@ -161,7 +161,7 @@
             currentInterval: 0,
             pool: [1, 2, 3, 4, 5, 6, 7], 
             timerInterval: null,
-            isShowingAnswer: false,
+            revealTimeout: null,            isShowingAnswer: false,
             isStarted: false,
             isFinished: false
         };
@@ -196,8 +196,9 @@
         }
 
         function startTimer() {
-            // Clear any existing timer to prevent overlaps
+            // Clear any existing timer or reveal timeouts to prevent overlaps
             clearInterval(state.timerInterval);
+            clearTimeout(state.revealTimeout);
             
             if (state.timer <= 0 || state.isFinished || !state.isStarted) {
                 document.getElementById('progress-bar').style.width = '0%';
@@ -207,7 +208,7 @@
             const progressBar = document.getElementById('progress-bar');
             let elapsed = 0;
             const duration = state.timer * 1000;
-            const step = 50; // Update every 50ms for smooth motion
+            const step = 50; 
 
             state.timerInterval = setInterval(() => {
                 elapsed += step;
@@ -216,8 +217,18 @@
                 if (progress >= 100) {
                     progressBar.style.width = '100%';
                     clearInterval(state.timerInterval);
-                    // Move to the next round automatically
-                    nextRound();
+                    
+                    if (!state.isShowingAnswer) {
+                        showAnswer();
+                        // Wait 2 seconds for the user to see the answer before moving on
+                        state.revealTimeout = setTimeout(() => {
+                            if (!state.isFinished && state.isStarted) {
+                                nextRound();
+                            }
+                        }, 2000);
+                    } else {
+                        nextRound();
+                    }
                 } else {
                     progressBar.style.width = progress + '%';
                 }
@@ -418,6 +429,9 @@
 
         function nextRound() {
             if (state.selectedIntervals.length === 0) return;
+            
+            // Clear any pending reveal timeouts if user clicks manually
+            clearTimeout(state.revealTimeout);
             
             if (state.noRepeat && state.pool.length === 0) {
                 finishSession();
