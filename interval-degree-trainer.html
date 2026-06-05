@@ -5,126 +5,178 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Number Mapper - Pro Deck</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #f8fafc; overflow-x: hidden; }
-        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .progress-bar { transition: width 0.1s linear; }
-        .active-int { background-color: #10b981 !important; border-color: #34d399 !important; color: white !important; box-shadow: 0 0 15px rgba(16, 185, 129, 0.3); transform: scale(1.05); }
-        .btn-up.active { background-color: #fbbf24 !important; color: #000 !important; box-shadow: 0 0 15px rgba(251, 191, 36, 0.4); }
-        .btn-down.active { background-color: #ef4444 !important; color: #fff !important; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
-        .btn-random.active { background-color: #10b981 !important; color: #fff !important; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
-        .btn-time.active { background-color: #6366f1 !important; color: #fff !important; border-color: #818cf8 !important; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #0b0f19; 
+            color: #f8fafc; 
+            overflow-x: hidden; 
+        }
+        .glass { 
+            background: rgba(17, 24, 39, 0.7); 
+            backdrop-filter: blur(16px); 
+            border: 1px solid rgba(255, 255, 255, 0.08); 
+        }
+        .progress-bar { 
+            transition: width 0.05s linear; 
+        }
+        /* Active state for intervals */
+        .active-int { 
+            background-color: #10b981 !important; 
+            border-color: #34d399 !important; 
+            color: white !important; 
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.35); 
+            transform: translateY(-2px);
+        }
+        /* Custom visual highlights for directions */
+        .btn-up.active { 
+            background-color: #fbbf24 !important; 
+            color: #000 !important; 
+            box-shadow: 0 0 15px rgba(251, 191, 36, 0.4); 
+        }
+        .btn-down.active { 
+            background-color: #ef4444 !important; 
+            color: #fff !important; 
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); 
+        }
+        .btn-random.active { 
+            background-color: #10b981 !important; 
+            color: #fff !important; 
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); 
+        }
+        .btn-time.active { 
+            background-color: #6366f1 !important; 
+            color: #fff !important; 
+            border-color: #818cf8 !important; 
+        }
     </style>
 </head>
 <body class="flex flex-col min-h-screen items-center justify-center p-4">
 
-    <div class="w-full max-w-md space-y-6">
+    <div class="w-full max-w-lg space-y-6">
         <div class="text-center space-y-2">
-            <h1 class="text-3xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-red-500">
+            <h1 class="text-4xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-emerald-400 to-red-500 uppercase">
                 Number Mapper
             </h1>
-            <p class="text-slate-400 text-sm">Full Permutation Interval Trainer</p>
+            <p class="text-slate-400 text-xs font-semibold uppercase tracking-[0.2em]">Full Chromatic & Diatonic Interval Trainer</p>
         </div>
 
         <div class="glass p-6 rounded-3xl shadow-2xl space-y-6">
             <!-- Interval Selection -->
             <div class="space-y-4">
                 <div class="flex justify-between items-center">
-                    <label class="text-xs font-semibold uppercase tracking-wider text-slate-500">Active Intervals</label>
-                    <div class="flex gap-2">
-                        <button onclick="bulkSelect(true)" class="text-[10px] bg-slate-800 hover:bg-slate-700 px-2 py-1 rounded-md border border-slate-700 transition uppercase font-bold text-slate-400">All</button>
-                        <button onclick="bulkSelect(false)" class="text-[10px] bg-slate-800 hover:bg-slate-700 px-2 py-1 rounded-md border border-slate-700 transition uppercase font-bold text-slate-400">Clear</button>
+                    <label class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Active Intervals</label>
+                    <div class="flex gap-1.5 flex-wrap">
+                        <button onclick="bulkSelect('all')" class="text-[9px] bg-slate-800 hover:bg-slate-700 px-2 py-1 rounded-md border border-slate-700 transition uppercase font-bold text-slate-300">All</button>
+                        <button onclick="bulkSelect('majors')" class="text-[9px] bg-slate-800 hover:bg-slate-700 px-2 py-1 rounded-md border border-slate-700 transition uppercase font-bold text-slate-300">Maj/Perf</button>
+                        <button onclick="bulkSelect('minors')" class="text-[9px] bg-slate-800 hover:bg-slate-700 px-2 py-1 rounded-md border border-slate-700 transition uppercase font-bold text-slate-300">Minors</button>
+                        <button onclick="bulkSelect('clear')" class="text-[9px] bg-slate-800 hover:bg-slate-700 px-2 py-1 rounded-md border border-slate-700 transition uppercase font-bold text-red-400">Clear</button>
                     </div>
                 </div>
                 
-                <div class="grid grid-cols-3 gap-2">
-                    <button onclick="toggleInterval(2)" id="int-2" class="int-btn py-3 rounded-xl border border-slate-700 bg-slate-800/50 hover:bg-slate-700 transition font-bold">2nd</button>
-                    <button onclick="toggleInterval(3)" id="int-3" class="int-btn py-3 rounded-xl border border-slate-700 bg-slate-800/50 hover:bg-slate-700 transition font-bold">3rd</button>
-                    <button onclick="toggleInterval(4)" id="int-4" class="int-btn py-3 rounded-xl border border-slate-700 bg-slate-800/50 hover:bg-slate-700 transition font-bold">4th</button>
-                    <button onclick="toggleInterval(5)" id="int-5" class="int-btn py-3 rounded-xl border border-slate-700 bg-slate-800/50 hover:bg-slate-700 transition font-bold">5th</button>
-                    <button onclick="toggleInterval(6)" id="int-6" class="int-btn py-3 rounded-xl border border-slate-700 bg-slate-800/50 hover:bg-slate-700 transition font-bold">6th</button>
-                    <button onclick="toggleInterval(7)" id="int-7" class="int-btn py-3 rounded-xl border border-slate-700 bg-slate-800/50 hover:bg-slate-700 transition font-bold">7th</button>
+                <div class="grid grid-cols-4 gap-2">
+                    <!-- 2nds -->
+                    <button onclick="toggleInterval('b2')" id="int-b2" class="int-btn py-2.5 rounded-xl border border-slate-800 bg-slate-900/40 hover:bg-slate-800 transition text-xs font-bold text-slate-400">b2 <span class="text-[9px] block text-slate-600 font-normal">Min 2nd</span></button>
+                    <button onclick="toggleInterval('2')" id="int-2" class="int-btn py-2.5 rounded-xl border border-slate-800 bg-slate-900/40 hover:bg-slate-800 transition text-xs font-bold text-slate-400">2 <span class="text-[9px] block text-slate-600 font-normal">Maj 2nd</span></button>
+                    <!-- 3rds -->
+                    <button onclick="toggleInterval('b3')" id="int-b3" class="int-btn py-2.5 rounded-xl border border-slate-800 bg-slate-900/40 hover:bg-slate-800 transition text-xs font-bold text-slate-400">b3 <span class="text-[9px] block text-slate-600 font-normal">Min 3rd</span></button>
+                    <button onclick="toggleInterval('3')" id="int-3" class="int-btn py-2.5 rounded-xl border border-slate-800 bg-slate-900/40 hover:bg-slate-800 transition text-xs font-bold text-slate-400">3 <span class="text-[9px] block text-slate-600 font-normal">Maj 3rd</span></button>
+                    <!-- 4ths & 5ths -->
+                    <button onclick="toggleInterval('4')" id="int-4" class="int-btn py-2.5 rounded-xl border border-slate-800 bg-slate-900/40 hover:bg-slate-800 transition text-xs font-bold text-slate-400">4 <span class="text-[9px] block text-slate-600 font-normal">Perf 4th</span></button>
+                    <button onclick="toggleInterval('#4')" id="int-#4" class="int-btn py-2.5 rounded-xl border border-slate-800 bg-slate-900/40 hover:bg-slate-800 transition text-xs font-bold text-slate-400">#4 <span class="text-[9px] block text-slate-600 font-normal">Aug 4th</span></button>
+                    <button onclick="toggleInterval('b5')" id="int-b5" class="int-btn py-2.5 rounded-xl border border-slate-800 bg-slate-900/40 hover:bg-slate-800 transition text-xs font-bold text-slate-400">b5 <span class="text-[9px] block text-slate-600 font-normal">Dim 5th</span></button>
+                    <button onclick="toggleInterval('5')" id="int-5" class="int-btn py-2.5 rounded-xl border border-slate-800 bg-slate-900/40 hover:bg-slate-800 transition text-xs font-bold text-slate-400">5 <span class="text-[9px] block text-slate-600 font-normal">Perf 5th</span></button>
+                    <!-- 6ths & 7ths -->
+                    <button onclick="toggleInterval('b6')" id="int-b6" class="int-btn py-2.5 rounded-xl border border-slate-800 bg-slate-900/40 hover:bg-slate-800 transition text-xs font-bold text-slate-400">b6 <span class="text-[9px] block text-slate-600 font-normal">Min 6th</span></button>
+                    <button onclick="toggleInterval('6')" id="int-6" class="int-btn py-2.5 rounded-xl border border-slate-800 bg-slate-900/40 hover:bg-slate-800 transition text-xs font-bold text-slate-400">6 <span class="text-[9px] block text-slate-600 font-normal">Maj 6th</span></button>
+                    <button onclick="toggleInterval('b7')" id="int-b7" class="int-btn py-2.5 rounded-xl border border-slate-800 bg-slate-900/40 hover:bg-slate-800 transition text-xs font-bold text-slate-400">b7 <span class="text-[9px] block text-slate-600 font-normal">Min 7th</span></button>
+                    <button onclick="toggleInterval('7')" id="int-7" class="int-btn py-2.5 rounded-xl border border-slate-800 bg-slate-900/40 hover:bg-slate-800 transition text-xs font-bold text-slate-400">7 <span class="text-[9px] block text-slate-600 font-normal">Maj 7th</span></button>
                 </div>
             </div>
 
             <!-- Direction & Session Settings -->
-            <div class="grid grid-cols-1 gap-6 pt-2 border-t border-slate-800">
-                <div class="space-y-3">
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 text-center">Direction</label>
-                    <div class="flex justify-between items-center bg-slate-900/50 p-1 rounded-2xl border border-slate-700">
-                        <button onclick="setDirection('up')" id="dir-up" class="dir-btn btn-up flex-1 py-2 rounded-xl transition text-sm font-bold">Up</button>
-                        <button onclick="setDirection('down')" id="dir-down" class="dir-btn btn-down flex-1 py-2 rounded-xl transition text-sm font-bold">Down</button>
-                        <button onclick="setDirection('random')" id="dir-random" class="dir-btn btn-random flex-1 py-2 rounded-xl transition text-sm font-bold">Random</button>
+            <div class="grid grid-cols-1 gap-5 pt-4 border-t border-slate-800">
+                <div class="space-y-2">
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 text-center">Direction</label>
+                    <div class="flex justify-between items-center bg-slate-950 p-1 rounded-2xl border border-slate-800">
+                        <button onclick="setDirection('up')" id="dir-up" class="dir-btn btn-up flex-1 py-2 rounded-xl transition text-xs font-black uppercase tracking-wider">Up</button>
+                        <button onclick="setDirection('down')" id="dir-down" class="dir-btn btn-down flex-1 py-2 rounded-xl transition text-xs font-black uppercase tracking-wider">Down</button>
+                        <button onclick="setDirection('random')" id="dir-random" class="dir-btn btn-random flex-1 py-2 rounded-xl transition text-xs font-black uppercase tracking-wider">Random</button>
                     </div>
                 </div>
 
                 <div class="flex items-center justify-between px-2">
                     <div class="flex items-center gap-3">
-                        <div onclick="toggleNoRepeat()" id="repeat-toggle" class="w-12 h-6 bg-slate-700 rounded-full p-1 cursor-pointer transition-colors duration-300 relative">
+                        <div onclick="toggleNoRepeat()" id="repeat-toggle" class="w-11 h-6 bg-slate-800 rounded-full p-1 cursor-pointer transition-colors duration-350 relative border border-slate-700">
                             <div id="toggle-circle" class="w-4 h-4 bg-white rounded-full transition-transform duration-300"></div>
                         </div>
-                        <span class="text-xs font-bold uppercase tracking-wider text-slate-400">No Repeat</span>
+                        <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">No Repeat</span>
                     </div>
                     <div id="cycle-status" class="hidden flex items-center gap-2">
-                        <span class="text-[10px] text-slate-500 font-bold uppercase">Progress:</span>
+                        <span class="text-[10px] text-slate-500 font-black uppercase">Progress:</span>
                         <span id="cycle-counter" class="text-xs font-black text-emerald-400">0 / 0</span>
                     </div>
                 </div>
 
-                <div class="space-y-3">
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 text-center">Auto-Advance Timer</label>
-                    <div class="grid grid-cols-5 gap-2">
-                        <button onclick="setTimer(0)" id="time-0" class="time-btn btn-time py-2 rounded-lg bg-slate-800 text-[10px] font-bold border border-slate-700">OFF</button>
-                        <button onclick="setTimer(10)" id="time-10" class="time-btn btn-time py-2 rounded-lg bg-slate-800 text-[10px] font-bold border border-slate-700 text-slate-400">10s</button>
-                        <button onclick="setTimer(15)" id="time-15" class="time-btn btn-time py-2 rounded-lg bg-slate-800 text-[10px] font-bold border border-slate-700 text-slate-400">15s</button>
-                        <button onclick="setTimer(20)" id="time-20" class="time-btn btn-time py-2 rounded-lg bg-slate-800 text-[10px] font-bold border border-slate-700 text-slate-400">20s</button>
-                        <button onclick="setTimer(30)" id="time-30" class="time-btn btn-time py-2 rounded-lg bg-slate-800 text-[10px] font-bold border border-slate-700 text-slate-400">30s</button>
+                <div class="space-y-2">
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 text-center">Auto-Advance Timer</label>
+                    <div class="grid grid-cols-5 gap-1.5">
+                        <button onclick="setTimer(0)" id="time-0" class="time-btn btn-time py-2 rounded-lg bg-slate-900/60 text-[10px] font-bold border border-slate-800">OFF</button>
+                        <button onclick="setTimer(10)" id="time-10" class="time-btn btn-time py-2 rounded-lg bg-slate-900/60 text-[10px] font-bold border border-slate-800 text-slate-400">10s</button>
+                        <button onclick="setTimer(15)" id="time-15" class="time-btn btn-time py-2 rounded-lg bg-slate-900/60 text-[10px] font-bold border border-slate-800 text-slate-400">15s</button>
+                        <button onclick="setTimer(20)" id="time-20" class="time-btn btn-time py-2 rounded-lg bg-slate-900/60 text-[10px] font-bold border border-slate-800 text-slate-400">20s</button>
+                        <button onclick="setTimer(30)" id="time-30" class="time-btn btn-time py-2 rounded-lg bg-slate-900/60 text-[10px] font-bold border border-slate-800 text-slate-400">30s</button>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Prompt Display Area -->
-        <div class="glass p-8 rounded-3xl shadow-2xl relative overflow-hidden flex flex-col items-center justify-center min-h-[300px]">
-            <div id="progress-container" class="absolute top-0 left-0 w-full h-1.5 bg-slate-800 hidden">
-                <div id="progress-bar" class="h-full bg-indigo-500 progress-bar w-0"></div>
+        <div class="glass p-8 rounded-3xl shadow-2xl relative overflow-hidden flex flex-col items-center justify-center min-h-[260px] border border-slate-800">
+            <div id="progress-container" class="absolute top-0 left-0 w-full h-1.5 bg-slate-950 hidden">
+                <div id="progress-bar" class="h-full bg-gradient-to-r from-indigo-500 to-emerald-500 progress-bar w-0"></div>
             </div>
 
             <div id="prompt-container" class="text-center w-full">
-                <div id="main-prompt-ui" class="flex flex-col items-center justify-center gap-2">
-                    <div class="flex items-center gap-6">
+                <!-- Main Prompt View -->
+                <div id="main-prompt-ui" class="flex flex-col items-center justify-center gap-1.5">
+                    <div class="flex items-center gap-6 justify-center">
                         <span id="display-degree" class="text-9xl font-black text-white leading-none tracking-tighter">--</span>
-                        <div class="flex flex-col items-start gap-1">
-                            <span id="display-interval-label" class="text-4xl font-bold text-slate-500 uppercase leading-none">--</span>
-                            <span id="direction-indicator" class="hidden px-2 py-1 rounded text-xs font-black uppercase tracking-widest border border-transparent">UP</span>
+                        <div class="flex flex-col items-start justify-center gap-1">
+                            <span id="display-interval-label" class="text-4xl font-extrabold text-slate-600 uppercase leading-none tracking-tight">--</span>
+                            <span id="display-interval-fullname" class="text-[10px] text-slate-500 font-bold tracking-wider uppercase leading-none mt-0.5"></span>
+                            <span id="direction-indicator" class="hidden px-2 py-1 rounded text-[10px] font-black uppercase tracking-widest border border-transparent mt-1">UP</span>
                         </div>
                     </div>
                 </div>
                 
-                <div id="finish-overlay" class="hidden absolute inset-0 bg-slate-900/95 backdrop-blur-md flex flex-col items-center justify-center z-10 p-6 text-center">
-                    <div class="text-emerald-400 mb-4 bg-emerald-400/10 p-4 rounded-full">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <!-- Session Finished Screen -->
+                <div id="finish-overlay" class="hidden absolute inset-0 bg-slate-950/95 backdrop-blur-md flex flex-col items-center justify-center z-10 p-6 text-center">
+                    <div class="text-emerald-400 mb-3 bg-emerald-400/10 p-4 rounded-full">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
                         </svg>
                     </div>
-                    <h2 class="text-2xl font-black uppercase tracking-tighter text-white">Deck Cleared</h2>
-                    <p id="finish-message" class="text-slate-400 text-sm mb-6">Mastered all combinations.</p>
-                    <button onclick="restartSession()" class="w-full bg-emerald-600 hover:bg-emerald-500 py-4 rounded-2xl font-bold transition shadow-lg shadow-emerald-900/20 active:scale-95 text-white uppercase tracking-widest">Reshuffle Deck</button>
+                    <h2 class="text-2xl font-black uppercase tracking-tighter text-white">Full Deck Cleared</h2>
+                    <p id="finish-message" class="text-slate-400 text-xs mt-1 mb-5">Mastered all active combinations.</p>
+                    <button onclick="restartSession()" class="w-full max-w-xs bg-emerald-600 hover:bg-emerald-500 py-3 rounded-2xl font-bold transition shadow-lg shadow-emerald-950/40 active:scale-95 text-xs uppercase tracking-widest">Reshuffle Deck</button>
                 </div>
 
-                <div id="answer-container" class="opacity-0 transition-opacity duration-300 mt-8 flex flex-col items-center">
-                    <p class="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] mb-1">Target Degree</p>
-                    <div id="display-answer" class="text-6xl font-black text-emerald-400">?</div>
+                <!-- Answer Reveal View -->
+                <div id="answer-container" class="opacity-0 transition-opacity duration-300 mt-6 flex flex-col items-center">
+                    <p class="text-slate-500 text-[9px] font-black uppercase tracking-[0.2em] mb-0.5">Target Degree</p>
+                    <div id="display-answer" class="text-5xl font-black text-emerald-400 tracking-tight">?</div>
                 </div>
             </div>
         </div>
 
+        <!-- Controls -->
         <div class="grid grid-cols-2 gap-4">
-            <button onclick="showAnswer()" id="btn-show" class="bg-slate-700 hover:bg-slate-600 py-5 rounded-2xl font-bold transition shadow-lg active:scale-95 text-sm uppercase tracking-widest">
+            <button onclick="showAnswer()" id="btn-show" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 py-4 rounded-2xl font-bold transition shadow-lg active:scale-95 text-xs uppercase tracking-widest">
                 Show Answer
             </button>
-            <button onclick="nextRound()" class="bg-indigo-600 hover:bg-indigo-500 py-5 rounded-2xl font-bold transition shadow-lg active:scale-95 text-sm uppercase tracking-widest text-white">
+            <button onclick="nextRound()" class="bg-emerald-600 hover:bg-emerald-500 py-4 rounded-2xl font-bold transition shadow-lg active:scale-95 text-xs uppercase tracking-widest text-white shadow-emerald-950/20">
                 Next Prompt
             </button>
         </div>
@@ -133,13 +185,31 @@
     </div>
 
     <script>
+        // Chromatic Definitions of major-scale-relative intervals
+        const INTERVAL_DEFS = {
+            'b2': { label: 'b2', name: 'Minor 2nd', semitones: 1, step: 1 },
+            '2':  { label: '2nd', name: 'Major 2nd', semitones: 2, step: 1 },
+            'b3': { label: 'b3', name: 'Minor 3rd', semitones: 3, step: 2 },
+            '3':  { label: '3rd', name: 'Major 3rd', semitones: 4, step: 2 },
+            '4':  { label: '4th', name: 'Perfect 4th', semitones: 5, step: 3 },
+            '#4': { label: '#4', name: 'Aug 4th', semitones: 6, step: 3 },
+            'b5': { label: 'b5', name: 'Dim 5th', semitones: 6, step: 4 },
+            '5':  { label: '5th', name: 'Perfect 5th', semitones: 7, step: 4 },
+            'b6': { label: 'b6', name: 'Minor 6th', semitones: 8, step: 5 },
+            '6':  { label: '6th', name: 'Major 6th', semitones: 9, step: 5 },
+            'b7': { label: 'b7', name: 'Minor 7th', semitones: 10, step: 6 },
+            '7':  { label: '7th', name: 'Major 7th', semitones: 11, step: 6 }
+        };
+
+        const NATURAL_SEMITONES = { 1: 0, 2: 2, 3: 4, 4: 5, 5: 7, 6: 9, 7: 11 };
+
         const state = {
-            selectedIntervals: [],
+            selectedIntervals: [], // Array of keys like 'b3', '3'
             timer: 0,
-            direction: 'up', 
-            activePromptDirection: 'up',
+            direction: 'up', // 'up', 'down', 'random'
+            activePromptDirection: 'up', // Actual direction for current challenge
             currentDegree: 0,
-            currentInterval: 0,
+            currentIntervalKey: '',
             isStarted: false,
             isFinished: false,
             isShowingAnswer: false,
@@ -150,14 +220,16 @@
             revealTimeout: null
         };
 
+        // UI Management - Toggles the highlights of the buttons
         function updateIntervalUI() {
             document.querySelectorAll('.int-btn').forEach(btn => {
-                const val = parseInt(btn.id.split('-')[1]);
+                const val = btn.id.replace('int-', '');
                 if (state.selectedIntervals.includes(val)) btn.classList.add('active-int');
                 else btn.classList.remove('active-int');
             });
         }
 
+        // Handle settings direction switches
         function setDirection(dir) {
             state.direction = dir;
             document.querySelectorAll('.dir-btn').forEach(btn => btn.classList.remove('active'));
@@ -168,6 +240,7 @@
             updateDisplay();
         }
 
+        // Toggle individual selection of intervals
         function toggleInterval(val) {
             const index = state.selectedIntervals.indexOf(val);
             if (index > -1) state.selectedIntervals.splice(index, 1);
@@ -181,28 +254,47 @@
                     state.isStarted = true;
                     state.isFinished = false;
                     nextRound();
+                } else {
+                    // Update pool live
+                    updateDisplay();
                 }
             } else {
                 state.isStarted = false;
                 resetStateUI();
+                updateDisplay();
             }
-            updateDisplay();
         }
 
-        function bulkSelect(shouldSelectAll) {
-            state.selectedIntervals = shouldSelectAll ? [2, 3, 4, 5, 6, 7] : [];
+        function bulkSelect(category) {
+            if (category === 'all') {
+                state.selectedIntervals = Object.keys(INTERVAL_DEFS);
+            } else if (category === 'majors') {
+                state.selectedIntervals = ['2', '3', '4', '5', '6', '7'];
+            } else if (category === 'minors') {
+                state.selectedIntervals = ['b2', 'b3', '#4', 'b5', 'b6', 'b7'];
+            } else {
+                state.selectedIntervals = [];
+            }
+
             updateIntervalUI();
             if (state.noRepeat) resetPool();
             
-            if (shouldSelectAll) {
+            if (state.selectedIntervals.length > 0) {
                 state.isStarted = true;
                 state.isFinished = false;
                 nextRound();
             } else {
                 state.isStarted = false;
                 resetStateUI();
+                updateDisplay();
             }
-            updateDisplay();
+        }
+
+        // Safe helpers for diatonic wraps
+        function wrapDegree(deg) {
+            while (deg > 7) deg -= 7;
+            while (deg < 1) deg += 7;
+            return deg;
         }
 
         function resetPool() {
@@ -216,16 +308,17 @@
             const directions = state.direction === 'random' ? ['up', 'down'] : [state.direction];
             state.pool = [];
 
-            state.selectedIntervals.forEach(intVal => {
+            state.selectedIntervals.forEach(intKey => {
                 degrees.forEach(deg => {
                     directions.forEach(dir => {
-                        state.pool.push({ deg, int: intVal, dir });
+                        state.pool.push({ deg, intKey, dir });
                     });
                 });
             });
 
             state.totalInPool = state.pool.length;
-            // Shuffle
+            
+            // Fisher-Yates Shuffle
             for (let i = state.pool.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [state.pool[i], state.pool[j]] = [state.pool[j], state.pool[i]];
@@ -239,13 +332,13 @@
             const counterSection = document.getElementById('cycle-status');
 
             if (state.noRepeat) {
-                circle.style.transform = 'translateX(24px)';
-                toggle.classList.replace('bg-slate-700', 'bg-emerald-500');
+                circle.style.transform = 'translateX(20px)';
+                toggle.classList.replace('bg-slate-800', 'bg-emerald-500');
                 counterSection.classList.remove('hidden');
                 resetPool(); 
             } else {
                 circle.style.transform = 'translateX(0px)';
-                toggle.classList.replace('bg-emerald-500', 'bg-slate-700');
+                toggle.classList.replace('bg-emerald-500', 'bg-slate-800');
                 counterSection.classList.add('hidden');
             }
             if (state.isStarted && !state.isFinished) nextRound();
@@ -261,6 +354,7 @@
 
         function updateDisplay() {
             const label = document.getElementById('display-interval-label');
+            const sublabel = document.getElementById('display-interval-fullname');
             const deg = document.getElementById('display-degree');
             const counter = document.getElementById('cycle-counter');
             const overlay = document.getElementById('finish-overlay');
@@ -272,22 +366,31 @@
 
             if (state.selectedIntervals.length === 0) {
                 label.innerText = "--";
+                sublabel.innerText = "";
                 deg.innerText = "--";
                 dirIndicator.classList.add('hidden');
                 answerContainer.style.opacity = '0';
+                if (state.noRepeat) counter.innerText = "0 / 0";
             } else {
                 deg.innerText = state.currentDegree || "--";
-                const suffix = state.currentInterval === 2 ? 'nd' : state.currentInterval === 3 ? 'rd' : 'th';
-                label.innerText = state.currentInterval + suffix;
-                label.classList.remove('text-slate-500');
-                label.classList.add('text-white');
+                
+                const intervalDef = INTERVAL_DEFS[state.currentIntervalKey];
+                if (intervalDef) {
+                    label.innerText = intervalDef.label;
+                    sublabel.innerText = intervalDef.name;
+                    label.classList.remove('text-slate-600');
+                    label.classList.add('text-white');
+                } else {
+                    label.innerText = "--";
+                    sublabel.innerText = "";
+                }
 
                 dirIndicator.classList.remove('hidden');
                 dirIndicator.innerText = state.activePromptDirection;
                 if (state.activePromptDirection === 'up') {
-                    dirIndicator.className = "px-2 py-1 rounded text-xs font-black uppercase tracking-widest border border-yellow-500/50 bg-yellow-500/10 text-yellow-400";
+                    dirIndicator.className = "px-2 py-1 rounded text-[10px] font-black uppercase tracking-widest border border-yellow-500/50 bg-yellow-500/10 text-yellow-400";
                 } else {
-                    dirIndicator.className = "px-2 py-1 rounded text-xs font-black uppercase tracking-widest border border-red-500/50 bg-red-500/10 text-red-400";
+                    dirIndicator.className = "px-2 py-1 rounded text-[10px] font-black uppercase tracking-widest border border-red-500/50 bg-red-500/10 text-red-400";
                 }
                 
                 if (state.noRepeat) {
@@ -301,12 +404,37 @@
         }
 
         function calculateTarget() {
-            if (state.currentDegree === 0 || state.currentInterval === 0) return "?";
-            const offset = state.currentInterval - 1;
-            let target = state.activePromptDirection === 'up' ? state.currentDegree + offset : state.currentDegree - offset;
-            while (target > 7) target -= 7;
-            while (target < 1) target += 7;
-            return target;
+            if (state.currentDegree === 0 || !state.currentIntervalKey) return "?";
+            
+            const S = state.currentDegree;
+            const intervalDef = INTERVAL_DEFS[state.currentIntervalKey];
+            const step = intervalDef.step;
+            const requestedSemi = intervalDef.semitones;
+            const dir = state.activePromptDirection;
+
+            // 1. Scale Degree Target
+            let T_diatonic = S + (dir === 'up' ? step : -step);
+            T_diatonic = wrapDegree(T_diatonic);
+
+            // 2. Absolute Chromatic target relative to Tonic
+            const startSemi = NATURAL_SEMITONES[S];
+            let actualSemi = startSemi + (dir === 'up' ? requestedSemi : -requestedSemi);
+            actualSemi = (actualSemi % 12 + 12) % 12;
+
+            // 3. Difference between chromatic reality and natural diatonic expectation
+            const naturalSemi = NATURAL_SEMITONES[T_diatonic];
+            let diff = (actualSemi - naturalSemi) % 12;
+            if (diff > 6) diff -= 12;
+            if (diff < -6) diff += 12;
+
+            // 4. Return correct notation
+            let accidental = "";
+            if (diff === -1) accidental = "b";
+            else if (diff === -2) accidental = "bb";
+            else if (diff === 1) accidental = "#";
+            else if (diff === 2) accidental = "##";
+
+            return accidental + T_diatonic;
         }
 
         function startTimer() {
@@ -358,13 +486,16 @@
             if (state.noRepeat) {
                 const item = state.pool.pop();
                 state.currentDegree = item.deg;
-                state.currentInterval = item.int;
+                state.currentIntervalKey = item.intKey;
                 state.activePromptDirection = item.dir;
             } else {
                 state.activePromptDirection = state.direction === 'random' ? (Math.random() > 0.5 ? 'up' : 'down') : state.direction;
-                state.currentInterval = state.selectedIntervals[Math.floor(Math.random() * state.selectedIntervals.length)];
+                state.currentIntervalKey = state.selectedIntervals[Math.floor(Math.random() * state.selectedIntervals.length)];
+                
                 let newDeg;
-                do { newDeg = Math.floor(Math.random() * 7) + 1; } while (newDeg === state.currentDegree && state.selectedIntervals.length < 2);
+                do { 
+                    newDeg = Math.floor(Math.random() * 7) + 1; 
+                } while (newDeg === state.currentDegree && state.selectedIntervals.length < 2);
                 state.currentDegree = newDeg;
             }
             
@@ -391,7 +522,7 @@
             state.isStarted = false;
             state.isFinished = false;
             state.currentDegree = 0;
-            state.currentInterval = 0;
+            state.currentIntervalKey = '';
             clearInterval(state.timerInterval);
             clearTimeout(state.revealTimeout);
             updateIntervalUI();
