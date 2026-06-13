@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AuraMelody - Pure Note Generator</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        mono: ['Space Grotesk', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0b0914;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(139, 92, 246, 0.08) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.06) 0px, transparent 50%);
+            background-attachment: fixed;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0b0914;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #231d3d;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #393061;
+        }
+    </style>
+</head>
+<body class="text-slate-100 font-sans min-h-screen flex flex-col justify-between antialiased selection:bg-purple-500/30 selection:text-purple-200">
+
+    <!-- Top Navigation Header -->
+    <header class="border-b border-white/5 bg-slate-950/40 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="bg-gradient-to-tr from-purple-600 to-indigo-600 p-2.5 rounded-xl shadow-lg shadow-purple-500/20">
+                    <i data-lucide="music-4" class="w-5 h-5 text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-200 to-slate-400">AuraMelody</h1>
+                    <p class="text-[9px] text-purple-400 font-semibold tracking-widest uppercase">Pure Visual Note Display</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-2">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                    <span class="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse"></span>
+                    Simple MIDI Draft Mode
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Grid -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        
+        <!-- Left Column: Controls and Circle of Fifths (5 cols) -->
+        <section class="lg:col-span-5 flex flex-col gap-6">
+            
+            <!-- 1. Key Signature Selector (Circle of Fifths) -->
+            <div class="bg-white/[0.02] border border-white/5 rounded-2xl p-6 backdrop-blur-sm relative overflow-hidden flex flex-col items-center">
+                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-emerald-500"></div>
+                
+                <div class="w-full flex justify-between items-start mb-6">
+                    <div>
+                        <h2 class="text-sm font-bold text-slate-200 flex items-center gap-2">
+                            <i data-lucide="compass" class="w-4 h-4 text-purple-400"></i>
+                            Circle of Fifths
+                        </h2>
+                        <p class="text-[11px] text-slate-400 mt-1">Select a key signature to filter note pools. Default is Chromatic.</p>
+                    </div>
+                    <button id="clear-key-btn" onclick="selectKey(null)" class="text-[10px] font-bold bg-white/5 hover:bg-white/10 text-slate-300 px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 border border-white/10 active:scale-95">
+                        <i data-lucide="refresh-cw" class="w-3 h-3"></i>
+                        Clear Key
+                    </button>
+                </div>
+
+                <!-- COF Selector Circular Interactive SVG -->
+                <div class="relative w-72 h-72 sm:w-80 sm:h-80 select-none">
+                    <svg id="cof-svg" viewBox="0 0 360 360" class="w-full h-full transform rotate-0 drop-shadow-[0_0_20px_rgba(0,0,0,0.6)]">
+                        <!-- Wedges injected dynamically by JS -->
+                    </svg>
+
+                    <!-- Center Reset Overlay Button -->
+                    <div id="cof-center-btn" onclick="selectKey(null)" class="absolute inset-0 m-auto w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-slate-950 border border-white/10 flex flex-col items-center justify-center cursor-pointer hover:border-purple-500/40 hover:bg-slate-900 transition shadow-[inset_0_2px_10px_rgba(0,0,0,0.8)] z-10 text-center p-2 group">
+                        <span class="text-[9px] text-slate-500 font-bold tracking-widest uppercase group-hover:text-purple-400 transition">Scale Filter</span>
+                        <span id="active-key-display" class="text-sm font-extrabold text-white mt-0.5 tracking-tight font-mono">None</span>
+                        <span id="active-scale-type" class="text-[9px] text-emerald-400 font-medium tracking-wide">Chromatic (All Notes)</span>
+                    </div>
+                </div>
+
+                <!-- Color Map Legend -->
+                <div class="mt-4 flex gap-6 text-[11px] text-slate-400 border-t border-white/5 pt-4 w-full justify-center">
+                    <span class="flex items-center gap-1.5">
+                        <span class="w-2.5 h-2.5 rounded bg-purple-600/30 border border-purple-500/60 inline-block"></span>
+                        Outer Ring: Major Keys
+                    </span>
+                    <span class="flex items-center gap-1.5">
+                        <span class="w-2.5 h-2.5 rounded bg-emerald-600/30 border border-emerald-500/60 inline-block"></span>
+                        Inner Ring: Minor Keys
+                    </span>
+                </div>
+            </div>
+
+            <!-- 2. Generation Engine Settings -->
+            <div class="bg-white/[0.02] border border-white/5 rounded-2xl p-6 backdrop-blur-sm relative">
+                <h2 class="text-sm font-bold text-slate-200 flex items-center gap-2 mb-4">
+                    <i data-lucide="sliders" class="w-4 h-4 text-emerald-400"></i>
+                    Generator Settings
+                </h2>
+
+                <div class="space-y-4">
+                    <!-- Note Count Selector -->
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="text-xs font-semibold text-slate-300">Notes Count</label>
+                            <span id="note-count-val" class="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded font-mono">4 Notes</span>
+                        </div>
+                        <div class="grid grid-cols-5 gap-2">
+                            <!-- 2 to 6 Notes trigger buttons -->
+                            <button onclick="setNoteLength(2)" id="len-btn-2" class="len-btn py-1.5 text-xs font-bold bg-white/5 hover:bg-white/10 rounded-lg border border-white/5 transition-all text-slate-400">2</button>
+                            <button onclick="setNoteLength(3)" id="len-btn-3" class="len-btn py-1.5 text-xs font-bold bg-white/5 hover:bg-white/10 rounded-lg border border-white/5 transition-all text-slate-400">3</button>
+                            <button onclick="setNoteLength(4)" id="len-btn-4" class="len-btn py-1.5 text-xs font-bold bg-purple-600/30 border-purple-500/50 text-white rounded-lg border transition-all">4</button>
+                            <button onclick="setNoteLength(5)" id="len-btn-5" class="len-btn py-1.5 text-xs font-bold bg-white/5 hover:bg-white/10 rounded-lg border border-white/5 transition-all text-slate-400">5</button>
+                            <button onclick="setNoteLength(6)" id="len-btn-6" class="len-btn py-1.5 text-xs font-bold bg-white/5 hover:bg-white/10 rounded-lg border border-white/5 transition-all text-slate-400">6</button>
+                        </div>
+                    </div>
+
+                    <!-- Octave Selection Range -->
+                    <div>
+                        <div class="flex justify-between items-center mb-1.5">
+                            <label class="text-xs font-semibold text-slate-300">Octave Range</label>
+                            <span id="octave-val" class="text-xs font-bold text-slate-400 font-mono">C3 - C5</span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2">
+                            <button id="oct-low" onclick="setOctaveRange('low')" class="oct-btn py-1.5 text-xs bg-white/5 text-slate-400 border border-white/5 rounded-lg hover:bg-white/10 transition">Low (2-3)</button>
+                            <button id="oct-mid" onclick="setOctaveRange('mid')" class="oct-btn py-1.5 text-xs bg-purple-600/20 text-purple-300 border border-purple-500/30 rounded-lg hover:bg-white/10 transition">Mid (3-4)</button>
+                            <button id="oct-high" onclick="setOctaveRange('high')" class="oct-btn py-1.5 text-xs bg-white/5 text-slate-400 border border-white/5 rounded-lg hover:bg-white/10 transition">High (4-5)</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- Right Column: Big Display and Output Controls (7 cols) -->
+        <section class="lg:col-span-7 flex flex-col gap-6">
+            
+            <!-- Quick Actions Hub -->
+            <div class="bg-white/[0.02] border border-white/5 rounded-2xl p-6 backdrop-blur-sm flex flex-col gap-4">
+                <div class="flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-sm font-bold text-slate-200">Melody Generator Sandbox</h2>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Quickly construct random, scale-correct patterns.</p>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <!-- Copy Sequence as Text -->
+                        <button onclick="copySequenceAsText()" class="text-xs font-semibold bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white px-3.5 py-1.5 rounded-lg border border-white/10 flex items-center gap-1.5 transition active:scale-95" title="Copy notes list to clipboard">
+                            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                            Copy Notes
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Big Radiant Trigger Button -->
+                <button onclick="generateMelody()" class="relative group overflow-hidden py-4.5 px-6 rounded-xl bg-gradient-to-r from-purple-600 via-violet-600 to-emerald-500 font-extrabold text-xs text-white tracking-widest uppercase shadow-xl hover:shadow-purple-500/20 active:scale-[0.99] transition-all flex items-center justify-center gap-2">
+                    <span class="absolute inset-0 w-full h-full bg-gradient-to-r from-white/10 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></span>
+                    <i data-lucide="wand-2" class="w-4 h-4"></i>
+                    <span>Generate Random Notes</span>
+                </button>
+                
+                <!-- Silent Copy Alert Banner -->
+                <div id="copy-toast" class="hidden text-center text-[10px] text-emerald-400 font-semibold bg-emerald-500/10 border border-emerald-500/20 rounded-lg py-1 px-3 mt-1 transition-all">
+                    Sequence copied to clipboard!
+                </div>
+            </div>
+
+            <!-- Notes Grid Display Area -->
+            <div class="bg-white/[0.02] border border-white/5 rounded-2xl p-6 backdrop-blur-sm flex-1 flex flex-col min-h-[380px]">
+                <div class="flex items-center justify-between border-b border-white/5 pb-4 mb-6">
+                    <div>
+                        <h2 class="text-sm font-bold text-slate-200 flex items-center gap-2">
+                            <i data-lucide="layout-grid" class="w-4 h-4 text-purple-400"></i>
+                            Pure Note Display
+                        </h2>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Locks prevent randomized overrides. Use selectors to custom adjust.</p>
+                    </div>
+                </div>
+
+                <!-- Interactive Sequencer Blocks / Visual Cards -->
+                <div id="notes-grid-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5 flex-1 items-stretch justify-center">
+                    <!-- Note Cards dynamically rendered here via Javascript -->
+                </div>
+
+                <!-- Tip / Interactive Instruction Box -->
+                <div class="mt-6 p-4 bg-purple-950/20 border border-purple-500/10 rounded-xl flex gap-3 items-start">
+                    <i data-lucide="info" class="w-4.5 h-4.5 text-purple-400 shrink-0 mt-0.5"></i>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        <strong class="text-slate-200">Visual Tuning:</strong> Use the padlock icon <i data-lucide="lock" class="w-3 h-3 inline text-amber-500"></i> on any note to lock it. When you click <strong class="text-slate-300">"Generate Random Notes"</strong>, those pinned notes stay frozen while others get new values!
+                    </p>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-white/5 bg-slate-950/20 py-5 text-[11px] text-slate-500 mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+            <div>
+                <p>&copy; 2026 AuraMelody. Minimalist Sandbox for Note Generation.</p>
+            </div>
+            <div class="flex gap-4">
+                <span class="text-slate-400 font-medium">Chromatic Engine Default</span>
+                <span class="text-white/10">|</span>
+                <span class="text-slate-400 font-medium">2 - 6 Note Sequence Drafts</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Musical Javascript logic -->
+    <script>
+        // Init Lucide Icons immediately
+        lucide.createIcons();
+
+        // Music Theory Scales, Intervals & Circle of Fifths Constants
+        const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+        const COF_KEYS = [
+            // 12 Major Keys (Outer Ring of Circle)
+            { name: 'C', type: 'Major', steps: [0, 2, 4, 5, 7, 9, 11] },
+            { name: 'G', type: 'Major', steps: [7, 9, 11, 0, 2, 4, 6] },
+            { name: 'D', type: 'Major', steps: [2, 4, 6, 7, 9, 11, 1] },
+            { name: 'A', type: 'Major', steps: [9, 11, 1, 2, 4, 6, 8] },
+            { name: 'E', type: 'Major', steps: [4, 6, 8, 9, 11, 1, 3] },
+            { name: 'B', type: 'Major', steps: [11, 1, 3, 4, 6, 8, 10] },
+            { name: 'F#', type: 'Major', steps: [6, 8, 10, 11, 1, 3, 5] },
+            { name: 'Db', type: 'Major', steps: [1, 3, 5, 6, 8, 10, 0] },
+            { name: 'Ab', type: 'Major', steps: [8, 10, 0, 1, 3, 5, 7] },
+            { name: 'Eb', type: 'Major', steps: [3, 5, 7, 8, 10, 0, 2] },
+            { name: 'Bb', type: 'Major', steps: [10, 0, 2, 3, 5, 7, 9] },
+            { name: 'F', type: 'Major', steps: [5, 7, 9, 10, 0, 2, 4] },
+            // 12 Relative Minor Keys (Inner Ring of Circle)
+            { name: 'Am', type: 'Minor', steps: [9, 11, 0, 2, 4, 5, 7] },
+            { name: 'Em', type: 'Minor', steps: [4, 6, 7, 9, 11, 0, 2] },
+            { name: 'Bm', type: 'Minor', steps: [11, 1, 2, 4, 6, 7, 9] },
+            { name: 'F#m', type: 'Minor', steps: [6, 8, 9, 11, 1, 2, 4] },
+            { name: 'C#m', type: 'Minor', steps: [1, 3, 4, 6, 8, 9, 11] },
+            { name: 'G#m', type: 'Minor', steps: [8, 10, 11, 1, 3, 4, 6] },
+            { name: 'D#m', type: 'Minor', steps: [3, 5, 6, 8, 10, 11, 1] },
+            { name: 'Bbm', type: 'Minor', steps: [10, 0, 1, 3, 5, 6, 8] },
+            { name: 'Fm', type: 'Minor', steps: [5, 7, 8, 10, 0, 1, 3] },
+            { name: 'Cm', type: 'Minor', steps: [0, 2, 3, 5, 7, 8, 10] },
+            { name: 'Gm', type: 'Minor', steps: [7, 9, 10, 0, 2, 3, 5] },
+            { name: 'Dm', type: 'Minor', steps: [2, 4, 5, 7, 9, 10, 0] },
+        ];
+
+        // State Machine
+        let activeKey = null; // null defaults to Chromatic (Free pitch mapping)
+        let noteLength = 4;
+        let baseOctaveRange = 'mid'; // 'low', 'mid', 'high'
+        let sequence = []; // Active sequence notes: { noteName: 'C', octave: 4, locked: false }
+
+        // Render Circle of Fifths with dynamic responsive alignment
+        function renderCircleOfFifths() {
+            const svg = document.getElementById('cof-svg');
+            svg.innerHTML = ''; // Clear prior wedges
+
+            const cx = 180;
+            const cy = 180;
+            const outerR = 175;
+            const midR = 125;
+            const innerR = 75;
+
+            // Generate 12 Major Slices around the outer circle
+            for (let i = 0; i < 12; i++) {
+                const key = COF_KEYS[i];
+                // Rotate slices so C sits directly at 12 o'clock (starts at angle 0 in rotated setup)
+                const wedge = createWedge(cx, cy, midR, outerR, i * 30, (i + 1) * 30, key, i);
+                svg.appendChild(wedge);
+            }
+
+            // Generate 12 Relative Minor Slices around the inner ring
+            for (let i = 0; i < 12; i++) {
+                const key = COF_KEYS[i + 12];
+                const wedge = createWedge(cx, cy, innerR, midR, i * 30, (i + 1) * 30, key, i + 12);
+                svg.appendChild(wedge);
+            }
+        }
+
+        // SVG Wedge path creator supporting concentric circles
+        function createWedge(cx, cy, rIn, rOut, startAngle, endAngle, key, keyIndex) {
+            // Apply -105 degrees rotation shift to make the top slice (C) center at exactly 12 o'clock
+            const shift = -105;
+            const rad = Math.PI / 180;
+            
+            const sAng = startAngle + shift;
+            const eAng = endAngle + shift;
+
+            const x1_in = cx + rIn * Math.cos(sAng * rad);
+            const y1_in = cy + rIn * Math.sin(sAng * rad);
+            const x2_in = cx + rIn * Math.cos(eAng * rad);
+            const y2_in = cy + rIn * Math.sin(eAng * rad);
+
+            const x1_out = cx + rOut * Math.cos(sAng * rad);
+            const y1_out = cy + rOut * Math.sin(sAng * rad);
+            const x2_out = cx + rOut * Math.cos(eAng * rad);
+            const y2_out = cy + rOut * Math.sin(eAng * rad);
+
+            const pathData = `
+                M ${x1_out} ${y1_out}
+                A ${rOut} ${rOut} 0 0 1 ${x2_out} ${y2_out}
+                L ${x2_in} ${y2_in}
+                A ${rIn} ${rIn} 0 0 0 ${x1_in} ${y1_in}
+                Z
+            `;
+
+            const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            path.setAttribute("d", pathData);
+            
+            const isSelected = activeKey && activeKey.name === key.name && activeKey.type === key.type;
+            
+            let fillClass = isSelected 
+                ? (key.type === 'Major' ? 'fill-purple-600 stroke-purple-400' : 'fill-emerald-600 stroke-emerald-400')
+                : (key.type === 'Major' ? 'fill-slate-900/90 stroke-white/5 hover:fill-purple-950/50' : 'fill-slate-950/90 stroke-white/5 hover:fill-emerald-950/50');
+
+            path.setAttribute("class", `${fillClass} cursor-pointer transition-colors duration-150 stroke-[1.5]`);
+
+            // Find Center of the slice for text placement
+            const textAngle = sAng + 15;
+            const textR = (rIn + rOut) / 2;
+            const tx = cx + textR * Math.cos(textAngle * rad);
+            const ty = cy + textR * Math.sin(textAngle * rad);
+
+            const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            text.setAttribute("x", tx);
+            text.setAttribute("y", ty + 4); // Offset coordinate for clean centering
+            text.setAttribute("text-anchor", "middle");
+            text.setAttribute("class", `text-[10px] select-none pointer-events-none font-extrabold tracking-tight ${isSelected ? 'fill-white' : 'fill-slate-400'}`);
+            text.textContent = key.name;
+
+            g.appendChild(path);
+            g.appendChild(text);
+
+            g.addEventListener('click', () => {
+                selectKey(keyIndex);
+            });
+
+            return g;
+        }
+
+        // Active scale configuration handler
+        function selectKey(keyIdx) {
+            if (keyIdx === null) {
+                activeKey = null;
+                document.getElementById('active-key-display').textContent = 'None';
+                document.getElementById('active-scale-type').textContent = 'Chromatic (All Notes)';
+                document.getElementById('active-scale-type').className = 'text-[9px] text-emerald-400 font-medium tracking-wide';
+            } else {
+                activeKey = COF_KEYS[keyIdx];
+                document.getElementById('active-key-display').textContent = activeKey.name;
+                document.getElementById('active-scale-type').textContent = activeKey.type === 'Major' ? 'Major scale locked' : 'Natural Minor locked';
+                document.getElementById('active-scale-type').className = `text-[9px] ${activeKey.type === 'Major' ? 'text-purple-400' : 'text-emerald-400'} font-semibold tracking-wide`;
+            }
+            renderCircleOfFifths();
+            // Automatically regenerate notes when key configuration overrides
+            generateMelody();
+        }
+
+        // Create restricted note array pool based on selected key and octaves
+        function getActiveNotePool() {
+            const baseOctaves = baseOctaveRange === 'low' ? [2, 3] : (baseOctaveRange === 'high' ? [4, 5] : [3, 4]);
+            let pool = [];
+
+            if (!activeKey) {
+                // Chromatic mapping - all 12 tones inside designated octaves
+                baseOctaves.forEach(oct => {
+                    NOTE_NAMES.forEach(note => {
+                        pool.push({ noteName: note, octave: oct });
+                    });
+                });
+            } else {
+                // Scale Restricted mapping
+                const tonicName = activeKey.name.replace('m', '');
+                const tonicIndex = NOTE_NAMES.indexOf(tonicName);
+                const scaleSteps = activeKey.steps;
+
+                baseOctaves.forEach(oct => {
+                    scaleSteps.forEach(stepOffset => {
+                        const noteIndex = (tonicIndex + stepOffset) % 12;
+                        let targetOctave = oct;
+                        // Handle transition wrap-around across octaves
+                        if (tonicIndex + stepOffset >= 12) {
+                            targetOctave += 1;
+                        }
+                        pool.push({ noteName: NOTE_NAMES[noteIndex], octave: targetOctave });
+                    });
+                });
+            }
+            return pool;
+        }
+
+        // Core Melody Generator Algorithm
+        function generateMelody() {
+            const pool = getActiveNotePool();
+            if (pool.length === 0) return;
+
+            let newSequence = [];
+
+            for (let i = 0; i < noteLength; i++) {
+                // If a card exists and has active lock pin, preserve it
+                if (sequence[i] && sequence[i].locked) {
+                    newSequence.push(sequence[i]);
+                    continue;
+                }
+
+                // Strictly choose random scale notes
+                const chosen = pool[Math.floor(Math.random() * pool.length)];
+
+                newSequence.push({
+                    noteName: chosen.noteName,
+                    octave: chosen.octave,
+                    locked: false
+                });
+            }
+
+            sequence = newSequence;
+            renderNotesGrid();
+        }
+
+        // Generate and append grid element templates for melody representation
+        function renderNotesGrid() {
+            const grid = document.getElementById('notes-grid-container');
+            grid.innerHTML = '';
+
+            sequence.forEach((note, index) => {
+                const card = document.createElement('div');
+                card.className = "bg-slate-900/85 rounded-xl p-4 flex flex-col justify-between h-44 border border-white/5 hover:border-white/15 transition-all relative group/card shadow-lg";
+
+                // Header Block with Index Title & Lock button
+                const header = document.createElement('div');
+                header.className = "flex justify-between items-center mb-1";
+
+                const stepIndex = document.createElement('span');
+                stepIndex.className = "text-[10px] font-mono text-slate-500 uppercase tracking-wider font-bold";
+                stepIndex.textContent = `Note #${index + 1}`;
+                header.appendChild(stepIndex);
+
+                const lockBtn = document.createElement('button');
+                lockBtn.className = `p-1.5 rounded-md hover:bg-white/5 active:scale-90 transition ${note.locked ? 'text-amber-500 bg-amber-500/5 border border-amber-500/10' : 'text-slate-600 hover:text-slate-400'}`;
+                lockBtn.innerHTML = note.locked ? `<i data-lucide="lock" class="w-3.5 h-3.5"></i>` : `<i data-lucide="unlock" class="w-3.5 h-3.5"></i>`;
+                lockBtn.title = note.locked ? "Locked" : "Unlocked";
+                lockBtn.addEventListener('click', () => {
+                    note.locked = !note.locked;
+                    renderNotesGrid();
+                });
+                header.appendChild(lockBtn);
+                card.appendChild(header);
+
+                // Giant Core Display Card
+                const body = document.createElement('div');
+                body.className = "my-2 flex flex-col items-center justify-center";
+
+                const noteVal = document.createElement('div');
+                noteVal.className = "text-3xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-br from-white to-slate-400 font-mono";
+                noteVal.textContent = note.noteName;
+                body.appendChild(noteVal);
+
+                const octVal = document.createElement('div');
+                octVal.className = "text-[10px] font-mono font-bold text-slate-500 mt-1 uppercase tracking-widest";
+                octVal.textContent = `Octave ${note.octave}`;
+                body.appendChild(octVal);
+                card.appendChild(body);
+
+                // Manual Override Select Dropdown
+                const footer = document.createElement('div');
+                footer.className = "mt-2 pt-2 border-t border-white/5";
+
+                const selectEl = document.createElement('select');
+                selectEl.className = "w-full bg-slate-950 border border-white/5 text-[10px] text-slate-400 font-mono rounded p-1 hover:border-white/10 transition cursor-pointer focus:outline-none";
+                
+                const activePool = getActiveNotePool();
+                activePool.forEach(pNote => {
+                    const opt = document.createElement('option');
+                    opt.value = `${pNote.noteName}-${pNote.octave}`;
+                    opt.textContent = `${pNote.noteName}${pNote.octave}`;
+                    if (pNote.noteName === note.noteName && pNote.octave === note.octave) {
+                        opt.selected = true;
+                    }
+                    selectEl.appendChild(opt);
+                });
+
+                selectEl.addEventListener('change', (e) => {
+                    const [newName, newOct] = e.target.value.split('-');
+                    note.noteName = newName;
+                    note.octave = parseInt(newOct);
+                    renderNotesGrid();
+                });
+
+                footer.appendChild(selectEl);
+                card.appendChild(footer);
+
+                grid.appendChild(card);
+            });
+
+            // Update newly rendered Lucide Icons
+            lucide.createIcons();
+        }
+
+        // Change sequence note length handler
+        function setNoteLength(num) {
+            noteLength = num;
+            document.getElementById('note-count-val').textContent = `${num} Notes`;
+
+            // Highlight chosen button
+            document.querySelectorAll('.len-btn').forEach(btn => {
+                btn.className = "len-btn py-1.5 text-xs font-bold bg-white/5 hover:bg-white/10 rounded-lg border border-white/5 transition-all text-slate-400";
+            });
+            const activeBtn = document.getElementById(`len-btn-${num}`);
+            if (activeBtn) {
+                activeBtn.className = "len-btn py-1.5 text-xs font-bold bg-purple-600/30 border-purple-500/50 text-white rounded-lg border transition-all";
+            }
+
+            // Adjust elements size while preserving locks if applicable
+            if (sequence.length > num) {
+                sequence = sequence.slice(0, num);
+            } else {
+                generateMelody();
+            }
+            renderNotesGrid();
+        }
+
+        // Adjust octave boundaries
+        function setOctaveRange(range) {
+            baseOctaveRange = range;
+            document.querySelectorAll('.oct-btn').forEach(btn => {
+                btn.className = "oct-btn py-1.5 text-xs bg-white/5 text-slate-400 border border-white/5 rounded-lg hover:bg-white/10 transition";
+            });
+            let rangeString = 'C3 - C5';
+            let activeId = 'oct-mid';
+            if (range === 'low') {
+                rangeString = 'C2 - C4';
+                activeId = 'oct-low';
+            } else if (range === 'high') {
+                rangeString = 'C4 - C6';
+                activeId = 'oct-high';
+            }
+            document.getElementById('octave-val').textContent = rangeString;
+            document.getElementById(activeId).className = "oct-btn py-1.5 text-xs bg-purple-600/20 text-purple-300 border border-purple-500/30 rounded-lg transition";
+
+            // Recalibrate sequence notes mapping to the chosen range
+            generateMelody();
+        }
+
+        // Formats the generated sequence to a clean text string and copies it
+        function copySequenceAsText() {
+            if (sequence.length === 0) return;
+            const textString = sequence.map(n => `${n.noteName}${n.octave}`).join(' - ');
+            
+            // Fallback command copy style supported across modern sandbox container elements
+            const tempInput = document.createElement('input');
+            tempInput.value = textString;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+
+            // Pop active alert indicator
+            const alertBox = document.getElementById('copy-toast');
+            alertBox.textContent = `Sequence "${textString}" copied!`;
+            alertBox.classList.remove('hidden');
+            setTimeout(() => {
+                alertBox.classList.add('hidden');
+            }, 3000);
+        }
+
+        // Initialize state on page load
+        window.onload = function() {
+            renderCircleOfFifths();
+            generateMelody();
+        }
+    </script>
+</body>
+</html>
