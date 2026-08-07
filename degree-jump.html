@@ -12,20 +12,17 @@
     
     <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- React and Babel for standalone execution -->
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
         body { 
             font-family: 'Inter', sans-serif; 
             -webkit-tap-highlight-color: transparent;
             overscroll-behavior-y: contain;
         }
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .animate-in { animation: fadeIn 0.4s ease-out forwards; }
         
@@ -33,12 +30,391 @@
         .key-btn:active { background-color: #6366f1; color: white; }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-100 selection:bg-indigo-500/30 overflow-x-hidden">
-    <div id="root"></div>
+<body class="bg-slate-950 text-slate-100 selection:bg-indigo-500/30 overflow-x-hidden min-h-screen flex flex-col">
 
-    <script type="text/babel">
-        const { useState, useEffect, useCallback, useMemo, useRef } = React;
+    <!-- Navigation Bar -->
+    <nav class="fixed top-0 left-0 right-0 bg-slate-900 border-b border-slate-800 z-50 px-4">
+        <div class="max-w-7xl mx-auto flex items-center justify-between h-14 md:h-16">
+            <button onclick="navigate('home')" class="flex items-center gap-2 text-white font-black text-sm tracking-tighter uppercase italic hover:opacity-80 transition-all active:scale-95">
+                <svg class="text-indigo-500" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                <span>Practice <span class="text-slate-500 font-bold">Suite</span></span>
+            </button>
+            <div class="flex items-center gap-2 md:gap-4">
+                <button onclick="navigate('degreeJump')" id="nav-btn-degree" class="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all text-slate-500 hover:text-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17.5c0-1.4 1.1-2.5 2.5-2.5s2.5 1.1 2.5 2.5c0 1.9-1.1 2.5-2.5 2.5S4 19.4 4 17.5z" opacity="0.4" /><path d="M15 6.5c0-1.4 1.1-2.5 2.5-2.5s2.5 1.1 2.5 2.5c0 1.9-1.1 2.5-2.5 2.5s-2.5-.6-2.5-2.5z" /><path d="M7 14c1.5-4 5-6 9-7" /><path d="m13 7 3-1-1 3" /></svg>
+                    <span class="hidden sm:inline">Degree Jump</span>
+                </button>
+                <button onclick="navigate('noteFlasher')" id="nav-btn-flasher" class="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all text-slate-500 hover:text-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                    <span class="hidden sm:inline">Note Flasher</span>
+                </button>
+            </div>
+        </div>
+    </nav>
 
+    <!-- Main Content Area with Dynamic Views -->
+    <div id="view-home" class="view-container min-h-screen flex flex-col items-center justify-center p-6 md:p-12 animate-in pt-24 hidden">
+        <div class="max-w-5xl w-full text-center space-y-16">
+            <header class="space-y-4">
+                <h1 class="text-5xl md:text-8xl font-black tracking-tighter text-white uppercase italic">Practice <span class="text-indigo-500">Suite</span></h1>
+                <p class="text-slate-500 font-medium tracking-widest uppercase text-xs md:text-sm">Universal training for modern musicians</p>
+            </header>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                <button onclick="navigate('degreeJump')" class="group relative bg-slate-900 border-2 border-slate-800 hover:border-indigo-500 rounded-[3rem] p-10 text-left transition-all hover:scale-[1.02] shadow-2xl overflow-hidden">
+                    <div class="absolute top-0 right-0 p-10 opacity-5 group-hover:opacity-10 transition-opacity">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="140" height="140" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17.5c0-1.4 1.1-2.5 2.5-2.5s2.5 1.1 2.5 2.5c0 1.9-1.1 2.5-2.5 2.5S4 19.4 4 17.5z" opacity="0.4" /><path d="M15 6.5c0-1.4 1.1-2.5 2.5-2.5s2.5 1.1 2.5 2.5c0 1.9-1.1 2.5-2.5 2.5s-2.5-.6-2.5-2.5z" /><path d="M7 14c1.5-4 5-6 9-7" /><path d="m13 7 3-1-1 3" /></svg>
+                    </div>
+                    <div class="relative z-10 space-y-5">
+                        <div class="w-14 h-14 bg-indigo-500 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                            <svg class="text-white" xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17.5c0-1.4 1.1-2.5 2.5-2.5s2.5 1.1 2.5 2.5c0 1.9-1.1 2.5-2.5 2.5S4 19.4 4 17.5z" opacity="0.4" /><path d="M15 6.5c0-1.4 1.1-2.5 2.5-2.5s2.5 1.1 2.5 2.5c0 1.9-1.1 2.5-2.5 2.5s-2.5-.6-2.5-2.5z" /><path d="M7 14c1.5-4 5-6 9-7" /><path d="m13 7 3-1-1 3" /></svg>
+                        </div>
+                        <h3 class="text-3xl font-black text-white uppercase tracking-tight">Degree Jump</h3>
+                        <p class="text-slate-400 text-base font-medium leading-relaxed max-w-[280px]">Practice relative intervals within major and minor key signatures.</p>
+                        <div class="pt-6 flex items-center gap-2 text-sm font-bold text-indigo-400 uppercase tracking-widest">Enter Session &rarr;</div>
+                    </div>
+                </button>
+                <button onclick="navigate('noteFlasher')" class="group relative bg-slate-900 border-2 border-slate-800 hover:border-rose-500 rounded-[3rem] p-10 text-left transition-all hover:scale-[1.02] shadow-2xl overflow-hidden">
+                    <div class="absolute top-0.5 right-0 p-10 opacity-5 group-hover:opacity-10 transition-opacity">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="140" height="140" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                    </div>
+                    <div class="relative z-10 space-y-5">
+                        <div class="w-14 h-14 bg-rose-500 rounded-2xl flex items-center justify-center shadow-lg shadow-rose-500/20">
+                            <svg class="text-white" xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                        </div>
+                        <h3 class="text-3xl font-black text-white uppercase tracking-tight">Note Flasher</h3>
+                        <p class="text-slate-400 text-base font-medium leading-relaxed max-w-[280px]">Focus on sharp/flat identification and speed training.</p>
+                        <div class="pt-6 flex items-center gap-2 text-sm font-bold text-rose-400 uppercase tracking-widest">Enter Session &rarr;</div>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Degree Jump View -->
+    <div id="view-degreeJump" class="view-container min-h-screen pt-14 md:p-6 md:pt-20 overflow-hidden flex flex-col md:flex-row gap-6 animate-in hidden">
+        <aside class="w-full md:w-[380px] bg-slate-900/80 backdrop-blur-xl border-b md:border border-slate-800 md:rounded-3xl p-6 overflow-y-auto custom-scrollbar flex flex-col gap-6 shrink-0 z-20 max-h-[85vh] md:max-h-[calc(100vh-120px)]">
+            <header class="flex items-center gap-3">
+                <div class="p-2.5 bg-indigo-500 rounded-2xl shadow-lg shadow-indigo-500/20">
+                    <svg class="text-white" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17.5c0-1.4 1.1-2.5 2.5-2.5s2.5 1.1 2.5 2.5c0 1.9-1.1 2.5-2.5 2.5S4 19.4 4 17.5z" opacity="0.4" /><path d="M15 6.5c0-1.4 1.1-2.5 2.5-2.5s2.5 1.1 2.5 2.5c0 1.9-1.1 2.5-2.5 2.5s-2.5-.6-2.5-2.5z" /><path d="M7 14c1.5-4 5-6 9-7" /><path d="m13 7 3-1-1 3" /></svg>
+                </div>
+                <div>
+                    <h2 class="text-lg font-black tracking-tight leading-tight uppercase">Degree Jump</h2>
+                    <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Practice Session</p>
+                </div>
+            </header>
+            
+            <section class="space-y-6">
+                <!-- Interactive Circle of Fifths -->
+                <div class="relative flex flex-col items-center">
+                    <div class="flex justify-between items-center w-full mb-6 px-1">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Key Selection</label>
+                        <div class="flex bg-slate-800 p-1 rounded-xl gap-1">
+                            <button onclick="toggleRandomizeKey()" id="btn-rand-key" class="px-2.5 py-1 rounded-lg text-[10px] font-black transition-all flex items-center gap-1.5 text-slate-500 hover:text-slate-300">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="12" height="12" x="2" y="10" rx="2" ry="2"/><path d="m17.92 14 3.5-3.5a2.24 2.24 0 0 0 0-3.17l-3.5-3.5a2.24 2.24 0 0 0-3.17 0L12.75 5.58"/><circle cx="8" cy="16" r="1"/></svg>
+                                <span>KEY</span>
+                            </button>
+                            <div class="w-px h-3 bg-slate-700 my-auto mx-0.5"></div>
+                            <button onclick="setAccidentalMode('flats')" id="btn-acc-flats" class="w-7 h-7 flex items-center justify-center rounded-lg text-[10px] font-black transition-all">♭</button>
+                            <button onclick="setAccidentalMode('sharps')" id="btn-acc-sharps" class="w-7 h-7 flex items-center justify-center rounded-lg text-[10px] font-black transition-all">♯</button>
+                        </div>
+                    </div>
+                    <div class="relative w-44 h-44 border-2 border-slate-800 rounded-full flex items-center justify-center" id="circle-of-fifths">
+                        <!-- Circle of Fifths elements dynamically inserted here -->
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="space-y-2">
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">Scale Type</label>
+                        <div class="flex bg-slate-800 p-1 rounded-xl">
+                            <button onclick="setScaleType('major')" id="btn-scale-major" class="flex-1 py-2 rounded-lg text-[10px] font-black uppercase transition-all">major</button>
+                            <button onclick="setScaleType('minor')" id="btn-scale-minor" class="flex-1 py-2 rounded-lg text-[10px] font-black uppercase transition-all">minor</button>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">Display</label>
+                        <div class="flex bg-slate-800 p-1 rounded-xl">
+                            <button onclick="setAnchorDisplay('note')" id="btn-disp-note" class="flex-1 py-2 rounded-lg text-[10px] font-black uppercase transition-all">note</button>
+                            <button onclick="setAnchorDisplay('degree')" id="btn-disp-degree" class="flex-1 py-2 rounded-lg text-[10px] font-black uppercase transition-all">degree</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">Practice Mode</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="setPracticeMode('diatonic')" id="btn-pm-diatonic" class="py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border-2">diatonic</button>
+                        <button onclick="setPracticeMode('chromatic')" id="btn-pm-chromatic" class="py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border-2">chromatic</button>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <div class="flex justify-between items-end">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Anchor Position</label>
+                        <span id="label-anchor-pos" class="text-xs font-black text-indigo-400">1</span>
+                    </div>
+                    <div class="grid grid-cols-4 gap-1.5" id="anchor-deg-grid">
+                        <!-- Scale degrees 1-7 + random generator buttons dynamic insertion -->
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center px-1">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Focus Jumps</label>
+                        <div class="flex gap-3">
+                            <button onclick="toggleAllIntervals(true)" class="text-[9px] font-black text-indigo-400 uppercase">All</button>
+                            <button onclick="toggleAllIntervals(false)" class="text-[9px] font-black text-slate-500 uppercase">None</button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-1.5" id="jumps-grid">
+                        <!-- Focus jump selection grid dynamically populated -->
+                    </div>
+                </div>
+
+                <div class="space-y-4 pt-2">
+                    <div class="space-y-2">
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">Jump Direction</label>
+                        <div class="grid grid-cols-3 gap-1.5">
+                            <button onclick="setDirectionPref('up')" id="btn-dir-up" class="flex items-center justify-center gap-2 py-3 rounded-xl border-2 transition-all">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+                                <span class="text-[10px] font-black">UP</span>
+                            </button>
+                            <button onclick="setDirectionPref('down')" id="btn-dir-down" class="flex items-center justify-center gap-2 py-3 rounded-xl border-2 transition-all">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                                <span class="text-[10px] font-black">DOWN</span>
+                            </button>
+                            <button onclick="setDirectionPref('random')" id="btn-dir-random" class="flex items-center justify-center gap-2 py-3 rounded-xl border-2 transition-all">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l6.1-8.6c.7-1.1 2-1.7 3.3-1.7H22"/><path d="m18 2 4 4-4 4"/></svg>
+                                <span class="text-[10px] font-black">RAND</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Toggle Options -->
+                    <div class="flex flex-col gap-4">
+                        <label class="flex items-center justify-between p-3 bg-slate-800/50 border border-slate-800 rounded-xl group cursor-pointer">
+                            <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Lock Anchor</span>
+                            <div id="chk-lock-anchor" class="w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all"></div>
+                        </label>
+                        <label class="flex items-center justify-between p-3 bg-slate-800/50 border border-slate-800 rounded-xl group cursor-pointer">
+                            <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">No Repeats</span>
+                            <div id="chk-no-repeats" class="w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all"></div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Timer & Auto Cycle Controls -->
+                <div class="space-y-3 pt-4 border-t border-slate-800/50">
+                    <div class="flex justify-between items-center">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                            <span>Auto-Cycle</span>
+                        </label>
+                        <div onclick="toggleTimerEnabled()" id="timer-switch" class="w-10 h-5 rounded-full relative transition-all border-2 cursor-pointer">
+                            <div id="timer-switch-dot" class="absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all left-0.5"></div>
+                        </div>
+                    </div>
+                    <div class="relative">
+                        <select onchange="updateTimerSeconds(this.value)" id="timer-seconds-select" class="w-full bg-slate-800 border-2 border-slate-700 rounded-xl py-3 px-4 text-xs font-black uppercase tracking-widest outline-none appearance-none cursor-pointer disabled:opacity-30">
+                            <option value="10">10 Seconds</option>
+                            <option value="20">20 Seconds</option>
+                            <option value="30" selected>30 Seconds</option>
+                            <option value="40">40 Seconds</option>
+                            <option value="50">50 Seconds</option>
+                            <option value="60">60 Seconds</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+        </aside>
+
+        <!-- Main Panel for Active Session Display -->
+        <main class="flex-1 flex flex-col items-center justify-center p-4 md:p-8 lg:p-12 h-full overflow-hidden z-10">
+            <div class="w-full max-w-4xl bg-slate-900 border border-slate-800 rounded-[3rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.7)] flex flex-col relative overflow-hidden min-h-[550px]">
+                <!-- Interactive Loading Progress Tracker -->
+                <div id="progress-bar-container" class="absolute top-0 left-0 right-0 h-2 bg-slate-800 z-30 hidden">
+                    <div id="progress-bar" class="h-full bg-indigo-500 transition-all duration-300" style="width: 0%;"></div>
+                </div>
+                
+                <div class="absolute inset-0 opacity-[0.04] pointer-events-none overflow-hidden text-white font-black text-[15vw] leading-none p-10 flex flex-col select-none">
+                    <span id="bg-text-key">C</span><span class="self-end" id="bg-text-mode">DIA</span>
+                </div>
+
+                <div class="flex-1 flex flex-col items-center justify-center p-6 md:p-10 lg:p-12 text-center z-10 relative overflow-y-auto overflow-x-hidden custom-scrollbar">
+                    <!-- Session Completed Screen -->
+                    <div id="session-completed-screen" class="space-y-8 animate-in hidden">
+                        <div class="w-24 h-24 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-500/20">
+                            <svg class="text-emerald-500" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                        </div>
+                        <h2 class="text-4xl md:text-6xl font-black text-white italic tracking-tighter uppercase">Session Complete</h2>
+                        <button onclick="resetPool()" class="bg-emerald-500 text-white px-12 py-5 rounded-2xl font-black text-xl hover:bg-emerald-600 shadow-xl">START AGAIN</button>
+                    </div>
+
+                    <!-- Active Exercise Screen -->
+                    <div id="exercise-screen" class="w-full flex-1 flex flex-col items-center justify-center gap-10 md:gap-14">
+                        <div class="flex flex-col items-center gap-3 opacity-90">
+                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.4em] mb-1" id="exercise-context-label">C Major Context</span>
+                            <div class="flex flex-wrap justify-center gap-4" id="horizontal-scale-tracker">
+                                <!-- Interactive scale notes tracker -->
+                            </div>
+                        </div>
+
+                        <!-- Interval Selection Display Layout -->
+                        <div class="flex items-center justify-center gap-8 md:gap-20 w-full pt-4">
+                            <div class="flex flex-col items-center">
+                                <div id="display-anchor" class="text-7xl md:text-9xl lg:text-[10rem] font-black text-white leading-none tracking-tighter drop-shadow-2xl">
+                                    C
+                                </div>
+                                <div class="text-[10px] md:text-xs font-black text-indigo-400 uppercase tracking-[0.3em] mt-3 opacity-70 italic">ANCHOR</div>
+                            </div>
+                            <div class="h-32 w-px bg-slate-800 opacity-50 shrink-0"></div>
+                            <div class="flex flex-col items-center relative">
+                                <div id="display-target" onclick="toggleTargetVisibility()" class="text-7xl md:text-9xl lg:text-[10rem] font-black leading-none tracking-tighter cursor-pointer select-none transition-all duration-300 text-slate-800 opacity-50 blur-[6px]">
+                                    ?
+                                </div>
+                                <div class="text-[10px] md:text-xs font-black text-slate-500 uppercase tracking-[0.3em] mt-3 opacity-70 italic">TARGET</div>
+                            </div>
+                        </div>
+
+                        <div class="w-full flex flex-col items-center gap-8">
+                            <div id="interval-direction-indicator" class="flex items-center justify-center gap-4 text-5xl md:text-7xl lg:text-8xl font-black">
+                                <span class="text-white drop-shadow-2xl" id="indicator-label">Maj 3</span>
+                            </div>
+                            
+                            <!-- Control Actions Row -->
+                            <div class="flex items-center gap-5">
+                                <button onclick="handleMainAction()" id="btn-primary-action" class="group relative inline-flex items-center gap-4 px-12 py-5 rounded-2xl font-black text-xl transition-all shadow-xl active:scale-95 z-20 bg-white text-slate-950 hover:bg-indigo-500 hover:text-white">
+                                    NEXT JUMP
+                                </button>
+                                <button onclick="nextTask(false)" id="btn-skip-task" title="Skip to next" class="w-16 h-16 flex items-center justify-center bg-slate-800 text-white border border-slate-700 rounded-2xl hover:bg-slate-700 active:scale-95 group z-20 hidden">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                                </button>
+                            </div>
+                            <div class="flex gap-4 opacity-30"><span class="text-[10px] font-bold border border-slate-700 px-3 py-1 rounded-full uppercase">Spacebar: Action</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer Context Reference Container -->
+                <div class="p-6 md:p-8 bg-slate-950/50 border-t border-slate-800 flex shrink-0 justify-center items-center gap-12 relative overflow-hidden flex-wrap md:flex-nowrap">
+                    <div class="flex flex-col items-center text-center z-10">
+                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 opacity-60">Scale Reference</span>
+                        <div class="flex flex-wrap justify-center gap-1.5" id="footer-scale-ref">
+                            <!-- Populated with current scale notes -->
+                        </div>
+                    </div>
+                    <div class="flex flex-col items-center text-center border-l border-slate-800 pl-12 relative z-10">
+                        <span class="text-[10px] font-bold text-amber-500 uppercase tracking-widest mb-2 flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/></svg>
+                            <span id="footer-pool-title">Total Session</span>
+                        </span>
+                        <div class="flex items-center gap-2">
+                            <span class="text-2xl font-black text-white" id="stat-pool-current">0</span>
+                            <span class="text-[11px] font-bold text-slate-600 uppercase tracking-widest">/ <span id="stat-pool-total">0</span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Note Flasher View -->
+    <div id="view-noteFlasher" class="view-container min-h-screen pt-14 md:p-6 md:pt-20 overflow-hidden flex flex-col md:flex-row gap-6 animate-in hidden">
+        <aside class="w-full md:w-[380px] bg-slate-900/80 backdrop-blur-xl border-b md:border border-slate-800 md:rounded-3xl p-6 overflow-y-auto custom-scrollbar flex flex-col gap-8 shrink-0 z-20 max-h-[85vh] md:max-h-[calc(100vh-120px)]">
+            <header class="flex items-center gap-3">
+                <div class="p-2.5 bg-rose-500 rounded-2xl shadow-lg shadow-rose-500/20">
+                    <svg class="text-white" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                </div>
+                <div>
+                    <h2 class="text-lg font-black tracking-tight leading-tight uppercase">Note Flasher</h2>
+                    <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Identification Practice</p>
+                </div>
+            </header>
+            
+            <section class="space-y-8">
+                <div class="space-y-3">
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">Focus Mode</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button onclick="setFlasherNoteType('sharps')" id="btn-fl-sharps" class="py-4 rounded-xl text-[10px] font-black uppercase transition-all border-2">sharps</button>
+                        <button onclick="setFlasherNoteType('flats')" id="btn-fl-flats" class="py-4 rounded-xl text-[10px] font-black uppercase transition-all border-2">flats</button>
+                        <button onclick="setFlasherNoteType('mixed')" id="btn-fl-mixed" class="py-4 rounded-xl text-[10px] font-black uppercase transition-all border-2">mixed</button>
+                    </div>
+                </div>
+                
+                <div class="flex flex-col gap-3 pt-2">
+                    <label class="flex items-center justify-between p-4 bg-slate-800/50 border border-slate-800 rounded-2xl group cursor-pointer">
+                        <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400 group-hover:text-slate-200 transition-colors">No Repeats</span>
+                        <div id="chk-fl-no-repeats" class="w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all"></div>
+                    </label>
+                </div>
+
+                <div class="space-y-4 pt-2 border-t border-slate-800/50">
+                    <div class="flex justify-between items-center">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                            <span>Auto-Cycle</span>
+                        </label>
+                        <div onclick="toggleFlasherTimerEnabled()" id="fl-timer-switch" class="w-10 h-5 rounded-full relative transition-all border-2 cursor-pointer">
+                            <div id="fl-timer-switch-dot" class="absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all left-0.5"></div>
+                        </div>
+                    </div>
+                    <div class="relative group">
+                        <select onchange="updateFlasherTimerSeconds(this.value)" id="fl-timer-seconds-select" class="w-full bg-slate-800 border-2 border-slate-700 rounded-xl py-3.5 px-4 text-xs font-black uppercase tracking-widest outline-none appearance-none cursor-pointer">
+                            <option value="10">10 Seconds</option>
+                            <option value="20">20 Seconds</option>
+                            <option value="30" selected>30 Seconds</option>
+                            <option value="40">40 Seconds</option>
+                            <option value="50">50 Seconds</option>
+                            <option value="60">60 Seconds</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+        </aside>
+
+        <main class="flex-1 flex flex-col items-center justify-center p-4 md:p-8 lg:p-12 h-full overflow-hidden z-10">
+            <div class="w-full max-w-4xl bg-slate-900 border border-slate-800 rounded-[3rem] shadow-2xl flex flex-col relative overflow-hidden min-h-[500px]">
+                <div id="fl-progress-bar-container" class="absolute top-0 left-0 right-0 h-2 bg-slate-800 z-30 hidden">
+                    <div id="fl-progress-bar" class="h-full bg-rose-500 transition-all duration-300" style="width: 0%;"></div>
+                </div>
+                
+                <div class="flex-1 flex flex-col items-center justify-center p-6 md:p-10 lg:p-12 text-center z-10 relative overflow-y-auto custom-scrollbar">
+                    <!-- Session Completed Screen -->
+                    <div id="fl-session-completed-screen" class="space-y-8 animate-in hidden">
+                        <div class="w-24 h-24 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-500/20">
+                            <svg class="text-emerald-500" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                        </div>
+                        <h2 class="text-4xl md:text-6xl font-black text-white italic tracking-tighter uppercase">Session Complete</h2>
+                        <button onclick="resetFlasherPool()" class="bg-emerald-500 text-white px-12 py-5 rounded-2xl font-black text-xl hover:bg-emerald-600 shadow-xl">START AGAIN</button>
+                    </div>
+
+                    <!-- Active Note Display Card -->
+                    <div id="fl-exercise-screen" class="w-full flex flex-col items-center gap-12">
+                        <div class="space-y-4">
+                            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.6em]">Identify the Note</p>
+                            <div id="display-fl-note" class="text-[10rem] md:text-[14rem] lg:text-[16rem] font-black text-white leading-none tracking-tighter drop-shadow-2xl select-none">
+                                C
+                            </div>
+                        </div>
+                        <div class="flex flex-col items-center gap-6">
+                            <div class="flex items-center gap-5">
+                                <button onclick="handleFlasherMainAction()" id="btn-fl-primary-action" class="group relative inline-flex items-center gap-4 px-12 py-5 rounded-2xl font-black text-xl transition-all shadow-xl active:scale-95 z-20 bg-white text-slate-950 hover:bg-rose-500 hover:text-white">
+                                    NEXT NOTE
+                                </button>
+                                <button onclick="nextFlasherNote(false)" id="btn-fl-skip-task" class="w-16 h-16 flex items-center justify-center bg-slate-800 text-white border border-slate-700 rounded-2xl hover:bg-slate-700 active:scale-95 group z-20 hidden">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                                </button>
+                            </div>
+                            <div class="flex gap-4 opacity-30"><span class="text-[10px] font-bold border border-slate-700 px-3 py-1 rounded-full uppercase">Spacebar: Action</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts & Core Logic -->
+    <script>
         // --- 1. GLOBAL CONSTANTS & DATA ---
         const NOTES_REF = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
         const COF_FLATS = ['C', 'G', 'D', 'A', 'E', 'B', 'Gb', 'Db', 'Ab', 'Eb', 'Bb', 'F'];
@@ -99,7 +475,114 @@
         ];
         const DIATONIC_INTERVAL_NAMES = { 0: '1st', 1: '2nd', 2: '3rd', 3: '4th', 4: '5th', 5: '6th', 6: '7th', 7: '8th' };
 
-        // --- 2. UTILITY FUNCTIONS ---
+        // Real Frequency mappings for realistic play synthesis
+        const NOTE_FREQS = {
+            'C': 261.63, 'C#': 277.18, 'C♯': 277.18, 'Db': 277.18, 'D♭': 277.18, 'D': 293.66, 
+            'D#': 311.13, 'D♯': 311.13, 'Eb': 311.13, 'E♭': 311.13, 'E': 329.63, 'F': 349.23, 
+            'F#': 369.99, 'F♯': 369.99, 'Gb': 369.99, 'G♭': 369.99, 'G': 392.00, 'G#': 415.30, 
+            'G♯': 415.30, 'Ab': 415.30, 'A♭': 415.30, 'A': 440.00, 'A#': 466.16, 'A♯': 466.16, 
+            'Bb': 466.16, 'B♭': 466.16, 'B': 493.88
+        };
+
+        // --- STATE VARIABLES ---
+        let state = {
+            currentView: 'home',
+            
+            // Degree Jump view state
+            degreeJump: {
+                mode: 'diatonic', // 'diatonic' | 'chromatic'
+                selectedKey: 'C',
+                randomizeKey: false,
+                scaleType: 'major', // 'major' | 'minor'
+                anchorDisplay: 'note', // 'note' | 'degree'
+                accidentalMode: 'flats', // 'flats' | 'sharps'
+                scaleDegree: 1, // 1-7 or 'random'
+                directionPref: 'up', // 'up' | 'down' | 'random'
+                lockStartNote: true,
+                noRepeats: false,
+                timerEnabled: false,
+                timerRunning: false,
+                timerSeconds: 30,
+                timeLeft: 30,
+                
+                enabledIntervals: [0, 1, 2, 3, 4, 5, 6, 7], // indices
+                currentTask: null,
+                showTarget: false,
+                pool: [],
+                sessionComplete: false
+            },
+
+            // Note Flasher view state
+            noteFlasher: {
+                noteType: 'mixed', // 'sharps' | 'flats' | 'mixed'
+                noRepeats: false,
+                timerEnabled: false,
+                timerRunning: false,
+                timerSeconds: 30,
+                timeLeft: 30,
+                currentNote: 'C',
+                pool: [],
+                sessionComplete: false
+            }
+        };
+
+        // --- STREAMING_CHUNK: Safeguarding the Web Audio Engine API... ---
+        // --- 2. AUDIO ENGINE ---
+        let audioCtx = null;
+        function getAudioCtx() {
+            if (!audioCtx) {
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                if (AudioContextClass) {
+                    audioCtx = new AudioContextClass();
+                }
+            }
+            return audioCtx;
+        }
+
+        function playTone(freq, duration, type = 'triangle', volume = 0.15) {
+            try {
+                const ctx = getAudioCtx();
+                if (!ctx) return;
+                if (ctx.state === 'suspended') ctx.resume();
+
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, ctx.currentTime);
+                
+                gain.gain.setValueAtTime(volume, ctx.currentTime);
+                // Soft decay envelope
+                gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+                
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                
+                osc.start();
+                osc.stop(ctx.currentTime + duration);
+            } catch (e) {
+                console.warn('Audio play failure:', e);
+            }
+        }
+
+        function playToneByNoteName(noteName) {
+            let name = noteName.replace('♯♯', '##').replace('♭♭', 'bb');
+            // Basic fallback
+            let freq = 440;
+            // Get the prefix base note
+            const baseNote = name.slice(0, 2);
+            if (NOTE_FREQS[baseNote]) {
+                freq = NOTE_FREQS[baseNote];
+            } else if (NOTE_FREQS[name.charAt(0)]) {
+                freq = NOTE_FREQS[name.charAt(0)];
+            }
+            playTone(freq, 0.4, 'triangle', 0.15);
+        }
+
+        const playBeep = () => playTone(380, 0.08, 'sine', 0.05);
+        const playTing = () => playTone(880, 0.25, 'sine', 0.1);
+
+        // --- 3. UTILITY METHODS ---
         function formatNote(note) {
             if (!note) return '';
             return note.replace('#', '♯').replace('b', '♭');
@@ -122,8 +605,9 @@
         function calculateDiatonic(scale, startDegree, intervalSteps, direction) {
             const startIndex = startDegree - 1;
             let targetIndex;
-            if (direction === 'up') targetIndex = (startIndex + intervalSteps) % 7;
-            else {
+            if (direction === 'up') {
+                targetIndex = (startIndex + intervalSteps) % 7;
+            } else {
                 targetIndex = (startIndex - intervalSteps) % 7;
                 while (targetIndex < 0) targetIndex += 7;
             }
@@ -137,690 +621,794 @@
             return formatNote(NOTES_REF[resultIdx]);
         }
 
-        // --- 3. AUDIO ENGINE ---
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        function playTone(freq, duration, type = 'sine', volume = 0.1) {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            const oscillator = audioCtx.createOscillator();
-            const gainNode = audioCtx.createGain();
-            oscillator.type = type;
-            oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime);
-            gainNode.gain.setValueAtTime(volume, audioCtx.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
-            oscillator.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
-            oscillator.start();
-            oscillator.stop(audioCtx.currentTime + duration);
-        }
-        const playBeep = () => playTone(440, 0.1, 'sine', 0.05);
-        const playTing = () => playTone(1200, 0.3, 'sine', 0.1);
-
-        // --- 4. ICON SYSTEM ---
-        function Icon({ children, size = 24, className = "", fill = "none" }) {
-            return (
-                <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-                    {children}
-                </svg>
-            );
-        }
-
-        const Footprints = (props) => <Icon {...props}><path d="M4 17.5c0-1.4 1.1-2.5 2.5-2.5s2.5 1.1 2.5 2.5c0 1.9-1.1 2.5-2.5 2.5S4 19.4 4 17.5z" opacity="0.4" /><path d="M15 6.5c0-1.4 1.1-2.5 2.5-2.5s2.5 1.1 2.5 2.5c0 1.9-1.1 2.5-2.5 2.5s-2.5-.6-2.5-2.5z" /><path d="M7 14c1.5-4 5-6 9-7" /><path d="m13 7 3-1-1 3" /></Icon>;
-        const MusicIcon = (props) => <Icon {...props}><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></Icon>;
-        const ChevronUp = (props) => <Icon {...props}><path d="m18 15-6-6-6 6"/></Icon>;
-        const ChevronDown = (props) => <Icon {...props}><path d="m6 9 6 6 6-6"/></Icon>;
-        const Shuffle = (props) => <Icon {...props}><path d="M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l6.1-8.6c.7-1.1 2-1.7 3.3-1.7H22"/><path d="m18 2 4 4-4 4"/><path d="M2 6h1.9c1.2 0 2.3.6 3 1.5l3.8 5"/><path d="M22 18h-5.9c-1.3 0-2.6-.7-3.3-1.8l-.5-.8"/><path d="m18 14 4 4-4 4"/></Icon>;
-        const Dices = (props) => <Icon {...props}><rect width="12" height="12" x="2" y="10" rx="2" ry="2"/><path d="m17.92 14 3.5-3.5a2.24 2.24 0 0 0 0-3.17l-3.5-3.5a2.24 2.24 0 0 0-3.17 0L12.75 5.58"/><circle cx="8" cy="16" r="1"/><path d="M15 10h.01"/><path d="M18 13h.01"/><path d="M18 7h.01"/></Icon>;
-        const Clock = (props) => <Icon {...props}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></Icon>;
-        const Play = (props) => <Icon {...props}><polygon points="5 3 19 12 5 21 5 3"/></Icon>;
-        const Square = (props) => <Icon {...props}><rect width="18" height="18" x="3" y="3" rx="2"/></Icon>;
-        const RefreshCw = (props) => <Icon {...props}><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></Icon>;
-        const ChevronRight = (props) => <Icon {...props}><path d="m9 18 6-6-6-6"/></Icon>;
-        const RotateCcw = (props) => <Icon {...props}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></Icon>;
-        const Layers = (props) => <Icon {...props}><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></Icon>;
-        const Zap = (props) => <Icon {...props}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></Icon>;
-
-        // --- 5. UI COMPONENTS ---
-        function NoteDisplay({ note, className = "" }) {
-            if (!note) return null;
-            const displayStr = formatNote(note);
-            const match = displayStr.match(/^([A-G1-8])([♯♭\+𝄪]+)?$/) || [null, displayStr, null];
+        function formatDisplayWithSup(text) {
+            if (!text) return '';
+            const match = text.match(/^([A-G1-8])([♯♭\+𝄪]+)?$/) || [null, text, null];
             const [_, letter, accidental] = match;
-            return (
-                <span className={className}>
-                    {letter}
-                    {accidental && <sup className="text-[0.45em] -top-[0.6em] ml-0.5 opacity-90 tracking-tighter">{accidental}</sup>}
-                </span>
-            );
+            if (accidental) {
+                return `${letter}<sup class="text-[0.45em] -top-[0.6em] ml-0.5 opacity-90 tracking-tighter">${accidental}</sup>`;
+            }
+            return letter;
         }
 
-        function Navbar({ activeView, onNavigate }) {
-            return (
-                <nav className="fixed top-0 left-0 right-0 bg-slate-900 border-b border-slate-800 z-50 px-4">
-                    <div className="max-w-7xl mx-auto flex items-center justify-between h-14 md:h-16">
-                        <button onClick={() => onNavigate('home')} className="flex items-center gap-2 text-white font-black text-sm tracking-tighter uppercase italic hover:opacity-80 transition-all active:scale-95">
-                            <MusicIcon size={20} className="text-indigo-500" />
-                            <span>Practice <span className="text-slate-500 font-bold">Suite</span></span>
-                        </button>
-                        <div className="flex items-center gap-2 md:gap-4">
-                            <button onClick={() => onNavigate('degreeJump')} className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all ${activeView === 'degreeJump' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 shadow-lg' : 'text-slate-500 hover:text-white'}`}>
-                                <Footprints size={16} /> <span className="hidden sm:inline">Degree Jump</span>
-                            </button>
-                            <button onClick={() => onNavigate('noteFlasher')} className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all ${activeView === 'noteFlasher' ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20 shadow-lg' : 'text-slate-500 hover:text-white'}`}>
-                                <Zap size={16} /> <span className="hidden sm:inline">Note Flasher</span>
-                            </button>
-                        </div>
-                    </div>
-                </nav>
-            );
+        // --- 4. NAVIGATION & VIEW CONTROLLERS ---
+        function navigate(viewName) {
+            state.currentView = viewName;
+            
+            // Reset background timers when navigating
+            clearInterval(timerInterval);
+            clearInterval(flasherTimerInterval);
+            state.degreeJump.timerRunning = false;
+            state.noteFlasher.timerRunning = false;
+
+            document.querySelectorAll('.view-container').forEach(el => el.classList.add('hidden'));
+            
+            // Toggle active styling of navigation targets
+            const navBtnDegree = document.getElementById('nav-btn-degree');
+            const navBtnFlasher = document.getElementById('nav-btn-flasher');
+            
+            navBtnDegree.className = "flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all text-slate-500 hover:text-white";
+            navBtnFlasher.className = "flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all text-slate-500 hover:text-white";
+
+            if (viewName === 'home') {
+                document.getElementById('view-home').classList.remove('hidden');
+            } else if (viewName === 'degreeJump') {
+                document.getElementById('view-degreeJump').classList.remove('hidden');
+                navBtnDegree.className = "flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 shadow-lg";
+                initDegreeJump();
+            } else if (viewName === 'noteFlasher') {
+                document.getElementById('view-noteFlasher').classList.remove('hidden');
+                navBtnFlasher.className = "flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all bg-rose-500/10 text-rose-400 border border-rose-500/20 shadow-lg";
+                initNoteFlasher();
+            }
         }
 
-        // --- 6. CORE MODULES ---
+        // --- 5. DEGREE JUMP ENGINE ---
+        let timerInterval = null;
 
-        function DegreeJump() {
-            const [mode, setMode] = useState('diatonic');
-            const [selectedKey, setSelectedKey] = useState('C');
-            const [randomizeKey, setRandomizeKey] = useState(false);
-            const [scaleType, setScaleType] = useState('major'); 
-            const [anchorDisplay, setAnchorDisplay] = useState('note');
-            const [accidentalMode, setAccidentalMode] = useState('flats');
-            const [scaleDegree, setScaleDegree] = useState(1); 
-            const [directionPref, setDirectionPref] = useState('up'); 
-            const [lockStartNote, setLockStartNote] = useState(true);
-            const [noRepeats, setNoRepeats] = useState(false);
-            const [timerEnabled, setTimerEnabled] = useState(false);
-            const [timerRunning, setTimerRunning] = useState(false);
-            const [timerSeconds, setTimerSeconds] = useState(30);
-            const [timeLeft, setTimeLeft] = useState(30);
+        function initDegreeJump() {
+            renderCircleOfFifths();
+            renderAccidentalButtons();
+            renderDegreeButtons();
+            renderJumpsGrid();
+            resetPool();
+            renderDegreeJumpUI();
+        }
+
+        function renderCircleOfFifths() {
+            const container = document.getElementById('circle-of-fifths');
+            container.innerHTML = `<div class="absolute inset-0 flex items-center justify-center text-slate-700 pointer-events-none">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="opacity-10"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+            </div>`;
             
-            const [enabledIntervals, setEnabledIntervals] = useState([0, 1, 2, 3, 4, 5, 6, 7]);
-            const [currentTask, setCurrentTask] = useState(null);
-            const [showTarget, setShowTarget] = useState(false);
-            const [pool, setPool] = useState([]);
-            const [sessionComplete, setSessionComplete] = useState(false);
+            const cof = state.degreeJump.accidentalMode === 'flats' ? COF_FLATS : COF_SHARPS;
+            cof.forEach((key, i) => {
+                const angle = (i * (360 / cof.length) - 90) * (Math.PI / 180);
+                const x = Math.cos(angle) * 72;
+                const y = Math.sin(angle) * 72;
+                
+                const btn = document.createElement('button');
+                btn.className = `absolute w-9 h-9 rounded-full flex items-center justify-center text-xs font-black transition-all border-2 ${
+                    state.degreeJump.selectedKey === key && !state.degreeJump.randomizeKey
+                    ? 'bg-indigo-500 border-indigo-400 text-white scale-110 shadow-lg shadow-indigo-500/30' 
+                    : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white'
+                }`;
+                btn.style.transform = `translate(${x}px, ${y}px)`;
+                btn.innerHTML = formatDisplayWithSup(formatNote(key));
+                btn.onclick = () => {
+                    selectKey(key);
+                };
+                container.appendChild(btn);
+            });
+        }
 
-            const currentCOF = useMemo(() => accidentalMode === 'flats' ? COF_FLATS : COF_SHARPS, [accidentalMode]);
-            const currentScale = useMemo(() => {
-                const library = scaleType === 'major' ? MAJOR_SCALES : MINOR_SCALES;
-                return library[selectedKey] || library['C'];
-            }, [selectedKey, scaleType]);
+        function renderAccidentalButtons() {
+            const mode = state.degreeJump.accidentalMode;
+            const flatsBtn = document.getElementById('btn-acc-flats');
+            const sharpsBtn = document.getElementById('btn-acc-sharps');
             
-            const availableIntervals = useMemo(() => {
-                return mode === 'diatonic' 
-                    ? Object.keys(DIATONIC_INTERVAL_NAMES).map(k => ({ id: parseInt(k), name: DIATONIC_INTERVAL_NAMES[k] }))
-                    : CHROMATIC_INTERVALS.map((int, i) => ({ id: i, name: int.name }));
-            }, [mode]);
+            if (mode === 'flats') {
+                flatsBtn.className = "w-7 h-7 flex items-center justify-center rounded-lg text-[10px] font-black transition-all bg-indigo-500 text-white shadow-md shadow-indigo-500/20";
+                sharpsBtn.className = "w-7 h-7 flex items-center justify-center rounded-lg text-[10px] font-black transition-all text-slate-500 hover:text-slate-300";
+            } else {
+                flatsBtn.className = "w-7 h-7 flex items-center justify-center rounded-lg text-[10px] font-black transition-all text-slate-500 hover:text-slate-300";
+                sharpsBtn.className = "w-7 h-7 flex items-center justify-center rounded-lg text-[10px] font-black transition-all bg-indigo-500 text-white shadow-md shadow-indigo-500/20";
+            }
+        }
 
-            const sessionTotal = useMemo(() => {
-                const degreeMultiplier = (scaleDegree === 'random') ? 7 : 1;
-                const keyMultiplier = randomizeKey ? currentCOF.length : 1;
-                const directionMultiplier = (directionPref === 'random') ? 2 : 1;
-                return enabledIntervals.length * degreeMultiplier * keyMultiplier * directionMultiplier;
-            }, [enabledIntervals, scaleDegree, randomizeKey, directionPref, currentCOF.length]);
+        function renderDegreeButtons() {
+            const grid = document.getElementById('anchor-deg-grid');
+            grid.innerHTML = '';
+            
+            for (let deg = 1; deg <= 7; deg++) {
+                const btn = document.createElement('button');
+                btn.className = `h-11 text-xs font-black rounded-xl transition-all border-2 ${
+                    state.degreeJump.scaleDegree === deg 
+                    ? 'bg-indigo-500 border-indigo-400 text-white shadow-md' 
+                    : 'bg-slate-800 border-slate-700 text-slate-500 hover:text-slate-300'
+                }`;
+                btn.innerText = deg;
+                btn.onclick = () => {
+                    state.degreeJump.scaleDegree = deg;
+                    resetPool();
+                };
+                grid.appendChild(btn);
+            }
+            
+            // Randomizer dynamic button
+            const randBtn = document.createElement('button');
+            randBtn.className = `h-11 rounded-xl border-2 flex items-center justify-center transition-all ${
+                state.degreeJump.scaleDegree === 'random'
+                ? 'bg-violet-600 border-violet-500 text-white shadow-md'
+                : 'bg-violet-900/30 border-violet-800/50 text-violet-300 hover:bg-violet-900/50'
+            }`;
+            randBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="12" height="12" x="2" y="10" rx="2" ry="2"/><path d="m17.92 14 3.5-3.5a2.24 2.24 0 0 0 0-3.17l-3.5-3.5a2.24 2.24 0 0 0-3.17 0L12.75 5.58"/><circle cx="8" cy="16" r="1"/></svg>`;
+            randBtn.onclick = () => {
+                state.degreeJump.scaleDegree = 'random';
+                resetPool();
+            };
+            grid.appendChild(randBtn);
+        }
 
-            const getDegreeLabel = useCallback((degIndex) => {
-                if (scaleType === 'major') return (degIndex + 1).toString();
-                const minorLabels = ['1', '2', 'b3', '4', '5', 'b6', 'b7'];
-                return minorLabels[degIndex] || (degIndex + 1).toString();
-            }, [scaleType]);
+        function renderJumpsGrid() {
+            const grid = document.getElementById('jumps-grid');
+            grid.innerHTML = '';
+            
+            const available = state.degreeJump.mode === 'diatonic' 
+                ? Object.keys(DIATONIC_INTERVAL_NAMES).map(k => ({ id: parseInt(k), name: DIATONIC_INTERVAL_NAMES[k] }))
+                : CHROMATIC_INTERVALS.map((int, i) => ({ id: i, name: int.name }));
+                
+            available.forEach(int => {
+                const btn = document.createElement('button');
+                const isEnabled = state.degreeJump.enabledIntervals.includes(int.id);
+                btn.className = `py-2.5 text-[10px] font-black rounded-xl border-2 transition-all ${
+                    isEnabled 
+                    ? 'bg-indigo-500 border-indigo-400 text-white shadow-md' 
+                    : 'bg-slate-800/50 border-slate-700 text-slate-500 hover:text-slate-300'
+                }`;
+                btn.innerText = int.name;
+                btn.onclick = () => {
+                    if (isEnabled) {
+                        state.degreeJump.enabledIntervals = state.degreeJump.enabledIntervals.filter(i => i !== int.id);
+                    } else {
+                        state.degreeJump.enabledIntervals.push(int.id);
+                    }
+                    resetPool();
+                };
+                grid.appendChild(btn);
+            });
+        }
 
-            const generateTaskFromPool = useCallback((inputPool, isSilent = false) => {
-                if (!inputPool || inputPool.length === 0) {
-                    if (noRepeats) setSessionComplete(true);
-                    return null;
-                }
+        function toggleAllIntervals(enable) {
+            const available = state.degreeJump.mode === 'diatonic' 
+                ? Object.keys(DIATONIC_INTERVAL_NAMES).map(k => parseInt(k))
+                : CHROMATIC_INTERVALS.map((_, i) => i);
+            
+            state.degreeJump.enabledIntervals = enable ? available : [];
+            resetPool();
+        }
 
-                setShowTarget(false);
-                setTimeLeft(timerSeconds);
-                if (!isSilent) playTing();
+        function setAccidentalMode(mode) {
+            const oldCof = state.degreeJump.accidentalMode === 'flats' ? COF_FLATS : COF_SHARPS;
+            const index = oldCof.indexOf(state.degreeJump.selectedKey);
+            
+            state.degreeJump.accidentalMode = mode;
+            
+            const newCof = mode === 'flats' ? COF_FLATS : COF_SHARPS;
+            if (index !== -1) {
+                state.degreeJump.selectedKey = newCof[index];
+            }
+            
+            renderCircleOfFifths();
+            renderAccidentalButtons();
+            resetPool();
+        }
 
-                let effectiveDegree, intervalIndex, effectiveKey, direction;
+        function toggleRandomizeKey() {
+            state.degreeJump.randomizeKey = !state.degreeJump.randomizeKey;
+            const btn = document.getElementById('btn-rand-key');
+            if (state.degreeJump.randomizeKey) {
+                btn.className = "px-2.5 py-1 rounded-lg text-[10px] font-black transition-all flex items-center gap-1.5 bg-amber-500 text-white shadow-lg shadow-amber-500/20";
+            } else {
+                btn.className = "px-2.5 py-1 rounded-lg text-[10px] font-black transition-all flex items-center gap-1.5 text-slate-500 hover:text-slate-300";
+            }
+            resetPool();
+        }
 
-                if (noRepeats) {
-                    const poolIdx = Math.floor(Math.random() * inputPool.length);
-                    const item = inputPool[poolIdx];
-                    effectiveDegree = item.degree;
-                    intervalIndex = item.interval;
-                    effectiveKey = item.key;
-                    direction = item.direction;
-                    
-                    const newPool = [...inputPool];
-                    newPool.splice(poolIdx, 1);
-                    setPool(newPool);
-                } else {
-                    effectiveDegree = scaleDegree === 'random' ? Math.floor(Math.random() * 7) + 1 : scaleDegree;
-                    intervalIndex = enabledIntervals[Math.floor(Math.random() * enabledIntervals.length)];
-                    effectiveKey = randomizeKey ? currentCOF[Math.floor(Math.random() * currentCOF.length)] : selectedKey;
-                    direction = directionPref === 'random' ? (Math.random() > 0.5 ? 'up' : 'down') : directionPref;
-                }
+        function selectKey(key) {
+            state.degreeJump.selectedKey = key;
+            state.degreeJump.randomizeKey = false;
+            
+            // Reset highlight in active DOM buttons
+            renderCircleOfFifths();
+            const randBtn = document.getElementById('btn-rand-key');
+            randBtn.className = "px-2.5 py-1 rounded-lg text-[10px] font-black transition-all flex items-center gap-1.5 text-slate-500 hover:text-slate-300";
+            
+            resetPool();
+        }
 
-                if (randomizeKey && effectiveKey !== selectedKey) {
-                    setSelectedKey(effectiveKey);
-                }
+        function setScaleType(type) {
+            state.degreeJump.scaleType = type;
+            document.getElementById('btn-scale-major').className = `flex-1 py-2 rounded-lg text-[10px] font-black uppercase transition-all ${type === 'major' ? 'bg-indigo-500 text-white shadow-md' : 'text-slate-500 hover:text-slate-300'}`;
+            document.getElementById('btn-scale-minor').className = `flex-1 py-2 rounded-lg text-[10px] font-black uppercase transition-all ${type === 'minor' ? 'bg-indigo-500 text-white shadow-md' : 'text-slate-500 hover:text-slate-300'}`;
+            resetPool();
+        }
 
-                const activeScale = scaleType === 'major' ? MAJOR_SCALES[effectiveKey] : MINOR_SCALES[effectiveKey];
-                const startNote = lockStartNote ? activeScale[effectiveDegree - 1] : activeScale[Math.floor(Math.random() * 7)];
+        function setAnchorDisplay(disp) {
+            state.degreeJump.anchorDisplay = disp;
+            document.getElementById('btn-disp-note').className = `flex-1 py-2 rounded-lg text-[10px] font-black uppercase transition-all ${disp === 'note' ? 'bg-indigo-500 text-white shadow-md' : 'text-slate-500 hover:text-slate-300'}`;
+            document.getElementById('btn-disp-degree').className = `flex-1 py-2 rounded-lg text-[10px] font-black uppercase transition-all ${disp === 'degree' ? 'bg-indigo-500 text-white shadow-md' : 'text-slate-500 hover:text-slate-300'}`;
+            renderDegreeJumpUI();
+        }
 
-                let task;
-                if (mode === 'diatonic') {
-                    const label = DIATONIC_INTERVAL_NAMES[intervalIndex];
-                    const note = calculateDiatonic(activeScale, effectiveDegree, intervalIndex, direction);
-                    task = { startNote, endNote: note, label, direction, activeDegree: effectiveDegree, key: effectiveKey };
-                } else {
-                    const interval = CHROMATIC_INTERVALS[intervalIndex];
-                    const note = calculateChromatic(startNote, interval.semitones, direction);
-                    task = { startNote, endNote: note, label: interval.name, direction, activeDegree: effectiveDegree, key: effectiveKey };
-                }
-                setCurrentTask(task);
-                return task;
-            }, [mode, selectedKey, scaleDegree, randomizeKey, lockStartNote, directionPref, noRepeats, timerSeconds, enabledIntervals, currentCOF, scaleType]);
+        function setPracticeMode(mode) {
+            state.degreeJump.mode = mode;
+            // Clean dynamic intervals if switching structures
+            state.degreeJump.enabledIntervals = mode === 'diatonic' ? [0, 1, 2, 3, 4, 5, 6, 7] : [0, 2, 4, 5, 7, 9, 11, 12];
+            
+            document.getElementById('btn-pm-diatonic').className = `py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border-2 ${mode === 'diatonic' ? 'bg-white text-slate-950 border-white shadow-lg' : 'bg-slate-800/50 border-slate-800 text-slate-500 hover:text-slate-300'}`;
+            document.getElementById('btn-pm-chromatic').className = `py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border-2 ${mode === 'chromatic' ? 'bg-white text-slate-950 border-white shadow-lg' : 'bg-slate-800/50 border-slate-800 text-slate-500 hover:text-slate-300'}`;
+            
+            renderJumpsGrid();
+            resetPool();
+        }
 
-            const nextTask = useCallback((shouldMute = false) => {
-                generateTaskFromPool(pool, shouldMute);
-            }, [generateTaskFromPool, pool]);
+        function setDirectionPref(dir) {
+            state.degreeJump.directionPref = dir;
+            document.getElementById('btn-dir-up').className = `flex items-center justify-center gap-2 py-3 rounded-xl border-2 transition-all ${dir === 'up' ? 'bg-indigo-500 border-indigo-400 text-white shadow-md' : 'bg-slate-800/50 border-slate-800 text-slate-500 hover:text-slate-300'}`;
+            document.getElementById('btn-dir-down').className = `flex items-center justify-center gap-2 py-3 rounded-xl border-2 transition-all ${dir === 'down' ? 'bg-indigo-500 border-indigo-400 text-white shadow-md' : 'bg-slate-800/50 border-slate-800 text-slate-500 hover:text-slate-300'}`;
+            document.getElementById('btn-dir-random').className = `flex items-center justify-center gap-2 py-3 rounded-xl border-2 transition-all ${dir === 'random' ? 'bg-indigo-500 border-indigo-400 text-white shadow-md' : 'bg-slate-800/50 border-slate-800 text-slate-500 hover:text-slate-300'}`;
+            resetPool();
+        }
 
-            const resetPool = useCallback((keepTimerStatus = false) => {
-                let newPool = [];
-                const keysToUse = randomizeKey ? currentCOF : [selectedKey];
-                const degreesToUse = scaleDegree === 'random' ? [1,2,3,4,5,6,7] : [scaleDegree];
-                const directionsToUse = directionPref === 'random' ? ['up', 'down'] : [directionPref];
+        // Bind dynamic toggle events
+        document.getElementById('chk-lock-anchor').onclick = () => {
+            state.degreeJump.lockStartNote = !state.degreeJump.lockStartNote;
+            document.getElementById('chk-lock-anchor').className = `w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${state.degreeJump.lockStartNote ? 'bg-indigo-500 border-indigo-400' : 'border-slate-700 bg-slate-900'}`;
+            document.getElementById('chk-lock-anchor').innerHTML = state.degreeJump.lockStartNote ? `<div class="w-2.5 h-2.5 bg-white rounded-sm"></div>` : '';
+            resetPool();
+        };
 
-                for (const k of keysToUse) {
-                    for (const d of degreesToUse) {
-                        for (const i of enabledIntervals) {
-                            for (const dir of directionsToUse) {
-                                newPool.push({ key: k, degree: d, interval: i, direction: dir });
-                            }
+        document.getElementById('chk-no-repeats').onclick = () => {
+            state.degreeJump.noRepeats = !state.degreeJump.noRepeats;
+            document.getElementById('chk-no-repeats').className = `w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${state.degreeJump.noRepeats ? 'bg-amber-500 border-amber-400' : 'border-slate-700 bg-slate-900'}`;
+            document.getElementById('chk-no-repeats').innerHTML = state.degreeJump.noRepeats ? `<div class="w-2.5 h-2.5 bg-white rounded-sm"></div>` : '';
+            resetPool();
+        };
+
+        function toggleTimerEnabled() {
+            state.degreeJump.timerEnabled = !state.degreeJump.timerEnabled;
+            const sw = document.getElementById('timer-switch');
+            const dot = document.getElementById('timer-switch-dot');
+            const skipBtn = document.getElementById('btn-skip-task');
+            
+            if (state.degreeJump.timerEnabled) {
+                sw.className = "w-10 h-5 rounded-full relative transition-all border-2 border-indigo-400 bg-indigo-500 cursor-pointer";
+                dot.className = "absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all left-[22px]";
+                skipBtn.classList.remove('hidden');
+            } else {
+                sw.className = "w-10 h-5 rounded-full relative transition-all border-2 border-slate-700 bg-slate-800 cursor-pointer";
+                dot.className = "absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all left-0.5";
+                skipBtn.classList.add('hidden');
+                stopTimer();
+            }
+            renderDegreeJumpUI();
+        }
+
+        function updateTimerSeconds(val) {
+            state.degreeJump.timerSeconds = parseInt(val);
+            state.degreeJump.timeLeft = parseInt(val);
+        }
+
+        function getSessionTotal() {
+            const cof = state.degreeJump.accidentalMode === 'flats' ? COF_FLATS : COF_SHARPS;
+            const degreeMultiplier = (state.degreeJump.scaleDegree === 'random') ? 7 : 1;
+            const keyMultiplier = state.degreeJump.randomizeKey ? cof.length : 1;
+            const directionMultiplier = (state.degreeJump.directionPref === 'random') ? 2 : 1;
+            return state.degreeJump.enabledIntervals.length * degreeMultiplier * keyMultiplier * directionMultiplier;
+        }
+
+        function resetPool() {
+            // Guard against empty intervals which cause recursion bugs
+            if (state.degreeJump.enabledIntervals.length === 0) {
+                state.degreeJump.pool = [];
+                state.degreeJump.currentTask = null;
+                state.degreeJump.sessionComplete = false;
+                renderCircleOfFifths();
+                renderAccidentalButtons();
+                renderDegreeButtons();
+                renderJumpsGrid();
+                renderDegreeJumpUI();
+                return;
+            }
+
+            let newPool = [];
+            const cof = state.degreeJump.accidentalMode === 'flats' ? COF_FLATS : COF_SHARPS;
+            const keysToUse = state.degreeJump.randomizeKey ? cof : [state.degreeJump.selectedKey];
+            const degreesToUse = state.degreeJump.scaleDegree === 'random' ? [1,2,3,4,5,6,7] : [state.degreeJump.scaleDegree];
+            const directionsToUse = state.degreeJump.directionPref === 'random' ? ['up', 'down'] : [state.degreeJump.directionPref];
+
+            for (const k of keysToUse) {
+                for (const d of degreesToUse) {
+                    for (const i of state.degreeJump.enabledIntervals) {
+                        for (const dir of directionsToUse) {
+                            newPool.push({ key: k, degree: d, interval: i, direction: dir });
                         }
                     }
                 }
-                
-                setPool(newPool);
-                setSessionComplete(false);
-                if (!keepTimerStatus) setTimerRunning(false);
-                setTimeLeft(timerSeconds);
-                generateTaskFromPool(newPool, true); 
-            }, [enabledIntervals, timerSeconds, scaleDegree, randomizeKey, currentCOF, selectedKey, directionPref, generateTaskFromPool]);
+            }
+            
+            state.degreeJump.pool = newPool;
+            state.degreeJump.sessionComplete = false;
+            state.degreeJump.timeLeft = state.degreeJump.timerSeconds;
+            
+            renderCircleOfFifths();
+            renderAccidentalButtons();
+            renderDegreeButtons();
+            renderJumpsGrid();
+            
+            generateTaskFromPool(newPool, true);
+        }
 
-            useEffect(() => { 
-                resetPool(timerRunning); 
-            }, [scaleDegree, mode, scaleType, accidentalMode, lockStartNote, noRepeats, randomizeKey, directionPref, enabledIntervals]);
-
-            useEffect(() => {
-                if (!randomizeKey) resetPool(timerRunning);
-            }, [selectedKey]);
-
-            useEffect(() => {
-                let intervalId;
-                if (timerEnabled && timerRunning && !sessionComplete) {
-                    intervalId = setInterval(() => {
-                        setTimeLeft((prev) => {
-                            if (prev <= 4 && prev > 1) playBeep();
-                            if (prev <= 1) { nextTask(); return timerSeconds; }
-                            return prev - 1;
-                        });
-                    }, 1000);
+        function generateTaskFromPool(inputPool, isSilent = false) {
+            if (!inputPool || inputPool.length === 0) {
+                if (state.degreeJump.noRepeats) {
+                    state.degreeJump.sessionComplete = true;
+                    stopTimer();
+                    renderDegreeJumpUI();
+                    return null;
                 }
-                return () => clearInterval(intervalId);
-            }, [timerEnabled, timerRunning, timerSeconds, nextTask, sessionComplete]);
-
-            const handleMainAction = () => {
-                if (audioCtx.state === 'suspended') audioCtx.resume();
-                if (sessionComplete) resetPool();
-                else if (timerEnabled) setTimerRunning(!timerRunning);
-                else nextTask();
-            };
-
-            function renderIntervalUI() {
-                if (!currentTask || sessionComplete) return null;
-                const isUp = currentTask.direction === 'up';
-                return (
-                    <div className="flex items-center justify-center gap-4 text-5xl md:text-7xl lg:text-8xl font-black">
-                        {!isUp && <span className="text-rose-500 animate-pulse">&larr;</span>}
-                        <span className="text-white drop-shadow-2xl">{currentTask.label}</span>
-                        {isUp && <span className="text-emerald-500 animate-pulse">&rarr;</span>}
-                    </div>
-                );
+                
+                // Avoid recursive loops when intervals are empty
+                if (state.degreeJump.enabledIntervals.length > 0) {
+                    resetPool();
+                } else {
+                    state.degreeJump.currentTask = null;
+                    renderDegreeJumpUI();
+                }
+                return null;
             }
 
-            return (
-                <div className="min-h-screen pt-14 md:p-6 md:pt-20 overflow-hidden flex flex-col md:flex-row gap-6 animate-in">
-                    <aside className="w-full md:w-[380px] bg-slate-900/80 backdrop-blur-xl border-b md:border border-slate-800 md:rounded-3xl p-6 overflow-y-auto custom-scrollbar flex flex-col gap-6 shrink-0 z-20">
-                        <header className="flex items-center gap-3">
-                            <div className="p-2.5 bg-indigo-500 rounded-2xl shadow-lg shadow-indigo-500/20">
-                                <Footprints className="text-white" size={24} />
-                            </div>
-                            <div>
-                                <h2 className="text-lg font-black tracking-tight leading-tight uppercase">Degree Jump</h2>
-                                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Practice Session</p>
-                            </div>
-                        </header>
-                        
-                        <section className="space-y-6">
-                            <div className="relative flex flex-col items-center">
-                                <div className="flex justify-between items-center w-full mb-8 px-1">
-                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Key Selection</label>
-                                    <div className="flex bg-slate-800 p-1 rounded-xl gap-1">
-                                        <button onClick={() => setRandomizeKey(!randomizeKey)} className={`px-2.5 py-1 rounded-lg text-[10px] font-black transition-all flex items-center gap-1.5 ${randomizeKey ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/20' : 'text-slate-500 hover:text-slate-300'}`}>
-                                            <Dices size={12}/> {randomizeKey ? 'RAND' : 'KEY'}
-                                        </button>
-                                        <div className="w-px h-3 bg-slate-700 my-auto mx-0.5"></div>
-                                        <button onClick={() => setAccidentalMode('flats')} className={`w-7 h-7 flex items-center justify-center rounded-lg text-[10px] font-black transition-all ${accidentalMode === 'flats' ? 'bg-indigo-500 text-white' : 'text-slate-500 hover:text-slate-300'}`}>♭</button>
-                                        <button onClick={() => setAccidentalMode('sharps')} className={`w-7 h-7 flex items-center justify-center rounded-lg text-[10px] font-black transition-all ${accidentalMode === 'sharps' ? 'bg-indigo-500 text-white' : 'text-slate-500 hover:text-slate-300'}`}>♯</button>
-                                    </div>
-                                </div>
-                                <div className="relative w-44 h-44 border-2 border-slate-800 rounded-full flex items-center justify-center">
-                                    <div className="absolute inset-0 flex items-center justify-center text-slate-700 pointer-events-none">
-                                        <MusicIcon size={32} className="opacity-10" />
-                                    </div>
-                                    {currentCOF.map((key, i) => {
-                                        const angle = (i * (360 / currentCOF.length) - 90) * (Math.PI / 180);
-                                        const x = Math.cos(angle) * 75; const y = Math.sin(angle) * 75;
-                                        return (
-                                            <button key={key} onClick={() => { setSelectedKey(key); setRandomizeKey(false); setTimerRunning(false); }} style={{ transform: `translate(${x}px, ${y}px)` }}
-                                                className={`absolute w-9 h-9 rounded-full flex items-center justify-center text-xs font-black transition-all border-2 ${selectedKey === key ? 'bg-indigo-500 border-indigo-400 text-white scale-110 shadow-lg shadow-indigo-500/30' : 'bg-slate-800 border-slate-700 text-slate-400'}`}>
-                                                <NoteDisplay note={key} />
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            </div>
+            state.degreeJump.showTarget = false;
+            state.degreeJump.timeLeft = state.degreeJump.timerSeconds;
+            
+            if (!isSilent) {
+                playTing();
+            }
 
-                            <div className="grid grid-cols-2 gap-3">
-                                <div className="space-y-2">
-                                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">Scale Type</label>
-                                    <div className="flex bg-slate-800 p-1 rounded-xl">
-                                        {['major', 'minor'].map(t => (
-                                            <button key={t} onClick={() => setScaleType(t)} className={`flex-1 py-2 rounded-lg text-[10px] font-black uppercase transition-all ${scaleType === t ? 'bg-indigo-500 text-white' : 'text-slate-500'}`}>{t}</button>
-                                        ))}
-                                    </div>
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">Display</label>
-                                    <div className="flex bg-slate-800 p-1 rounded-xl">
-                                        {['note', 'degree'].map(m => (
-                                            <button key={m} onClick={() => setAnchorDisplay(m)} className={`flex-1 py-2 rounded-lg text-[10px] font-black uppercase transition-all ${anchorDisplay === m ? 'bg-indigo-500 text-white' : 'text-slate-500'}`}>{m}</button>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
+            let effectiveDegree, intervalIndex, effectiveKey, direction;
 
-                            {/* RESTORED PRACTICE MODE TOGGLE */}
-                            <div className="space-y-2">
-                                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">Practice Mode</label>
-                                <div className="grid grid-cols-2 gap-2">
-                                    {['diatonic', 'chromatic'].map(m => (
-                                        <button key={m} onClick={() => setMode(m)} className={`py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border-2 ${mode === m ? 'bg-white text-slate-950 border-white' : 'bg-slate-800/50 border-slate-800 text-slate-500'}`}>{m}</button>
-                                    ))}
-                                </div>
-                            </div>
+            if (state.degreeJump.noRepeats) {
+                const poolIdx = Math.floor(Math.random() * inputPool.length);
+                const item = inputPool[poolIdx];
+                effectiveDegree = item.degree;
+                intervalIndex = item.interval;
+                effectiveKey = item.key;
+                direction = item.direction;
+                
+                inputPool.splice(poolIdx, 1);
+                state.degreeJump.pool = inputPool;
+            } else {
+                effectiveDegree = state.degreeJump.scaleDegree === 'random' ? Math.floor(Math.random() * 7) + 1 : state.degreeJump.scaleDegree;
+                effectiveIntervalList = state.degreeJump.enabledIntervals;
+                intervalIndex = effectiveIntervalList[Math.floor(Math.random() * effectiveIntervalList.length)];
+                
+                const cof = state.degreeJump.accidentalMode === 'flats' ? COF_FLATS : COF_SHARPS;
+                effectiveKey = state.degreeJump.randomizeKey ? cof[Math.floor(Math.random() * cof.length)] : state.degreeJump.selectedKey;
+                direction = state.degreeJump.directionPref === 'random' ? (Math.random() > 0.5 ? 'up' : 'down') : state.degreeJump.directionPref;
+            }
 
-                            <div className="space-y-3">
-                                <div className="flex justify-between items-end">
-                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Anchor Position</label>
-                                    <span className="text-xs font-black text-indigo-400">
-                                        {scaleDegree === 'random' ? 'Dynamic' : (anchorDisplay === 'note' ? currentScale[scaleDegree-1] : getDegreeLabel(scaleDegree-1))}
-                                    </span>
-                                </div>
-                                <div className="grid grid-cols-4 gap-1.5">
-                                    {[1, 2, 3, 4, 5, 6, 7].map(deg => (
-                                        <button key={deg} onClick={() => setScaleDegree(deg)} className={`h-11 text-xs font-black rounded-xl transition-all border-2 ${scaleDegree === deg ? 'bg-indigo-500 border-indigo-400 text-white shadow-md' : 'bg-slate-800 border-slate-700 text-slate-500'}`}>{deg}</button>
-                                    ))}
-                                    <button onClick={() => { if(scaleDegree === 'random') nextTask(); else setScaleDegree('random'); }} className={`h-11 rounded-xl border-2 flex items-center justify-center transition-all bg-violet-900/30 border-violet-800/50 text-violet-300 hover:bg-violet-900/50 active:bg-indigo-500 active:text-white`}><Dices size={18} /></button>
-                                </div>
-                            </div>
+            const activeScale = state.degreeJump.scaleType === 'major' ? MAJOR_SCALES[effectiveKey] : MINOR_SCALES[effectiveKey];
+            const startNote = state.degreeJump.lockStartNote ? activeScale[effectiveDegree - 1] : activeScale[Math.floor(Math.random() * 7)];
 
-                            <div className="space-y-3">
-                                <div className="flex justify-between items-center px-1">
-                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Focus Jumps</label>
-                                    <div className="flex gap-3">
-                                        <button onClick={() => setEnabledIntervals(availableIntervals.map(i => i.id))} className="text-[9px] font-black text-indigo-400 uppercase">All</button>
-                                        <button onClick={() => setEnabledIntervals([])} className="text-[9px] font-black text-slate-500 uppercase">None</button>
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-3 gap-1.5">
-                                    {availableIntervals.map((int) => (
-                                        <button key={int.id} onClick={() => setEnabledIntervals(prev => prev.includes(int.id) ? prev.filter(i => i !== int.id) : [...prev, int.id])} className={`py-2.5 text-[10px] font-black rounded-xl border-2 transition-all ${enabledIntervals.includes(int.id) ? 'bg-indigo-500 border-indigo-400 text-white' : 'bg-slate-800/50 border-slate-700 text-slate-500'}`}>{int.name}</button>
-                                    ))}
-                                </div>
-                            </div>
+            let task;
+            if (state.degreeJump.mode === 'diatonic') {
+                const label = DIATONIC_INTERVAL_NAMES[intervalIndex];
+                const note = calculateDiatonic(activeScale, effectiveDegree, intervalIndex, direction);
+                task = { startNote, endNote: note, label, direction, activeDegree: effectiveDegree, key: effectiveKey };
+            } else {
+                const interval = CHROMATIC_INTERVALS[intervalIndex];
+                const note = calculateChromatic(startNote, interval.semitones, direction);
+                task = { startNote, endNote: note, label: interval.name, direction, activeDegree: effectiveDegree, key: effectiveKey };
+            }
+            
+            state.degreeJump.currentTask = task;
+            
+            // Play initial prompt pitch!
+            if (!isSilent) {
+                setTimeout(() => playToneByNoteName(startNote), 100);
+            }
 
-                            <div className="space-y-4 pt-2">
-                                <div className="space-y-2">
-                                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">Jump Direction</label>
-                                    <div className="grid grid-cols-3 gap-1.5">
-                                        {[
-                                            {id: 'up', icon: <ChevronUp size={14}/>, label: 'UP'},
-                                            {id: 'down', icon: <ChevronDown size={14}/>, label: 'DOWN'},
-                                            {id: 'random', icon: <Shuffle size={14}/>, label: 'RAND'}
-                                        ].map(dir => (
-                                            <button key={dir.id} onClick={() => setDirectionPref(dir.id)} className={`flex items-center justify-center gap-2 py-3 rounded-xl border-2 transition-all ${directionPref === dir.id ? 'bg-indigo-500 border-indigo-400 text-white' : 'bg-slate-800/50 border-slate-800 text-slate-500'}`}>
-                                                {dir.icon} <span className="text-[10px] font-black">{dir.label}</span>
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <div className="flex flex-col gap-4">
-                                    <label className="flex items-center justify-between p-3 bg-slate-800/50 border border-slate-800 rounded-xl group cursor-pointer">
-                                        <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Lock Anchor</span>
-                                        <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${lockStartNote ? 'bg-indigo-500 border-indigo-400' : 'border-slate-700 bg-slate-900'}`}>
-                                            {lockStartNote && <div className="w-2.5 h-2.5 bg-white rounded-sm" />}
-                                        </div>
-                                        <input type="checkbox" className="hidden" checked={lockStartNote} onChange={e => setLockStartNote(e.target.checked)} />
-                                    </label>
-                                    <label className="flex items-center justify-between p-3 bg-slate-800/50 border border-slate-800 rounded-xl group cursor-pointer">
-                                        <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">No Repeats</span>
-                                        <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${noRepeats ? 'bg-amber-500 border-amber-400' : 'border-slate-700 bg-slate-900'}`}>
-                                            {noRepeats && <div className="w-2.5 h-2.5 bg-white rounded-sm" />}
-                                        </div>
-                                        <input type="checkbox" className="hidden" checked={noRepeats} onChange={e => setNoRepeats(e.target.checked)} />
-                                    </label>
-                                </div>
-                            </div>
-
-                            <div className="space-y-3 pt-4 border-t border-slate-800/50">
-                                <div className="flex justify-between items-center">
-                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2"><Clock size={14} /> Auto-Cycle</label>
-                                    <label className="flex items-center gap-2 cursor-pointer group">
-                                        <div className={`w-10 h-5 rounded-full relative transition-all border-2 ${timerEnabled ? 'bg-indigo-500 border-indigo-400' : 'bg-slate-800 border-slate-700'}`}>
-                                            <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all ${timerEnabled ? 'left-[22px]' : 'left-0.5'}`} />
-                                        </div>
-                                        <input type="checkbox" className="hidden" checked={timerEnabled} onChange={e => { setTimerEnabled(e.target.checked); if (!e.target.checked) setTimerRunning(false); }} />
-                                    </label>
-                                </div>
-                                <div className="relative">
-                                    <select disabled={!timerEnabled || timerRunning} value={timerSeconds} onChange={e => { setTimerSeconds(Number(e.target.value)); setTimeLeft(Number(e.target.value)); }}
-                                        className="w-full bg-slate-800 border-2 border-slate-700 rounded-xl py-3 px-4 text-xs font-black uppercase tracking-widest outline-none appearance-none cursor-pointer disabled:opacity-30">
-                                        {[10, 20, 30, 40, 50, 60].map(s => <option key={s} value={s}>{s} Seconds</option>)}
-                                    </select>
-                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500"><ChevronDown size={14} /></div>
-                                </div>
-                            </div>
-                        </section>
-                    </aside>
-
-                    <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 lg:p-12 h-full overflow-hidden z-10">
-                        <div className="w-full max-w-4xl max-h-full bg-slate-900 border border-slate-800 rounded-[3rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.7)] flex flex-col relative overflow-hidden">
-                            {timerEnabled && !sessionComplete && (
-                                <div className="absolute top-0 left-0 right-0 h-2 bg-slate-800 z-30">
-                                    <div className={`h-full bg-indigo-500 transition-all ${timerRunning ? 'duration-1000 ease-linear' : 'duration-300'}`} style={{ width: `${(timeLeft / timerSeconds) * 100}%` }} />
-                                </div>
-                            )}
-                            <div className="absolute inset-0 opacity-[0.04] pointer-events-none overflow-hidden text-white font-black text-[15vw] leading-none p-10 flex flex-col">
-                                <span>{formatNote(selectedKey)}</span><span className="self-end">{mode === 'diatonic' ? 'DIA' : 'CHR'}</span>
-                            </div>
-                            <div className="flex-1 flex flex-col items-center justify-center p-6 md:p-10 lg:p-12 text-center z-10 relative overflow-y-auto overflow-x-hidden custom-scrollbar">
-                                {sessionComplete ? (
-                                    <div className="space-y-8 animate-in">
-                                        <div className="w-24 h-24 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-500/20"><RotateCcw className="text-emerald-500" size={48} /></div>
-                                        <h2 className="text-4xl md:text-6xl font-black text-white italic tracking-tighter uppercase italic">Session Complete</h2>
-                                        <button onClick={() => resetPool(false)} className="bg-emerald-500 text-white px-12 py-5 rounded-2xl font-black text-xl hover:bg-emerald-600 shadow-xl">START AGAIN</button>
-                                    </div>
-                                ) : currentTask && (
-                                    <div className="w-full flex-1 flex flex-col items-center justify-center gap-10 md:gap-14">
-                                        <div className="flex flex-col items-center gap-3 opacity-90">
-                                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.4em] mb-1"><NoteDisplay note={currentTask.key} /> {scaleType === 'major' ? 'Major' : 'Minor'} Context</span>
-                                            <div className="flex gap-4">
-                                                { (scaleType === 'major' ? MAJOR_SCALES[currentTask.key] : MINOR_SCALES[currentTask.key]).map((note, i) => {
-                                                    const displayDegree = currentTask.activeDegree;
-                                                    return (
-                                                        <div key={i} className="flex flex-col items-center">
-                                                            <span className={`text-xs md:text-sm font-black transition-all ${displayDegree === i+1 ? 'text-indigo-400 scale-125' : 'text-slate-600'}`}><NoteDisplay note={note} /></span>
-                                                            {displayDegree === i+1 && <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full mt-1.5 animate-pulse" />}
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center justify-center gap-8 md:gap-20 w-full pt-4">
-                                            <div className="flex flex-col items-center">
-                                                <div className="text-7xl md:text-9xl lg:text-[11rem] font-black text-white leading-none tracking-tighter transition-all drop-shadow-2xl">
-                                                    {anchorDisplay === 'note' ? <NoteDisplay note={currentTask.startNote} /> : <NoteDisplay note={getDegreeLabel(currentTask.activeDegree - 1)} />}
-                                                </div>
-                                                <div className="text-[10px] md:text-xs font-black text-indigo-400 uppercase tracking-[0.3em] mt-3 opacity-70 italic">ANCHOR</div>
-                                            </div>
-                                            <div className="h-32 w-px bg-slate-800 opacity-50 shrink-0"></div>
-                                            <div className="flex flex-col items-center relative">
-                                                <div className={`text-7xl md:text-9xl lg:text-[11rem] font-black leading-none tracking-tighter cursor-pointer select-none transition-all duration-300 ${showTarget ? 'text-emerald-400 scale-105' : 'text-slate-800 opacity-50 blur-[6px]'}`} onClick={() => { if (audioCtx.state === 'suspended') audioCtx.resume(); setShowTarget(!showTarget); }}>
-                                                    {showTarget ? <NoteDisplay note={currentTask.endNote} /> : '?'}
-                                                </div>
-                                                <div className="text-[10px] md:text-xs font-black text-slate-500 uppercase tracking-[0.3em] mt-3 opacity-70 italic">TARGET</div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div className="w-full flex flex-col items-center gap-8">
-                                            {renderIntervalUI()}
-                                            <div className="flex items-center gap-5">
-                                                <button onClick={handleMainAction} className={`group relative inline-flex items-center gap-4 px-12 py-5 rounded-2xl font-black text-xl transition-all shadow-xl active:scale-95 z-20 ${timerEnabled && timerRunning ? 'bg-rose-500 text-white hover:bg-rose-600' : 'bg-white text-slate-950 hover:bg-indigo-500 hover:text-white'}`}>
-                                                    {timerEnabled ? (timerRunning ? <><Square size={24} fill="currentColor" />STOP TIMER</> : <><Play size={24} fill="currentColor" />START TIMER</>) : <><RefreshCw size={24} />NEXT JUMP</>}
-                                                </button>
-                                                {timerEnabled && <button onClick={() => nextTask()} title="Skip to next" className="w-16 h-16 flex items-center justify-center bg-slate-800 text-white border border-slate-700 rounded-2xl hover:bg-slate-700 active:scale-95 group z-20"><ChevronRight size={28} /></button>}
-                                            </div>
-                                            <div className="flex gap-4 opacity-30"><span className="text-[10px] font-bold border border-slate-700 px-3 py-1 rounded-full uppercase">{timerEnabled ? "Space: Start/Stop • Arrow Right: Skip" : "Space: Next"}</span></div>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                            <div className="p-6 md:p-8 bg-slate-950/50 border-t border-slate-800 flex shrink-0 justify-center items-center gap-12 relative overflow-hidden">
-                                <div className="flex flex-col items-center text-center z-10">
-                                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 opacity-60">Scale Reference</span>
-                                    <div className="flex flex-wrap justify-center gap-1.5">
-                                        {(scaleType === 'major' ? MAJOR_SCALES[selectedKey] : MINOR_SCALES[selectedKey]).map((note, i) => (
-                                            <span key={i} className={`text-[11px] font-black px-2.5 py-1 rounded border transition-colors ${currentTask?.activeDegree === i+1 ? 'bg-indigo-500 border-indigo-400 text-white' : 'bg-slate-800 border-slate-700 text-slate-400'}`}><NoteDisplay note={note} /></span>
-                                        ))}
-                                    </div>
-                                </div>
-                                <div className="flex flex-col items-center text-center border-l border-slate-800 pl-12 relative z-10">
-                                    <span className="text-[10px] font-bold text-amber-500 uppercase tracking-widest mb-2 flex items-center gap-2"><Layers size={12} /> {noRepeats ? 'Remaining' : 'Total Session'}</span>
-                                    <div className="flex items-center gap-2"><span className="text-2xl font-black text-white">{noRepeats ? pool.length : sessionTotal}</span><span className="text-[11px] font-bold text-slate-600 uppercase tracking-widest">/ {sessionTotal}</span></div>
-                                </div>
-                            </div>
-                        </div>
-                    </main>
-                </div>
-            );
+            renderDegreeJumpUI();
+            return task;
         }
 
-        // --- NOTE FLASHER MODULE ---
+        function nextTask(isSilent = false) {
+            generateTaskFromPool(state.degreeJump.pool, isSilent);
+        }
 
-        function NoteFlasher() {
-            const [noteType, setNoteType] = useState('mixed');
-            const [noRepeats, setNoRepeats] = useState(false);
-            const [timerEnabled, setTimerEnabled] = useState(false);
-            const [timerRunning, setTimerRunning] = useState(false);
-            const [timerSeconds, setTimerSeconds] = useState(30);
-            const [timeLeft, setTimeLeft] = useState(30);
-            const [currentNote, setCurrentNote] = useState('');
-            const [pool, setPool] = useState([]);
-            const [sessionComplete, setSessionComplete] = useState(false);
+        function toggleTargetVisibility() {
+            if (!state.degreeJump.currentTask) return;
+            state.degreeJump.showTarget = !state.degreeJump.showTarget;
+            const targetEl = document.getElementById('display-target');
+            if (state.degreeJump.showTarget) {
+                targetEl.className = "text-7xl md:text-9xl lg:text-[10rem] font-black leading-none tracking-tighter cursor-pointer select-none transition-all duration-300 text-emerald-400 scale-105";
+                targetEl.innerHTML = formatDisplayWithSup(formatNote(state.degreeJump.currentTask.endNote));
+                // Play Target audio pitch on discovery!
+                playToneByNoteName(state.degreeJump.currentTask.endNote);
+            } else {
+                targetEl.className = "text-7xl md:text-9xl lg:text-[10rem] font-black leading-none tracking-tighter cursor-pointer select-none transition-all duration-300 text-slate-800 opacity-50 blur-[6px]";
+                targetEl.innerText = "?";
+            }
+        }
 
-            const resetPool = useCallback(() => {
-                const currentPool = NOTE_POOLS[noteType];
-                setPool(Array.from({ length: currentPool.length }, (_, i) => i));
-                setSessionComplete(false);
-                setTimerRunning(false);
-                setTimeLeft(timerSeconds);
-            }, [noteType, timerSeconds]);
-
-            useEffect(() => { resetPool(); }, [resetPool, noteType, noRepeats]);
-
-            const nextNote = useCallback((shouldMute = false) => {
-                const currentPool = NOTE_POOLS[noteType];
-                setTimeLeft(timerSeconds);
-                if (!shouldMute) playTing();
-                let index;
-                let newPool = [...pool];
-                if (noRepeats) {
-                    if (newPool.length === 0) {
-                        setSessionComplete(true);
-                        setTimerRunning(false);
-                        return;
-                    }
-                    const poolIdx = Math.floor(Math.random() * newPool.length);
-                    index = newPool[poolIdx];
-                    newPool.splice(poolIdx, 1);
-                    setPool(newPool);
+        function handleMainAction() {
+            if (state.degreeJump.sessionComplete) {
+                resetPool();
+            } else if (state.degreeJump.timerEnabled) {
+                if (state.degreeJump.timerRunning) {
+                    stopTimer();
                 } else {
-                    index = Math.floor(Math.random() * currentPool.length);
+                    startTimer();
                 }
-                setCurrentNote(currentPool[index]);
-            }, [noteType, noRepeats, pool, timerSeconds]);
+            } else {
+                nextTask();
+            }
+        }
 
-            useEffect(() => {
-                let intervalId;
-                if (timerEnabled && timerRunning && !sessionComplete) {
-                    intervalId = setInterval(() => {
-                        setTimeLeft((prev) => {
-                            if (prev <= 4 && prev > 1) playBeep();
-                            if (prev <= 1) { nextNote(); return timerSeconds; }
-                            return prev - 1;
-                        });
-                    }, 1000);
+        function startTimer() {
+            if (state.degreeJump.enabledIntervals.length === 0) return;
+            state.degreeJump.timerRunning = true;
+            document.getElementById('progress-bar-container').classList.remove('hidden');
+            
+            const actionBtn = document.getElementById('btn-primary-action');
+            actionBtn.className = "group relative inline-flex items-center gap-4 px-12 py-5 rounded-2xl font-black text-xl transition-all shadow-xl active:scale-95 z-20 bg-rose-500 text-white hover:bg-rose-600";
+            actionBtn.innerText = "STOP TIMER";
+
+            timerInterval = setInterval(() => {
+                state.degreeJump.timeLeft--;
+                const percent = (state.degreeJump.timeLeft / state.degreeJump.timerSeconds) * 100;
+                document.getElementById('progress-bar').style.width = `${percent}%`;
+
+                if (state.degreeJump.timeLeft <= 4 && state.degreeJump.timeLeft > 0) {
+                    playBeep();
                 }
-                return () => clearInterval(intervalId);
-            }, [timerEnabled, timerRunning, timerSeconds, nextNote, sessionComplete]);
 
-            useEffect(() => { if (!sessionComplete) nextNote(true); }, [noteType]);
-
-            const handleMainAction = () => {
-                if (audioCtx.state === 'suspended') audioCtx.resume();
-                if (sessionComplete) resetPool();
-                else if (timerEnabled) setTimerRunning(!timerRunning);
-                else nextNote();
-            };
-
-            return (
-                <div className="min-h-screen pt-14 md:p-6 md:pt-20 overflow-hidden flex flex-col md:flex-row gap-6 animate-in">
-                    <aside className="w-full md:w-[380px] bg-slate-900/80 backdrop-blur-xl border-b md:border border-slate-800 md:rounded-3xl p-6 overflow-y-auto custom-scrollbar flex flex-col gap-8 shrink-0 z-20">
-                        <header className="flex items-center gap-3">
-                            <div className="p-2.5 bg-rose-500 rounded-2xl shadow-lg shadow-rose-500/20"><Zap className="text-white" size={24} /></div>
-                            <div>
-                                <h2 className="text-lg font-black tracking-tight leading-tight uppercase">Note Flasher</h2>
-                                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Identification Practice</p>
-                            </div>
-                        </header>
-                        <section className="space-y-8">
-                            <div className="space-y-3">
-                                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">Focus Mode</label>
-                                <div className="grid grid-cols-3 gap-2">
-                                    {['sharps', 'flats', 'mixed'].map(m => (
-                                        <button key={m} onClick={() => setNoteType(m)} className={`py-4 rounded-xl text-[10px] font-black uppercase transition-all border-2 ${noteType === m ? 'bg-white text-slate-950 border-white' : 'bg-slate-800/50 border-slate-800 text-slate-500'}`}>{m}</button>
-                                    ))}
-                                </div>
-                            </div>
-                            <div className="flex flex-col gap-3 pt-2">
-                                <label className="flex items-center justify-between p-4 bg-slate-800/50 border border-slate-800 rounded-2xl group cursor-pointer">
-                                    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 group-hover:text-slate-200 transition-colors">No Repeats</span>
-                                    <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${noRepeats ? 'bg-amber-500 border-amber-400' : 'border-slate-700 bg-slate-900'}`}>{noRepeats && <div className="w-2.5 h-2.5 bg-white rounded-sm" />}</div>
-                                    <input type="checkbox" className="hidden" checked={noRepeats} onChange={e => setNoRepeats(e.target.checked)} />
-                                </label>
-                            </div>
-                            <div className="space-y-4 pt-2 border-t border-slate-800/50">
-                                <div className="flex justify-between items-center">
-                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2"><Clock size={14} /> Auto-Cycle</label>
-                                    <label className="flex items-center gap-2 cursor-pointer group">
-                                        <div className={`w-10 h-5 rounded-full relative transition-all border-2 ${timerEnabled ? 'bg-indigo-500 border-indigo-400' : 'bg-slate-800 border-slate-700'}`}><div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all ${timerEnabled ? 'left-[22px]' : 'left-0.5'}`} /></div>
-                                        <input type="checkbox" className="hidden" checked={timerEnabled} onChange={e => { setTimerEnabled(e.target.checked); if (!e.target.checked) setTimerRunning(false); }} />
-                                    </label>
-                                </div>
-                                <div className="relative group">
-                                    <select disabled={!timerEnabled || timerRunning} value={timerSeconds} onChange={e => { setTimerSeconds(Number(e.target.value)); setTimeLeft(Number(e.target.value)); }}
-                                        className="w-full bg-slate-800 border-2 border-slate-700 rounded-xl py-3.5 px-4 text-xs font-black uppercase tracking-widest outline-none appearance-none cursor-pointer">
-                                        {[10, 20, 30, 40, 50, 60].map(s => <option key={s} value={s}>{s} Seconds</option>)}
-                                    </select>
-                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500"><ChevronDown size={14} /></div>
-                                </div>
-                            </div>
-                        </section>
-                    </aside>
-                    <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 lg:p-12 h-full overflow-hidden z-10">
-                        <div className="w-full max-w-4xl max-h-full bg-slate-900 border border-slate-800 rounded-[3rem] shadow-2xl flex flex-col relative overflow-hidden">
-                            {timerEnabled && !sessionComplete && (
-                                <div className="absolute top-0 left-0 right-0 h-2 bg-slate-800 z-30">
-                                    <div className={`h-full bg-rose-500 transition-all ${timerRunning ? 'duration-1000 ease-linear' : 'duration-300'}`} style={{ width: `${(timeLeft / timerSeconds) * 100}%` }} />
-                                </div>
-                            )}
-                            <div className="flex-1 flex flex-col items-center justify-center p-6 md:p-10 lg:p-12 text-center z-10 relative overflow-y-auto custom-scrollbar">
-                                {sessionComplete ? (
-                                    <div className="space-y-8 animate-in">
-                                        <div className="w-24 h-24 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-500/20"><RotateCcw className="text-emerald-500" size={48} /></div>
-                                        <h2 className="text-4xl md:text-6xl font-black text-white italic tracking-tighter uppercase italic">Session Complete</h2>
-                                        <button onClick={resetPool} className="bg-emerald-500 text-white px-12 py-5 rounded-2xl font-black text-xl hover:bg-emerald-600 shadow-xl">START AGAIN</button>
-                                    </div>
-                                ) : (
-                                    <div className="w-full flex flex-col items-center gap-12">
-                                        <div className="space-y-4">
-                                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.6em]">Identify the Note</p>
-                                            <div className="text-[10rem] md:text-[14rem] lg:text-[18rem] font-black text-white leading-none tracking-tighter drop-shadow-2xl">
-                                                <NoteDisplay note={currentNote} />
-                                            </div>
-                                        </div>
-                                        <div className="flex flex-col items-center gap-6">
-                                            <div className="flex items-center gap-5">
-                                                <button onClick={handleMainAction} 
-                                                    className={`group relative inline-flex items-center gap-4 px-12 py-5 rounded-2xl font-black text-xl transition-all shadow-xl active:scale-95 z-20 ${timerEnabled && timerRunning ? 'bg-rose-500 text-white hover:bg-rose-600' : 'bg-white text-slate-950 hover:bg-rose-500 hover:text-white'}`}>
-                                                    {timerEnabled ? (timerRunning ? <><Square size={24} fill="currentColor" />STOP TIMER</> : <><Play size={24} fill="currentColor" />START TIMER</>) : <><RefreshCw size={24} />NEXT NOTE</>}
-                                                </button>
-                                                {timerEnabled && <button onClick={() => nextNote()} className="w-16 h-16 flex items-center justify-center bg-slate-800 text-white border border-slate-700 rounded-2xl hover:bg-slate-700 active:scale-95 group z-20"><ChevronRight size={28} /></button>}
-                                            </div>
-                                            <div className="flex gap-4 opacity-30"><span className="text-[10px] font-bold border border-slate-700 px-3 py-1 rounded-full uppercase">Space: Action</span></div>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </main>
-                </div>
-            );
+                if (state.degreeJump.timeLeft <= 0) {
+                    nextTask();
+                }
+            }, 1000);
         }
 
-        // --- 7. HOME PAGE MODULE ---
-        function HomePage({ onSelect }) {
-            return (
-                <div className="min-h-screen flex flex-col items-center justify-center p-6 md:p-12 animate-in pt-24">
-                    <div className="max-w-5xl w-full text-center space-y-16">
-                        <header className="space-y-4">
-                            <h1 className="text-5xl md:text-8xl font-black tracking-tighter text-white uppercase italic">Practice <span className="text-indigo-500">Suite</span></h1>
-                            <p className="text-slate-500 font-medium tracking-widest uppercase text-xs md:text-sm">Universal training for modern musicians</p>
-                        </header>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                            <button onClick={() => onSelect('degreeJump')} className="group relative bg-slate-900 border-2 border-slate-800 hover:border-indigo-500 rounded-[3rem] p-10 text-left transition-all hover:scale-[1.02] shadow-2xl overflow-hidden">
-                                <div className="absolute top-0 right-0 p-10 opacity-5 group-hover:opacity-10 transition-opacity"><Footprints size={140} /></div>
-                                <div className="relative z-10 space-y-5">
-                                    <div className="w-14 h-14 bg-indigo-500 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/20"><Footprints className="text-white" size={28} /></div>
-                                    <h3 className="text-3xl font-black text-white uppercase tracking-tight">Degree Jump</h3>
-                                    <p className="text-slate-400 text-base font-medium leading-relaxed max-w-[280px]">Practice relative intervals within major and minor key signatures.</p>
-                                    <div className="pt-6 flex items-center gap-2 text-sm font-bold text-indigo-400 uppercase tracking-widest">Enter Session <ChevronRight size={18} /></div>
-                                </div>
-                            </button>
-                            <button onClick={() => onSelect('noteFlasher')} className="group relative bg-slate-900 border-2 border-slate-800 hover:border-rose-500 rounded-[3rem] p-10 text-left transition-all hover:scale-[1.02] shadow-2xl overflow-hidden">
-                                <div className="absolute top-0 right-0 p-10 opacity-5 group-hover:opacity-10 transition-opacity"><Zap size={140} /></div>
-                                <div className="relative z-10 space-y-5">
-                                    <div className="w-14 h-14 bg-rose-500 rounded-2xl flex items-center justify-center shadow-lg shadow-rose-500/20"><Zap className="text-white" size={28} /></div>
-                                    <h3 className="text-3xl font-black text-white uppercase tracking-tight">Note Flasher</h3>
-                                    <p className="text-slate-400 text-base font-medium leading-relaxed max-w-[280px]">Focus on sharp/flat identification and speed training.</p>
-                                    <div className="pt-6 flex items-center gap-2 text-sm font-bold text-rose-400 uppercase tracking-widest">Enter Session <ChevronRight size={18} /></div>
-                                </div>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            );
+        function stopTimer() {
+            state.degreeJump.timerRunning = false;
+            clearInterval(timerInterval);
+            document.getElementById('progress-bar-container').classList.add('hidden');
+            document.getElementById('progress-bar').style.width = `0%`;
+            
+            const actionBtn = document.getElementById('btn-primary-action');
+            actionBtn.className = "group relative inline-flex items-center gap-4 px-12 py-5 rounded-2xl font-black text-xl transition-all shadow-xl active:scale-95 z-20 bg-white text-slate-950 hover:bg-indigo-500 hover:text-white";
+            actionBtn.innerText = state.degreeJump.timerEnabled ? "START TIMER" : "NEXT JUMP";
         }
 
-        // --- 8. ROOT APP ---
-        function App() {
-            const [currentView, setCurrentView] = useState('home');
-            return (
-                <div className="min-h-screen bg-slate-950">
-                    <Navbar activeView={currentView} onNavigate={setCurrentView} />
-                    {currentView === 'degreeJump' ? <DegreeJump /> : currentView === 'noteFlasher' ? <NoteFlasher /> : <HomePage onSelect={setCurrentView} />}
-                </div>
-            );
+        function renderDegreeJumpUI() {
+            const task = state.degreeJump.currentTask;
+            const completedScreen = document.getElementById('session-completed-screen');
+            const exerciseScreen = document.getElementById('exercise-screen');
+            
+            if (state.degreeJump.sessionComplete) {
+                completedScreen.classList.remove('hidden');
+                exerciseScreen.classList.add('hidden');
+                return;
+            }
+
+            completedScreen.classList.add('hidden');
+            exerciseScreen.classList.remove('hidden');
+
+            // Manage background text values
+            document.getElementById('bg-text-key').innerText = formatNote(state.degreeJump.selectedKey);
+            document.getElementById('bg-text-mode').innerText = state.degreeJump.mode === 'diatonic' ? 'DIA' : 'CHR';
+
+            // Safe exit when task is null (due to deselecting all intervals)
+            if (!task) {
+                document.getElementById('exercise-context-label').innerText = "No intervals selected";
+                document.getElementById('horizontal-scale-tracker').innerHTML = '<span class="text-slate-500 text-xs font-semibold py-2">Please select at least one interval in the focus panel.</span>';
+                document.getElementById('display-anchor').innerText = "-";
+                document.getElementById('display-target').innerText = "-";
+                document.getElementById('display-target').className = "text-7xl md:text-9xl lg:text-[10rem] font-black leading-none tracking-tighter select-none transition-all duration-300 text-slate-800 opacity-50 blur-[2px]";
+                document.getElementById('interval-direction-indicator').innerHTML = '<span class="text-slate-600 text-3xl font-bold tracking-tight uppercase">Inactive</span>';
+                document.getElementById('footer-scale-ref').innerHTML = '<span class="text-slate-600 text-[11px] font-black py-1 px-3">Select intervals to load reference</span>';
+                
+                document.getElementById('footer-pool-title').innerText = 'Total Session';
+                document.getElementById('stat-pool-current').innerText = '0';
+                document.getElementById('stat-pool-total').innerText = '0';
+                document.getElementById('label-anchor-pos').innerText = 'Inactive';
+                
+                const actionBtn = document.getElementById('btn-primary-action');
+                actionBtn.className = "group relative inline-flex items-center gap-4 px-12 py-5 rounded-2xl font-black text-xl transition-all shadow-xl active:scale-95 z-20 bg-slate-800/40 text-slate-600 border border-slate-800 cursor-not-allowed";
+                actionBtn.innerText = "SELECT INTERVAL";
+                return;
+            }
+
+            document.getElementById('exercise-context-label').innerText = `${formatNote(task.key)} ${state.degreeJump.scaleType} Context`;
+            
+            // Build Context Reference Horizontal Line
+            const horizontalTracker = document.getElementById('horizontal-scale-tracker');
+            horizontalTracker.innerHTML = '';
+            
+            const activeScale = state.degreeJump.scaleType === 'major' ? MAJOR_SCALES[task.key] : MINOR_SCALES[task.key];
+            
+            activeScale.forEach((note, i) => {
+                const isActive = task.activeDegree === i + 1;
+                const wrapper = document.createElement('div');
+                wrapper.className = "flex flex-col items-center";
+                wrapper.innerHTML = `<span class="text-xs md:text-sm font-black transition-all ${isActive ? 'text-indigo-400 scale-125 font-black' : 'text-slate-600'}">${formatDisplayWithSup(formatNote(note))}</span>
+                ${isActive ? '<div class="w-1.5 h-1.5 bg-indigo-500 rounded-full mt-1.5 animate-pulse"></div>' : ''}`;
+                horizontalTracker.appendChild(wrapper);
+            });
+
+            // Footer scale helper update
+            const footerScaleRef = document.getElementById('footer-scale-ref');
+            footerScaleRef.innerHTML = '';
+            activeScale.forEach((note, i) => {
+                const isAnchor = task.activeDegree === i + 1;
+                const noteSpan = document.createElement('span');
+                noteSpan.className = `text-[11px] font-black px-2.5 py-1 rounded border transition-colors ${
+                    isAnchor ? 'bg-indigo-500 border-indigo-400 text-white' : 'bg-slate-800 border-slate-700 text-slate-400'
+                }`;
+                noteSpan.innerHTML = formatDisplayWithSup(formatNote(note));
+                footerScaleRef.appendChild(noteSpan);
+            });
+
+            // Display values
+            const degreeLabels = state.degreeJump.scaleType === 'major' ? ['1','2','3','4','5','6','7'] : ['1','2','b3','4','5','b6','b7'];
+            const anchorDisplayVal = state.degreeJump.anchorDisplay === 'note' ? task.startNote : degreeLabels[task.activeDegree - 1];
+            
+            document.getElementById('display-anchor').innerHTML = formatDisplayWithSup(formatNote(anchorDisplayVal));
+            
+            // Set dynamic arrow indicators
+            const directionLabel = task.direction === 'up' ? '&rarr;' : '&larr;';
+            const colorClass = task.direction === 'up' ? 'text-emerald-500' : 'text-rose-500';
+            
+            document.getElementById('interval-direction-indicator').innerHTML = `
+                ${task.direction === 'down' ? `<span class="${colorClass} animate-pulse">${directionLabel}</span>` : ''}
+                <span class="text-white drop-shadow-2xl">${task.label}</span>
+                ${task.direction === 'up' ? `<span class="${colorClass} animate-pulse">${directionLabel}</span>` : ''}
+            `;
+
+            // Reset targets
+            const targetEl = document.getElementById('display-target');
+            if (state.degreeJump.showTarget) {
+                targetEl.className = "text-7xl md:text-9xl lg:text-[10rem] font-black leading-none tracking-tighter cursor-pointer select-none transition-all duration-300 text-emerald-400 scale-105";
+                targetEl.innerHTML = formatDisplayWithSup(formatNote(task.endNote));
+            } else {
+                targetEl.className = "text-7xl md:text-9xl lg:text-[10rem] font-black leading-none tracking-tighter cursor-pointer select-none transition-all duration-300 text-slate-800 opacity-50 blur-[6px]";
+                targetEl.innerText = "?";
+            }
+
+            // Stat tracking updates
+            document.getElementById('footer-pool-title').innerText = state.degreeJump.noRepeats ? 'Remaining' : 'Total Session';
+            document.getElementById('stat-pool-current').innerText = state.degreeJump.noRepeats ? state.degreeJump.pool.length : getSessionTotal();
+            document.getElementById('stat-pool-total').innerText = getSessionTotal();
+            document.getElementById('label-anchor-pos').innerText = state.degreeJump.scaleDegree === 'random' ? 'Dynamic' : (state.degreeJump.anchorDisplay === 'note' ? activeScale[state.degreeJump.scaleDegree-1] : degreeLabels[state.degreeJump.scaleDegree-1]);
+
+            // Update main action button state
+            const actionBtn = document.getElementById('btn-primary-action');
+            if (state.degreeJump.timerEnabled) {
+                if (state.degreeJump.timerRunning) {
+                    actionBtn.className = "group relative inline-flex items-center gap-4 px-12 py-5 rounded-2xl font-black text-xl transition-all shadow-xl active:scale-95 z-20 bg-rose-500 text-white hover:bg-rose-600";
+                    actionBtn.innerText = "STOP TIMER";
+                } else {
+                    actionBtn.className = "group relative inline-flex items-center gap-4 px-12 py-5 rounded-2xl font-black text-xl transition-all shadow-xl active:scale-95 z-20 bg-white text-slate-950 hover:bg-indigo-500 hover:text-white";
+                    actionBtn.innerText = "START TIMER";
+                }
+            } else {
+                actionBtn.className = "group relative inline-flex items-center gap-4 px-12 py-5 rounded-2xl font-black text-xl transition-all shadow-xl active:scale-95 z-20 bg-white text-slate-950 hover:bg-indigo-500 hover:text-white";
+                actionBtn.innerText = "NEXT JUMP";
+            }
         }
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+
+        // --- 6. NOTE FLASHER ENGINE ---
+        let flasherTimerInterval = null;
+
+        function initNoteFlasher() {
+            resetFlasherPool();
+            renderFlasherUI();
+        }
+
+        function setFlasherNoteType(type) {
+            state.noteFlasher.noteType = type;
+            resetFlasherPool();
+        }
+
+        document.getElementById('chk-fl-no-repeats').onclick = () => {
+            state.noteFlasher.noRepeats = !state.noteFlasher.noRepeats;
+            document.getElementById('chk-fl-no-repeats').className = `w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${state.noteFlasher.noRepeats ? 'bg-amber-500 border-amber-400' : 'border-slate-700 bg-slate-900'}`;
+            document.getElementById('chk-fl-no-repeats').innerHTML = state.noteFlasher.noRepeats ? `<div class="w-2.5 h-2.5 bg-white rounded-sm"></div>` : '';
+            resetFlasherPool();
+        };
+
+        function toggleFlasherTimerEnabled() {
+            state.noteFlasher.timerEnabled = !state.noteFlasher.timerEnabled;
+            const sw = document.getElementById('fl-timer-switch');
+            const dot = document.getElementById('fl-timer-switch-dot');
+            const skipBtn = document.getElementById('btn-fl-skip-task');
+            
+            if (state.noteFlasher.timerEnabled) {
+                sw.className = "w-10 h-5 rounded-full relative transition-all border-2 border-indigo-400 bg-indigo-500 cursor-pointer";
+                dot.className = "absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all left-[22px]";
+                skipBtn.classList.remove('hidden');
+            } else {
+                sw.className = "w-10 h-5 rounded-full relative transition-all border-2 border-slate-700 bg-slate-800 cursor-pointer";
+                dot.className = "absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all left-0.5";
+                skipBtn.classList.add('hidden');
+                stopFlasherTimer();
+            }
+            renderFlasherUI();
+        }
+
+        // Auto cycle select dropdown hooks
+        function updateFlasherTimerSeconds(val) {
+            state.noteFlasher.timerSeconds = parseInt(val);
+            state.noteFlasher.timeLeft = parseInt(val);
+        }
+
+        function resetFlasherPool() {
+            const list = NOTE_POOLS[state.noteFlasher.noteType];
+            state.noteFlasher.pool = Array.from({ length: list.length }, (_, i) => i);
+            state.noteFlasher.sessionComplete = false;
+            state.noteFlasher.timeLeft = state.noteFlasher.timerSeconds;
+            
+            stopFlasherTimer();
+            nextFlasherNote(true);
+        }
+
+        function nextFlasherNote(isSilent = false) {
+            const list = NOTE_POOLS[state.noteFlasher.noteType];
+            state.noteFlasher.timeLeft = state.noteFlasher.timerSeconds;
+            
+            if (!isSilent) {
+                playTing();
+            }
+
+            let index;
+            let currentPool = [...state.noteFlasher.pool];
+
+            if (state.noteFlasher.noRepeats) {
+                if (currentPool.length === 0) {
+                    state.noteFlasher.sessionComplete = true;
+                    stopFlasherTimer();
+                    renderFlasherUI();
+                    return;
+                }
+                const poolIdx = Math.floor(Math.random() * currentPool.length);
+                index = currentPool[poolIdx];
+                currentPool.splice(poolIdx, 1);
+                state.noteFlasher.pool = currentPool;
+            } else {
+                index = Math.floor(Math.random() * list.length);
+            }
+
+            state.noteFlasher.currentNote = list[index];
+            
+            if (!isSilent) {
+                // Play audio context cue after brief visual identification delay!
+                setTimeout(() => playToneByNoteName(state.noteFlasher.currentNote), 120);
+            }
+
+            renderFlasherUI();
+        }
+
+        function handleFlasherMainAction() {
+            if (state.noteFlasher.sessionComplete) {
+                resetFlasherPool();
+            } else if (state.noteFlasher.timerEnabled) {
+                if (state.noteFlasher.timerRunning) {
+                    stopFlasherTimer();
+                } else {
+                    startFlasherTimer();
+                }
+            } else {
+                nextFlasherNote();
+            }
+        }
+
+        function startFlasherTimer() {
+            state.noteFlasher.timerRunning = true;
+            document.getElementById('fl-progress-bar-container').classList.remove('hidden');
+            
+            const btn = document.getElementById('btn-fl-primary-action');
+            btn.className = "group relative inline-flex items-center gap-4 px-12 py-5 rounded-2xl font-black text-xl transition-all shadow-xl active:scale-95 z-20 bg-rose-500 text-white hover:bg-rose-600";
+            btn.innerText = "STOP TIMER";
+
+            flasherTimerInterval = setInterval(() => {
+                state.noteFlasher.timeLeft--;
+                const percent = (state.noteFlasher.timeLeft / state.noteFlasher.timerSeconds) * 100;
+                document.getElementById('fl-progress-bar').style.width = `${percent}%`;
+
+                if (state.noteFlasher.timeLeft <= 4 && state.noteFlasher.timeLeft > 0) {
+                    playBeep();
+                }
+
+                if (state.noteFlasher.timeLeft <= 0) {
+                    nextFlasherNote();
+                }
+            }, 1000);
+        }
+
+        function stopFlasherTimer() {
+            state.noteFlasher.timerRunning = false;
+            clearInterval(flasherTimerInterval);
+            document.getElementById('fl-progress-bar-container').classList.add('hidden');
+            document.getElementById('fl-progress-bar').style.width = `0%`;
+            
+            const btn = document.getElementById('btn-fl-primary-action');
+            btn.className = "group relative inline-flex items-center gap-4 px-12 py-5 rounded-2xl font-black text-xl transition-all shadow-xl active:scale-95 z-20 bg-white text-slate-950 hover:bg-rose-500 hover:text-white";
+            btn.innerText = state.noteFlasher.timerEnabled ? "START TIMER" : "NEXT NOTE";
+        }
+
+        function renderFlasherUI() {
+            // Update active state visual controls
+            document.getElementById('btn-fl-sharps').className = `py-4 rounded-xl text-[10px] font-black uppercase transition-all border-2 ${state.noteFlasher.noteType === 'sharps' ? 'bg-white text-slate-950 border-white shadow-lg' : 'bg-slate-800/50 border-slate-800 text-slate-500 hover:text-slate-300'}`;
+            document.getElementById('btn-fl-flats').className = `py-4 rounded-xl text-[10px] font-black uppercase transition-all border-2 ${state.noteFlasher.noteType === 'flats' ? 'bg-white text-slate-950 border-white shadow-lg' : 'bg-slate-800/50 border-slate-800 text-slate-500 hover:text-slate-300'}`;
+            document.getElementById('btn-fl-mixed').className = `py-4 rounded-xl text-[10px] font-black uppercase transition-all border-2 ${state.noteFlasher.noteType === 'mixed' ? 'bg-white text-slate-950 border-white shadow-lg' : 'bg-slate-800/50 border-slate-800 text-slate-500 hover:text-slate-300'}`;
+
+            const compScreen = document.getElementById('fl-session-completed-screen');
+            const exScreen = document.getElementById('fl-exercise-screen');
+
+            if (state.noteFlasher.sessionComplete) {
+                compScreen.classList.remove('hidden');
+                exScreen.classList.add('hidden');
+                return;
+            }
+
+            compScreen.classList.add('hidden');
+            exScreen.classList.remove('hidden');
+
+            document.getElementById('display-fl-note').innerHTML = formatDisplayWithSup(formatNote(state.noteFlasher.currentNote));
+
+            const btn = document.getElementById('btn-fl-primary-action');
+            if (state.noteFlasher.timerEnabled) {
+                if (state.noteFlasher.timerRunning) {
+                    btn.className = "group relative inline-flex items-center gap-4 px-12 py-5 rounded-2xl font-black text-xl transition-all shadow-xl active:scale-95 z-20 bg-rose-500 text-white hover:bg-rose-600";
+                    btn.innerText = "STOP TIMER";
+                } else {
+                    btn.className = "group relative inline-flex items-center gap-4 px-12 py-5 rounded-2xl font-black text-xl transition-all shadow-xl active:scale-95 z-20 bg-white text-slate-950 hover:bg-rose-500 hover:text-white";
+                    btn.innerText = "START TIMER";
+                }
+            } else {
+                btn.className = "group relative inline-flex items-center gap-4 px-12 py-5 rounded-2xl font-black text-xl transition-all shadow-xl active:scale-95 z-20 bg-white text-slate-950 hover:bg-rose-500 hover:text-white";
+                btn.innerText = "NEXT NOTE";
+            }
+        }
+
+        // --- 7. KEYBOARD SHORTCUTS & EVENT HOOKS ---
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                // Play sound trigger first to initialize audio context securely
+                getAudioCtx();
+                
+                if (state.currentView === 'degreeJump') {
+                    handleMainAction();
+                } else if (state.currentView === 'noteFlasher') {
+                    handleFlasherMainAction();
+                }
+            }
+            if (e.code === 'ArrowRight') {
+                if (state.currentView === 'degreeJump') {
+                    nextTask();
+                } else if (state.currentView === 'noteFlasher') {
+                    nextFlasherNote();
+                }
+            }
+        });
+
+        // --- 8. INITIALIZE PAGE ---
+        window.onload = function() {
+            navigate('home');
+        };
     </script>
 </body>
 </html>
