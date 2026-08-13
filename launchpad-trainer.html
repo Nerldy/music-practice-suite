@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Launchpad Interval Trainer</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        .piano-container {
+            user-select: none;
+        }
+        .white-key {
+            position: relative;
+            background: linear-gradient(to bottom, #f8fafc 0%, #e2e8f0 100%);
+            border: 1px solid #cbd5e1;
+            border-bottom-left-radius: 4px;
+            border-bottom-right-radius: 4px;
+            transition: background 0.1s ease, transform 0.05s ease;
+        }
+        .white-key:hover, .white-key.active {
+            background: linear-gradient(to bottom, #38bdf8 0%, #0284c7 100%) !important;
+            border-color: #0369a1;
+        }
+        .black-key {
+            position: absolute;
+            top: 0;
+            z-index: 20;
+            background: linear-gradient(to bottom, #334155 0%, #0f172a 100%);
+            border-bottom-left-radius: 3px;
+            border-bottom-right-radius: 3px;
+            border: 1px solid #1e293b;
+            transition: background 0.1s ease;
+        }
+        .black-key:hover, .black-key.active {
+            background: linear-gradient(to bottom, #0284c7 0%, #0369a1 100%) !important;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen flex flex-col justify-between selection:bg-cyan-500 selection:text-white">
+
+    <header class="border-b border-slate-800 bg-slate-900/65 backdrop-blur sticky top-0 z-30 px-4 py-3">
+        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/></svg>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg tracking-tight bg-gradient-to-r from-cyan-400 to-indigo-400 bg-clip-text text-transparent">IntervalLaunch</h1>
+                    <p class="text-xs text-slate-400">Launchpad Shape & Interval Trainer</p>
+                </div>
+            </div>
+
+            <!-- Controls Toolbar -->
+            <div class="flex flex-wrap items-center gap-3 text-sm">
+                <!-- Base Key Selector -->
+                <div class="flex items-center space-x-2 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700">
+                    <span class="text-xs text-slate-400 font-medium">Key:</span>
+                    <select id="baseKeySelect" class="bg-transparent text-cyan-300 font-bold focus:outline-none cursor-pointer">
+                        <option value="all">All Keys (Random)</option>
+                        <option value="0" selected>C</option>
+                        <option value="1">C# / Db</option>
+                        <option value="2">D</option>
+                        <option value="3">D# / Eb</option>
+                        <option value="4">E</option>
+                        <option value="5">F</option>
+                        <option value="6">F# / Gb</option>
+                        <option value="7">G</option>
+                        <option value="8">G# / Ab</option>
+                        <option value="9">A</option>
+                        <option value="10">A# / Bb</option>
+                        <option value="11">B</option>
+                    </select>
+                </div>
+
+                <!-- Direction Selector -->
+                <div class="flex items-center space-x-2 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700">
+                    <span class="text-xs text-slate-400 font-medium">Dir:</span>
+                    <select id="directionSelect" class="bg-transparent text-cyan-300 font-bold focus:outline-none cursor-pointer">
+                        <option value="both" selected>Both</option>
+                        <option value="up">Only Up</option>
+                        <option value="down">Only Down</option>
+                    </select>
+                </div>
+
+                <!-- Interval Category Filter Dropdown -->
+                <div class="relative">
+                    <button id="intervalFilterBtn" class="flex items-center space-x-2 bg-slate-800/80 hover:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700 text-xs font-medium text-cyan-300 cursor-pointer">
+                        <span>Intervals: <span id="intervalCountLabel">All</span></span>
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+                    <div id="intervalDropdown" class="absolute right-0 mt-2 w-56 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-3 z-50 hidden space-y-2">
+                        <div class="flex justify-between items-center pb-2 border-b border-slate-800 text-[11px] text-slate-400">
+                            <span class="font-semibold text-slate-300">Select Categories</span>
+                            <div class="space-x-1">
+                                <button id="selectAllIntervals" class="text-cyan-400 hover:underline cursor-pointer">All</button>
+                                <span class="text-slate-600">|</span>
+                                <button id="selectNoneIntervals" class="text-cyan-400 hover:underline cursor-pointer">None</button>
+                            </div>
+                        </div>
+                        <label class="flex items-center space-x-2 text-xs text-slate-300 cursor-pointer hover:text-cyan-300">
+                            <input type="checkbox" data-category="2nds" class="interval-cat-checkbox rounded bg-slate-800 border-slate-700 text-cyan-500 focus:ring-0 cursor-pointer" checked>
+                            <span>2nds (Major & Minor)</span>
+                        </label>
+                        <label class="flex items-center space-x-2 text-xs text-slate-300 cursor-pointer hover:text-cyan-300">
+                            <input type="checkbox" data-category="3rds" class="interval-cat-checkbox rounded bg-slate-800 border-slate-700 text-cyan-500 focus:ring-0 cursor-pointer" checked>
+                            <span>3rds (Major & Minor)</span>
+                        </label>
+                        <label class="flex items-center space-x-2 text-xs text-slate-300 cursor-pointer hover:text-cyan-300">
+                            <input type="checkbox" data-category="4ths" class="interval-cat-checkbox rounded bg-slate-800 border-slate-700 text-cyan-500 focus:ring-0 cursor-pointer" checked>
+                            <span>4ths & Tritone</span>
+                        </label>
+                        <label class="flex items-center space-x-2 text-xs text-slate-300 cursor-pointer hover:text-cyan-300">
+                            <input type="checkbox" data-category="5ths" class="interval-cat-checkbox rounded bg-slate-800 border-slate-700 text-cyan-500 focus:ring-0 cursor-pointer" checked>
+                            <span>5ths & Augmented</span>
+                        </label>
+                        <label class="flex items-center space-x-2 text-xs text-slate-300 cursor-pointer hover:text-cyan-300">
+                            <input type="checkbox" data-category="6ths" class="interval-cat-checkbox rounded bg-slate-800 border-slate-700 text-cyan-500 focus:ring-0 cursor-pointer" checked>
+                            <span>6ths (Major & Minor)</span>
+                        </label>
+                        <label class="flex items-center space-x-2 text-xs text-slate-300 cursor-pointer hover:text-cyan-300">
+                            <input type="checkbox" data-category="7ths" class="interval-cat-checkbox rounded bg-slate-800 border-slate-700 text-cyan-500 focus:ring-0 cursor-pointer" checked>
+                            <span>7ths (Major & Minor)</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Timer Picker -->
+                <div class="flex items-center space-x-2 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700">
+                    <span class="text-xs text-slate-400 font-medium">Timer:</span>
+                    <select id="timerSelect" class="bg-transparent text-cyan-300 font-bold focus:outline-none cursor-pointer">
+                        <option value="0">Off</option>
+                        <option value="10">10s</option>
+                        <option value="20">20s</option>
+                        <option value="30">30s</option>
+                        <option value="40">40s</option>
+                        <option value="50">50s</option>
+                    </select>
+                </div>
+
+                <!-- No Repeat Toggle -->
+                <div class="flex items-center space-x-2 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700">
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="noRepeatToggle" class="sr-only peer" checked>
+                        <div class="w-8 h-4 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-cyan-500"></div>
+                    </label>
+                    <span class="text-xs text-slate-300 font-medium select-none">No Repeat</span>
+                    <span id="poolCounter" class="text-xs font-mono bg-slate-900 px-1.5 py-0.5 rounded text-cyan-400">--/--</span>
+                </div>
+
+                <!-- MIDI Status Badge -->
+                <div id="midiStatus" class="flex items-center space-x-1.5 bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-800 text-xs font-medium">
+                    <span id="midiDot" class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse"></span>
+                    <span id="midiText" class="text-slate-400">MIDI Disconnected</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-4xl w-full mx-auto p-4 flex flex-col justify-center items-center my-auto">
+        <div class="w-full bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-6 sm:p-10 relative overflow-hidden">
+            <!-- Timer countdown bar -->
+            <div id="timerBarContainer" class="absolute top-0 left-0 w-full h-1.5 bg-slate-800 hidden">
+                <div id="timerBar" class="h-full bg-cyan-500 transition-all duration-100 w-full"></div>
+            </div>
+
+            <!-- Top card info -->
+            <div class="flex justify-between items-center mb-8">
+                <div class="text-xs font-mono uppercase tracking-widest text-slate-400">
+                    Question <span id="currentQNum" class="text-cyan-400 font-bold">1</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <div id="timerDisplay" class="text-xs font-mono font-bold text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20 hidden">
+                        20s ready
+                    </div>
+                    <button id="startTimerBtn" class="px-3 py-1 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-semibold text-xs transition shadow-md shadow-cyan-600/20 cursor-pointer hidden">
+                        ▶ Start Timer
+                    </button>
+                </div>
+                <div class="text-xs text-slate-400">
+                    Score: <span id="scoreVal" class="text-emerald-400 font-bold">0</span>/<span id="totalVal" class="font-bold">0</span>
+                </div>
+            </div>
+
+            <!-- Flashcard Prompt Area -->
+            <div class="text-center py-8">
+                <p class="text-sm text-slate-400 mb-2">What is the interval shape?</p>
+                <div id="promptContainer" class="flex items-center justify-center space-x-4 my-6">
+                    <!-- Dynamically populated prompt in numbers -->
+                </div>
+
+                <!-- Reveal Notes Toggle & Display -->
+                <div class="mt-6 flex flex-col items-center justify-center space-y-3">
+                    <label class="inline-flex items-center cursor-pointer bg-slate-800/80 hover:bg-slate-800 px-4 py-2 rounded-xl border border-slate-700 transition">
+                        <input type="checkbox" id="revealToggle" class="sr-only peer">
+                        <svg class="w-4 h-4 mr-2 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        <span class="text-xs font-semibold text-slate-300">Reveal Notes</span>
+                    </label>
+
+                    <div id="revealedNotesBox" class="text-sm font-mono text-cyan-300 bg-cyan-950/40 border border-cyan-800/40 px-4 py-2 rounded-lg opacity-0 transition-opacity duration-200">
+                        <!-- e.g. C → G -->
+                    </div>
+                </div>
+
+                <!-- Feedback status message -->
+                <div id="feedbackMsg" class="h-8 mt-4 text-sm font-semibold flex items-center justify-center transition-all"></div>
+            </div>
+
+            <!-- Action buttons -->
+            <div class="flex items-center justify-center space-x-4 mt-4">
+                <button id="skipBtn" class="px-6 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium text-sm transition border border-slate-700 cursor-pointer">
+                    Skip / Next
+                </button>
+                <button id="stopBtn" class="px-6 py-2.5 rounded-xl bg-rose-950/60 hover:bg-rose-900/80 text-rose-300 font-medium text-sm transition border border-rose-800/60 cursor-pointer">
+                    Stop Session
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <div id="summaryModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 text-center shadow-2xl">
+            <h2 class="text-xl font-bold text-cyan-400 mb-2">Session Summary</h2>
+            <p class="text-sm text-slate-400 mb-6">Great job practicing your interval shapes!</p>
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700">
+                    <div class="text-2xl font-bold text-emerald-400" id="summaryScore">0</div>
+                    <div class="text-xs text-slate-400 mt-1">Correct Answers</div>
+                </div>
+                <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700">
+                    <div class="text-2xl font-bold text-cyan-400" id="summaryAccuracy">0%</div>
+                    <div class="text-xs text-slate-400 mt-1">Accuracy</div>
+                </div>
+            </div>
+            <button id="restartSessionBtn" class="w-full py-3 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-sm transition shadow-lg shadow-cyan-600/30 cursor-pointer">
+                Start New Session
+            </button>
+        </div>
+    </div>
+
+    <footer class="bg-slate-900 border-t border-slate-800 p-4 sticky bottom-0 z-30">
+        <div class="max-w-7xl mx-auto flex flex-col items-center">
+            <div class="flex justify-between w-full text-xs text-slate-400 mb-2 px-2">
+                <span>MIDI Piano Visualizer (C2 — C7 • 5 Octaves)</span>
+                <span class="text-cyan-400 font-mono">Strictly visual MIDI input (No audio or auto-grading)</span>
+            </div>
+            <!-- Piano Keyboard UI - Scrollable 5 Octaves -->
+            <div class="w-full overflow-x-auto pb-1">
+                <div id="pianoKeyboard" class="piano-container relative flex h-36 min-w-[900px] bg-slate-950 p-2 rounded-xl border border-slate-800 shadow-inner">
+                    <!-- Dynamically generated 5 octave keys via JS -->
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        let audioCtx = null;
+        function playBeep(freq = 880, duration = 0.1) {
+            try {
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.value = freq;
+                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch (e) {
+                console.error("Audio error:", e);
+            }
+        }
+
+        const BASE_KEYS = [
+            { name: 'C', semitone: 0, noteName: 'C' },
+            { name: 'C# / Db', semitone: 1, noteName: 'C#' },
+            { name: 'D', semitone: 2, noteName: 'D' },
+            { name: 'D# / Eb', semitone: 3, noteName: 'Eb' },
+            { name: 'E', semitone: 4, noteName: 'E' },
+            { name: 'F', semitone: 5, noteName: 'F' },
+            { name: 'F# / Gb', semitone: 6, noteName: 'F#' },
+            { name: 'G', semitone: 7, noteName: 'G' },
+            { name: 'G# / Ab', semitone: 8, noteName: 'Ab' },
+            { name: 'A', semitone: 9, noteName: 'A' },
+            { name: 'A# / Bb', semitone: 10, noteName: 'Bb' },
+            { name: 'B', semitone: 11, noteName: 'B' }
+        ];
+
+        const START_POSITIONS = [
+            { label: '1', semitoneOffset: 0 },
+            { label: 'b2', semitoneOffset: 1 },
+            { label: '2', semitoneOffset: 2 },
+            { label: 'b3', semitoneOffset: 3 },
+            { label: '3', semitoneOffset: 4 },
+            { label: '4', semitoneOffset: 5 },
+            { label: 'b5', semitoneOffset: 6 },
+            { label: '5', semitoneOffset: 7 },
+            { label: 'b6', semitoneOffset: 8 },
+            { label: '6', semitoneOffset: 9 },
+            { label: 'b7', semitoneOffset: 10 },
+            { label: '7', semitoneOffset: 11 }
+        ];
+
+        const INTERVALS = [
+            { label: 'm2', semitones: 1, category: '2nds' },
+            { label: 'M2', semitones: 2, category: '2nds' },
+            { label: 'm3', semitones: 3, category: '3rds' },
+            { label: 'M3', semitones: 4, category: '3rds' },
+            { label: 'P4', semitones: 5, category: '4ths' },
+            { label: 'TT', semitones: 6, category: '4ths' },
+            { label: 'P5', semitones: 7, category: '5ths' },
+            { label: '#5', semitones: 8, category: '5ths' },
+            { label: 'm6', semitones: 8, category: '6ths' },
+            { label: 'M6', semitones: 9, category: '6ths' },
+            { label: 'm7', semitones: 10, category: '7ths' },
+            { label: 'M7', semitones: 11, category: '7ths' }
+        ];
+
+        const NOTE_NAMES = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];
+
+        let currentQuestion = null;
+        let questionPool = [];
+        let score = 0;
+        let totalAnswered = 0;
+        let timerInterval = null;
+        let timeLeft = 20;
+        let timerDuration = 20;
+        let activeMidiNotes = new Set();
+
+        // DOM Elements
+        const baseKeySelect = document.getElementById('baseKeySelect');
+        const directionSelect = document.getElementById('directionSelect');
+        const timerSelect = document.getElementById('timerSelect');
+        const noRepeatToggle = document.getElementById('noRepeatToggle');
+        const poolCounter = document.getElementById('poolCounter');
+        const promptContainer = document.getElementById('promptContainer');
+        const revealToggle = document.getElementById('revealToggle');
+        const revealedNotesBox = document.getElementById('revealedNotesBox');
+        const feedbackMsg = document.getElementById('feedbackMsg');
+        const skipBtn = document.getElementById('skipBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const currentQNumEl = document.getElementById('currentQNum');
+        const scoreValEl = document.getElementById('scoreVal');
+        const totalValEl = document.getElementById('totalVal');
+        const timerBarContainer = document.getElementById('timerBarContainer');
+        const timerBar = document.getElementById('timerBar');
+        const timerDisplay = document.getElementById('timerDisplay');
+        const startTimerBtn = document.getElementById('startTimerBtn');
+        const midiDot = document.getElementById('midiDot');
+        const midiText = document.getElementById('midiText');
+        const pianoKeyboard = document.getElementById('pianoKeyboard');
+        const summaryModal = document.getElementById('summaryModal');
+        const summaryScore = document.getElementById('summaryScore');
+        const summaryAccuracy = document.getElementById('summaryAccuracy');
+        const restartSessionBtn = document.getElementById('restartSessionBtn');
+
+        // Interval filter elements
+        const intervalFilterBtn = document.getElementById('intervalFilterBtn');
+        const intervalDropdown = document.getElementById('intervalDropdown');
+        const intervalCatCheckboxes = document.querySelectorAll('.interval-cat-checkbox');
+        const selectAllIntervals = document.getElementById('selectAllIntervals');
+        const selectNoneIntervals = document.getElementById('selectNoneIntervals');
+        const intervalCountLabel = document.getElementById('intervalCountLabel');
+
+        intervalFilterBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            intervalDropdown.classList.toggle('hidden');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!intervalDropdown.contains(e.target) && !intervalFilterBtn.contains(e.target)) {
+                intervalDropdown.classList.add('hidden');
+            }
+        });
+
+        selectAllIntervals.addEventListener('click', () => {
+            intervalCatCheckboxes.forEach(cb => cb.checked = true);
+            updateIntervalFilterState();
+        });
+
+        selectNoneIntervals.addEventListener('click', () => {
+            intervalCatCheckboxes.forEach(cb => cb.checked = false);
+            updateIntervalFilterState();
+        });
+
+        intervalCatCheckboxes.forEach(cb => {
+            cb.addEventListener('change', () => {
+                updateIntervalFilterState();
+            });
+        });
+
+        function updateIntervalFilterState() {
+            let checkedCount = Array.from(intervalCatCheckboxes).filter(cb => cb.checked).length;
+            if (checkedCount === intervalCatCheckboxes.length) {
+                intervalCountLabel.textContent = 'All';
+            } else if (checkedCount === 0) {
+                intervalCountLabel.textContent = 'None selected';
+            } else {
+                intervalCountLabel.textContent = `${checkedCount} selected`;
+            }
+            questionPool = generatePool();
+            score = 0;
+            totalAnswered = 0;
+            scoreVal.textContent = score;
+            totalVal.textContent = totalAnswered;
+            nextQuestion();
+        }
+
+        const START_MIDI = 36;
+        const END_MIDI = 96;
+
+        function buildPiano() {
+            pianoKeyboard.innerHTML = '';
+            let whiteKeysCount = 0;
+            
+            for (let m = START_MIDI; m <= END_MIDI; m++) {
+                const noteInOctave = m % 12;
+                const isBlack = [1, 3, 6, 8, 10].includes(noteInOctave);
+                if (!isBlack) whiteKeysCount++;
+            }
+
+            const whiteKeyWidthPercent = 100 / whiteKeysCount;
+            let currentWhiteIndex = 0;
+
+            for (let m = START_MIDI; m <= END_MIDI; m++) {
+                const noteInOctave = m % 12;
+                const isBlack = [1, 3, 6, 8, 10].includes(noteInOctave);
+
+                if (!isBlack) {
+                    const keyEl = document.createElement('div');
+                    keyEl.className = 'white-key h-full flex flex-col justify-end items-center pb-2 text-[9px] text-slate-500 font-mono cursor-pointer';
+                    keyEl.style.width = `${whiteKeyWidthPercent}%`;
+                    keyEl.dataset.midi = m;
+                    const octaveNum = Math.floor(m / 12) - 1;
+                    keyEl.innerHTML = `<span>${NOTE_NAMES[noteInOctave]}${noteInOctave === 0 ? octaveNum : ''}</span>`;
+                    
+                    keyEl.addEventListener('mousedown', () => {
+                        activeMidiNotes.add(m);
+                        renderPiano();
+                    });
+                    keyEl.addEventListener('mouseup', () => {
+                        activeMidiNotes.delete(m);
+                        renderPiano();
+                    });
+                    keyEl.addEventListener('mouseleave', () => {
+                        activeMidiNotes.delete(m);
+                        renderPiano();
+                    });
+
+                    pianoKeyboard.appendChild(keyEl);
+                    currentWhiteIndex++;
+                } else {
+                    const keyEl = document.createElement('div');
+                    keyEl.className = 'black-key h-3/5 flex flex-col justify-end items-center pb-1 text-[7px] text-slate-400 font-mono cursor-pointer';
+                    const leftPosPercent = (currentWhiteIndex * whiteKeyWidthPercent) - (whiteKeyWidthPercent * 0.35);
+                    keyEl.style.left = `${leftPosPercent}%`;
+                    keyEl.style.width = `${whiteKeyWidthPercent * 0.7}%`;
+                    keyEl.dataset.midi = m;
+                    keyEl.innerHTML = `<span>${NOTE_NAMES[noteInOctave]}</span>`;
+                    
+                    keyEl.addEventListener('mousedown', () => {
+                        activeMidiNotes.add(m);
+                        renderPiano();
+                    });
+                    keyEl.addEventListener('mouseup', () => {
+                        activeMidiNotes.delete(m);
+                        renderPiano();
+                    });
+                    keyEl.addEventListener('mouseleave', () => {
+                        activeMidiNotes.delete(m);
+                        renderPiano();
+                    });
+
+                    pianoKeyboard.appendChild(keyEl);
+                }
+            }
+        }
+
+        function renderPiano() {
+            const keys = pianoKeyboard.querySelectorAll('[data-midi]');
+            keys.forEach(k => {
+                const midi = parseInt(k.dataset.midi);
+                k.classList.remove('active');
+                
+                if (activeMidiNotes.has(midi)) {
+                    k.classList.add('active');
+                }
+            });
+        }
+
+        function generatePool() {
+            const selectedKeyVal = baseKeySelect.value;
+            const directionVal = directionSelect.value;
+            
+            const activeCategories = new Set();
+            intervalCatCheckboxes.forEach(cb => {
+                if (cb.checked) activeCategories.add(cb.dataset.category);
+            });
+
+            if (activeCategories.size === 0) {
+                return [];
+            }
+
+            let keysToUse = selectedKeyVal === 'all' ? BASE_KEYS : [BASE_KEYS.find(k => k.semitone == selectedKeyVal)];
+            let directions = directionVal === 'both' ? ['up', 'down'] : [directionVal];
+            let filteredIntervals = INTERVALS.filter(i => activeCategories.has(i.category));
+
+            let pool = [];
+            keysToUse.forEach(baseKey => {
+                START_POSITIONS.forEach(startPos => {
+                    filteredIntervals.forEach(interval => {
+                        directions.forEach(direction => {
+                            pool.push({
+                                baseKey: baseKey,
+                                startPos: startPos,
+                                interval: interval,
+                                direction: direction
+                            });
+                        });
+                    });
+                });
+            });
+            return shuffleArray(pool);
+        }
+
+        function shuffleArray(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex != 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        function updatePoolCounter() {
+            if (noRepeatToggle.checked) {
+                poolCounter.textContent = `${questionPool.length} left`;
+            } else {
+                poolCounter.textContent = 'Infinite';
+            }
+        }
+
+        function nextQuestion() {
+            feedbackMsg.textContent = '';
+            feedbackMsg.className = 'h-8 mt-4 text-sm font-semibold flex items-center justify-center transition-all';
+            revealToggle.checked = false;
+            revealedNotesBox.style.opacity = '0';
+
+            if (questionPool.length === 0) {
+                questionPool = generatePool();
+            }
+
+            if (questionPool.length === 0) {
+                promptContainer.innerHTML = `<div class="text-amber-400 text-base font-semibold">Please select at least one interval category above!</div>`;
+                revealedNotesBox.textContent = 'No categories selected';
+                return;
+            }
+
+            currentQuestion = questionPool.pop();
+            updatePoolCounter();
+
+            let baseSemi = currentQuestion.baseKey.semitone;
+            let startSemi = (baseSemi + currentQuestion.startPos.semitoneOffset) % 12;
+            let targetSemi = currentQuestion.direction === 'up' 
+                ? (startSemi + currentQuestion.interval.semitones) % 12 
+                : (startSemi - currentQuestion.interval.semitones + 12) % 12;
+
+            let startNoteName = NOTE_NAMES[startSemi];
+            let targetNoteName = NOTE_NAMES[targetSemi];
+            let baseName = currentQuestion.baseKey.name;
+
+            currentQuestion.startNoteName = startNoteName;
+            currentQuestion.targetNoteName = targetNoteName;
+            currentQuestion.baseName = baseName;
+
+            let arrowHtml = currentQuestion.direction === 'up'
+                ? `<span class="text-emerald-400 font-extrabold text-5xl mx-3">→</span>`
+                : `<span class="text-rose-500 font-extrabold text-5xl mx-3">←</span>`;
+
+            promptContainer.innerHTML = `
+                <div class="flex flex-col items-center">
+                    <span class="text-4xl font-bold font-mono bg-slate-800 px-4 py-2 rounded-xl border border-slate-700">${currentQuestion.startPos.label}</span>
+                    <span class="text-[10px] text-slate-500 mt-1">(${baseName} key)</span>
+                </div>
+                ${arrowHtml}
+                <div class="flex flex-col items-center">
+                    <span class="text-4xl font-bold font-mono bg-slate-800 px-4 py-2 rounded-xl border border-slate-700">${currentQuestion.interval.label}</span>
+                    <span class="text-[10px] text-slate-500 mt-1">interval</span>
+                </div>
+            `;
+
+            revealedNotesBox.textContent = `Notes: ${startNoteName} ${currentQuestion.direction === 'up' ? '→' : '←'} ${targetNoteName}`;
+
+            totalVal.textContent = totalAnswered;
+            currentQNumEl.textContent = totalAnswered + 1;
+
+            prepareTimer();
+            renderPiano();
+        }
+
+        function prepareTimer() {
+            clearInterval(timerInterval);
+            timerDuration = parseInt(timerSelect.value);
+            if (timerDuration === 0) {
+                timerBarContainer.classList.add('hidden');
+                timerDisplay.classList.add('hidden');
+                startTimerBtn.classList.add('hidden');
+                return;
+            }
+
+            timerBarContainer.classList.remove('hidden');
+            timerDisplay.classList.remove('hidden');
+            startTimerBtn.classList.remove('hidden');
+            timeLeft = timerDuration;
+            timerBar.style.width = '100%';
+            timerDisplay.textContent = `${timerDuration}s ready`;
+            timerDisplay.classList.remove('animate-pulse');
+        }
+
+        function startTimerCountdown() {
+            timerDuration = parseInt(timerSelect.value);
+            if (timerDuration === 0) return;
+            
+            clearInterval(timerInterval);
+            startTimerBtn.classList.add('hidden');
+            timeLeft = timerDuration;
+            updateTimerDisplay();
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay();
+
+                if (timeLeft <= 3 && timeLeft > 0) {
+                    playBeep(700 + (3 - timeLeft) * 100, 0.1);
+                    timerDisplay.textContent = `${timeLeft}s remaining (Beep!)`;
+                    timerDisplay.classList.add('animate-pulse');
+                }
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    handleTimeOut();
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            let pct = (timeLeft / timerDuration) * 100;
+            timerBar.style.width = `${pct}%`;
+            if (timeLeft > 3) {
+                timerDisplay.textContent = `${timeLeft}s remaining`;
+                timerDisplay.classList.remove('animate-pulse');
+            }
+        }
+
+        function handleTimeOut() {
+            totalAnswered++;
+            score++;
+            scoreVal.textContent = score;
+            feedbackMsg.textContent = `Time's up! Next shape loading...`;
+            feedbackMsg.className = 'h-8 mt-4 text-sm font-semibold flex items-center justify-center text-amber-400 bg-amber-500/10 rounded-lg border border-amber-500/20';
+            setTimeout(nextQuestion, 1000);
+        }
+
+        function initMIDI() {
+            if (navigator.requestMIDIAccess) {
+                navigator.requestMIDIAccess().then(onMIDISuccess, onMIDIFailure);
+            } else {
+                midiDot.className = 'w-2.5 h-2.5 rounded-full bg-slate-600';
+                midiText.textContent = 'MIDI Not Supported';
+            }
+        }
+
+        function onMIDISuccess(midiAccess) {
+            midiDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/50';
+            midiText.textContent = 'MIDI Connected';
+            
+            const inputs = midiAccess.inputs.values();
+            for (let input of inputs) {
+                input.onmidimessage = handleMIDIMessage;
+            }
+
+            midiAccess.onstatechange = (e) => {
+                if (e.port.type === 'input') {
+                    if (e.port.state === 'connected') {
+                        e.port.onmidimessage = handleMIDIMessage;
+                        midiDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/50';
+                        midiText.textContent = 'MIDI Connected';
+                    } else {
+                        midiDot.className = 'w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse';
+                        midiText.textContent = 'MIDI Disconnected';
+                    }
+                }
+            };
+        }
+
+        function onMIDIFailure() {
+            midiDot.className = 'w-2.5 h-2.5 rounded-full bg-rose-500';
+            midiText.textContent = 'MIDI Error / Blocked';
+        }
+
+        function handleMIDIMessage(event) {
+            const [status, note, velocity] = event.data;
+            const command = status >> 4;
+            if (command === 9 || (command === 11 && velocity > 0)) {
+                if (velocity > 0) {
+                    activeMidiNotes.add(note);
+                } else {
+                    activeMidiNotes.delete(note);
+                }
+            } else if (command === 8) {
+                activeMidiNotes.delete(note);
+            }
+            renderPiano();
+        }
+
+        function showSummary() {
+            if (timerInterval) clearInterval(timerInterval);
+            summaryScore.textContent = score;
+            let accuracy = totalAnswered > 0 ? Math.round((score / totalAnswered) * 100) : 0;
+            summaryAccuracy.textContent = `${accuracy}%`;
+            summaryModal.classList.remove('hidden');
+        }
+
+        function restartSession() {
+            summaryModal.classList.add('hidden');
+            score = 0;
+            totalAnswered = 0;
+            scoreVal.textContent = score;
+            totalVal.textContent = totalAnswered;
+            questionPool = generatePool();
+            nextQuestion();
+        }
+
+        revealToggle.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                revealedNotesBox.style.opacity = '1';
+            } else {
+                revealedNotesBox.style.opacity = '0';
+            }
+        });
+
+        startTimerBtn.addEventListener('click', () => {
+            startTimerCountdown();
+        });
+
+        skipBtn.addEventListener('click', () => {
+            if (timerInterval) clearInterval(timerInterval);
+            score++;
+            totalAnswered++;
+            scoreVal.textContent = score;
+            nextQuestion();
+        });
+
+        stopBtn.addEventListener('click', () => {
+            showSummary();
+        });
+
+        restartSessionBtn.addEventListener('click', () => {
+            restartSession();
+        });
+
+        baseKeySelect.addEventListener('change', () => {
+            questionPool = generatePool();
+            score = 0;
+            totalAnswered = 0;
+            scoreVal.textContent = score;
+            totalVal.textContent = totalAnswered;
+            nextQuestion();
+        });
+
+        directionSelect.addEventListener('change', () => {
+            questionPool = generatePool();
+            score = 0;
+            totalAnswered = 0;
+            scoreVal.textContent = score;
+            totalVal.textContent = totalAnswered;
+            nextQuestion();
+        });
+
+        timerSelect.addEventListener('change', () => {
+            prepareTimer();
+        });
+
+        noRepeatToggle.addEventListener('change', () => {
+            questionPool = generatePool();
+            updatePoolCounter();
+        });
+
+        window.onload = function() {
+            buildPiano();
+            questionPool = generatePool();
+            updatePoolCounter();
+            nextQuestion();
+            initMIDI();
+        };
+    </script>
+</body>
+</html>
