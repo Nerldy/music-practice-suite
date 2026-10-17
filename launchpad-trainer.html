@@ -191,6 +191,9 @@
                     <button id="startTimerBtn" class="px-3 py-1 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-semibold text-xs transition shadow-md shadow-cyan-600/20 cursor-pointer hidden">
                         ▶ Start Timer
                     </button>
+                    <button id="pauseTimerBtn" class="px-3 py-1 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-semibold text-xs transition shadow-md shadow-amber-600/20 cursor-pointer hidden">
+                        ⏸ Pause
+                    </button>
                 </div>
                 <div class="text-xs text-slate-400">
                     Score: <span id="scoreVal" class="text-emerald-400 font-bold">0</span>/<span id="totalVal" class="font-bold">0</span>
@@ -233,21 +236,26 @@
         </div>
     </main>
 
-    <div id="summaryModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 text-center shadow-2xl">
-            <h2 class="text-xl font-bold text-cyan-400 mb-2">Session Summary</h2>
-            <p class="text-sm text-slate-400 mb-6">Great job practicing your interval shapes!</p>
-            <div class="grid grid-cols-2 gap-4 mb-6">
-                <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700">
-                    <div class="text-2xl font-bold text-emerald-400" id="summaryScore">0</div>
-                    <div class="text-xs text-slate-400 mt-1">Correct Answers</div>
+    <div id="summaryModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 text-center shadow-2xl space-y-6">
+            <div class="w-12 h-12 bg-cyan-500/10 text-cyan-400 rounded-2xl flex items-center justify-center mx-auto border border-cyan-500/20">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+            </div>
+            <div>
+                <h2 class="text-xl font-bold text-slate-100">Session Complete</h2>
+                <p class="text-xs text-slate-400 mt-1">Here is a summary of your practice session</p>
+            </div>
+            <div class="grid grid-cols-2 gap-4 bg-slate-950/50 p-4 rounded-xl border border-slate-800">
+                <div>
+                    <span class="text-xs text-slate-500 uppercase block font-semibold">Completed</span>
+                    <span id="summaryScore" class="text-2xl font-bold text-cyan-400 font-mono">0 / 0</span>
                 </div>
-                <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700">
-                    <div class="text-2xl font-bold text-cyan-400" id="summaryAccuracy">0%</div>
-                    <div class="text-xs text-slate-400 mt-1">Accuracy</div>
+                <div>
+                    <span class="text-xs text-slate-500 uppercase block font-semibold">Accuracy</span>
+                    <span id="summaryAccuracy" class="text-2xl font-bold text-emerald-400 font-mono">100%</span>
                 </div>
             </div>
-            <button id="restartSessionBtn" class="w-full py-3 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-sm transition shadow-lg shadow-cyan-600/30 cursor-pointer">
+            <button id="restartSessionBtn" class="w-full py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-semibold text-sm rounded-xl transition shadow-lg shadow-cyan-600/20 cursor-pointer">
                 Start New Session
             </button>
         </div>
@@ -348,6 +356,8 @@
         let timeLeft = 20;
         let timerDuration = 20;
         let activeMidiNotes = new Set();
+        let isTimerRunning = false;
+        let isTimerPaused = false;
 
         // DOM Elements
         const baseKeySelect = document.getElementById('baseKeySelect');
@@ -368,6 +378,7 @@
         const timerBar = document.getElementById('timerBar');
         const timerDisplay = document.getElementById('timerDisplay');
         const startTimerBtn = document.getElementById('startTimerBtn');
+        const pauseTimerBtn = document.getElementById('pauseTimerBtn');
         const midiDot = document.getElementById('midiDot');
         const midiText = document.getElementById('midiText');
         const pianoKeyboard = document.getElementById('pianoKeyboard');
@@ -423,8 +434,8 @@
             questionPool = generatePool();
             score = 0;
             totalAnswered = 0;
-            scoreVal.textContent = score;
-            totalVal.textContent = totalAnswered;
+            scoreValEl.textContent = score;
+            totalValEl.textContent = totalAnswered;
             nextQuestion();
         }
 
@@ -614,29 +625,60 @@
 
             revealedNotesBox.textContent = `Notes: ${startNoteName} ${currentQuestion.direction === 'up' ? '→' : '←'} ${targetNoteName}`;
 
-            totalVal.textContent = totalAnswered;
+            totalValEl.textContent = totalAnswered;
             currentQNumEl.textContent = totalAnswered + 1;
 
             prepareTimer();
             renderPiano();
+
+            // If timer session was already started by the user, immediately start countdown for new card
+            if (isTimerRunning && timerDuration > 0) {
+                startTimerCountdown();
+            }
         }
 
         function prepareTimer() {
             clearInterval(timerInterval);
             timerDuration = parseInt(timerSelect.value);
             if (timerDuration === 0) {
+                isTimerRunning = false;
+                isTimerPaused = false;
                 timerBarContainer.classList.add('hidden');
                 timerDisplay.classList.add('hidden');
                 startTimerBtn.classList.add('hidden');
+                pauseTimerBtn.classList.add('hidden');
                 return;
             }
 
             timerBarContainer.classList.remove('hidden');
             timerDisplay.classList.remove('hidden');
-            startTimerBtn.classList.remove('hidden');
-            timeLeft = timerDuration;
-            timerBar.style.width = '100%';
-            timerDisplay.textContent = `${timerDuration}s ready`;
+            
+            if (!isTimerRunning && !isTimerPaused) {
+                startTimerBtn.classList.remove('hidden');
+                pauseTimerBtn.classList.add('hidden');
+                startTimerBtn.textContent = '▶ Start Timer';
+            } else if (isTimerPaused) {
+                startTimerBtn.classList.remove('hidden');
+                startTimerBtn.textContent = '▶ Resume';
+                pauseTimerBtn.classList.add('hidden');
+            } else {
+                startTimerBtn.classList.add('hidden');
+                pauseTimerBtn.classList.remove('hidden');
+            }
+
+            if (!isTimerPaused) {
+                timeLeft = timerDuration;
+            }
+            let pct = (timeLeft / timerDuration) * 100;
+            timerBar.style.width = `${pct}%`;
+            
+            if (isTimerPaused) {
+                timerDisplay.textContent = `${timeLeft}s (Paused)`;
+            } else if (!isTimerRunning) {
+                timerDisplay.textContent = `${timerDuration}s ready`;
+            } else {
+                timerDisplay.textContent = `${timeLeft}s remaining`;
+            }
             timerDisplay.classList.remove('animate-pulse');
         }
 
@@ -645,11 +687,19 @@
             if (timerDuration === 0) return;
             
             clearInterval(timerInterval);
+            isTimerRunning = true;
+            isTimerPaused = false;
             startTimerBtn.classList.add('hidden');
-            timeLeft = timerDuration;
+            pauseTimerBtn.classList.remove('hidden');
+
+            if (timeLeft <= 0 || timeLeft > timerDuration) {
+                timeLeft = timerDuration;
+            }
             updateTimerDisplay();
 
             timerInterval = setInterval(() => {
+                if (isTimerPaused) return;
+
                 timeLeft--;
                 updateTimerDisplay();
 
@@ -666,6 +716,18 @@
             }, 1000);
         }
 
+        function pauseTimer() {
+            if (!isTimerRunning) return;
+            clearInterval(timerInterval);
+            isTimerRunning = false;
+            isTimerPaused = true;
+            pauseTimerBtn.classList.add('hidden');
+            startTimerBtn.classList.remove('hidden');
+            startTimerBtn.textContent = '▶ Resume';
+            timerDisplay.textContent = `${timeLeft}s (Paused)`;
+            timerDisplay.classList.remove('animate-pulse');
+        }
+
         function updateTimerDisplay() {
             let pct = (timeLeft / timerDuration) * 100;
             timerBar.style.width = `${pct}%`;
@@ -678,68 +740,32 @@
         function handleTimeOut() {
             totalAnswered++;
             score++;
-            scoreVal.textContent = score;
-            feedbackMsg.textContent = `Time's up! Next shape loading...`;
+            scoreValEl.textContent = score;
+            feedbackMsg.textContent = `Time's up! Next card...`;
             feedbackMsg.className = 'h-8 mt-4 text-sm font-semibold flex items-center justify-center text-amber-400 bg-amber-500/10 rounded-lg border border-amber-500/20';
-            setTimeout(nextQuestion, 1000);
+            setTimeout(nextQuestion, 600);
         }
 
-        function initMIDI() {
-            if (navigator.requestMIDIAccess) {
-                navigator.requestMIDIAccess().then(onMIDISuccess, onMIDIFailure);
+        pauseTimerBtn.addEventListener('click', () => {
+            pauseTimer();
+        });
+
+        startTimerBtn.addEventListener('click', () => {
+            if (isTimerPaused) {
+                startTimerCountdown();
             } else {
-                midiDot.className = 'w-2.5 h-2.5 rounded-full bg-slate-600';
-                midiText.textContent = 'MIDI Not Supported';
+                timeLeft = timerDuration;
+                startTimerCountdown();
             }
-        }
-
-        function onMIDISuccess(midiAccess) {
-            midiDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/50';
-            midiText.textContent = 'MIDI Connected';
-            
-            const inputs = midiAccess.inputs.values();
-            for (let input of inputs) {
-                input.onmidimessage = handleMIDIMessage;
-            }
-
-            midiAccess.onstatechange = (e) => {
-                if (e.port.type === 'input') {
-                    if (e.port.state === 'connected') {
-                        e.port.onmidimessage = handleMIDIMessage;
-                        midiDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/50';
-                        midiText.textContent = 'MIDI Connected';
-                    } else {
-                        midiDot.className = 'w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse';
-                        midiText.textContent = 'MIDI Disconnected';
-                    }
-                }
-            };
-        }
-
-        function onMIDIFailure() {
-            midiDot.className = 'w-2.5 h-2.5 rounded-full bg-rose-500';
-            midiText.textContent = 'MIDI Error / Blocked';
-        }
-
-        function handleMIDIMessage(event) {
-            const [status, note, velocity] = event.data;
-            const command = status >> 4;
-            if (command === 9 || (command === 11 && velocity > 0)) {
-                if (velocity > 0) {
-                    activeMidiNotes.add(note);
-                } else {
-                    activeMidiNotes.delete(note);
-                }
-            } else if (command === 8) {
-                activeMidiNotes.delete(note);
-            }
-            renderPiano();
-        }
+        });
 
         function showSummary() {
             if (timerInterval) clearInterval(timerInterval);
-            summaryScore.textContent = score;
-            let accuracy = totalAnswered > 0 ? Math.round((score / totalAnswered) * 100) : 0;
+            isTimerRunning = false;
+            isTimerPaused = false;
+
+            const accuracy = totalAnswered > 0 ? Math.round((score / totalAnswered) * 100) : 0;
+            summaryScore.textContent = `${score} / ${totalAnswered}`;
             summaryAccuracy.textContent = `${accuracy}%`;
             summaryModal.classList.remove('hidden');
         }
@@ -748,11 +774,22 @@
             summaryModal.classList.add('hidden');
             score = 0;
             totalAnswered = 0;
-            scoreVal.textContent = score;
-            totalVal.textContent = totalAnswered;
+            scoreValEl.textContent = score;
+            totalValEl.textContent = totalAnswered;
             questionPool = generatePool();
             nextQuestion();
         }
+
+        restartSessionBtn.addEventListener('click', restartSession);
+
+        skipBtn.addEventListener('click', () => {
+            totalAnswered++;
+            nextQuestion();
+        });
+
+        stopBtn.addEventListener('click', () => {
+            showSummary();
+        });
 
         revealToggle.addEventListener('change', (e) => {
             if (e.target.checked) {
@@ -762,45 +799,31 @@
             }
         });
 
-        startTimerBtn.addEventListener('click', () => {
-            startTimerCountdown();
-        });
-
-        skipBtn.addEventListener('click', () => {
-            if (timerInterval) clearInterval(timerInterval);
-            score++;
-            totalAnswered++;
-            scoreVal.textContent = score;
-            nextQuestion();
-        });
-
-        stopBtn.addEventListener('click', () => {
-            showSummary();
-        });
-
-        restartSessionBtn.addEventListener('click', () => {
-            restartSession();
-        });
-
         baseKeySelect.addEventListener('change', () => {
+            isTimerRunning = false;
+            isTimerPaused = false;
             questionPool = generatePool();
             score = 0;
             totalAnswered = 0;
-            scoreVal.textContent = score;
-            totalVal.textContent = totalAnswered;
+            scoreValEl.textContent = score;
+            totalValEl.textContent = totalAnswered;
             nextQuestion();
         });
 
         directionSelect.addEventListener('change', () => {
+            isTimerRunning = false;
+            isTimerPaused = false;
             questionPool = generatePool();
             score = 0;
             totalAnswered = 0;
-            scoreVal.textContent = score;
-            totalVal.textContent = totalAnswered;
+            scoreValEl.textContent = score;
+            totalValEl.textContent = totalAnswered;
             nextQuestion();
         });
 
         timerSelect.addEventListener('change', () => {
+            isTimerRunning = false;
+            isTimerPaused = false;
             prepareTimer();
         });
 
@@ -808,6 +831,56 @@
             questionPool = generatePool();
             updatePoolCounter();
         });
+
+        function initMIDI() {
+            if (navigator.requestMIDIAccess) {
+                navigator.requestMIDIAccess().then(onMIDISuccess, onMIDIFailure);
+            } else {
+                midiText.textContent = "WebMIDI Not Supported";
+                midiDot.className = "w-2.5 h-2.5 rounded-full bg-slate-600";
+            }
+        }
+
+        function onMIDISuccess(midiAccess) {
+            midiText.textContent = "MIDI Ready";
+            midiDot.className = "w-2.5 h-2.5 rounded-full bg-emerald-500";
+
+            const inputs = midiAccess.inputs.values();
+            for (let input of inputs) {
+                input.onmidimessage = handleMIDIMessage;
+            }
+
+            midiAccess.onstatechange = (e) => {
+                if (e.port.type === 'input') {
+                    if (e.port.state === 'connected') {
+                        midiText.textContent = "MIDI Connected";
+                        midiDot.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse";
+                        e.port.onmidimessage = handleMIDIMessage;
+                    } else {
+                        midiText.textContent = "MIDI Disconnected";
+                        midiDot.className = "w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse";
+                    }
+                }
+            };
+        }
+
+        function onMIDIFailure() {
+            midiText.textContent = "MIDI Access Denied";
+            midiDot.className = "w-2.5 h-2.5 rounded-full bg-rose-500";
+        }
+
+        function handleMIDIMessage(event) {
+            const [command, note, velocity] = event.data;
+            const cmd = command >> 4;
+
+            // Note On (1001 / 9) and Note Off (1000 / 8)
+            if (cmd === 9 && velocity > 0) {
+                activeMidiNotes.add(note);
+            } else if (cmd === 8 || (cmd === 9 && velocity === 0)) {
+                activeMidiNotes.delete(note);
+            }
+            renderPiano();
+        }
 
         window.onload = function() {
             buildPiano();
