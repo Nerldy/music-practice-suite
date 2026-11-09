@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Music Key & Scale Practice Chooser</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(100, 116, 139, 0.5);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(148, 163, 184, 0.8);
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col items-center justify-between p-4 sm:p-6">
+
+    <main class="w-full max-w-4xl flex-grow flex flex-col gap-6">
+        <!-- Header -->
+        <header class="text-center my-4">
+            <h1 class="text-3xl sm:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">
+                Daily Scale & Mode Chooser
+            </h1>
+            <p class="text-slate-400 text-sm sm:text-base mt-2">
+                Randomize your daily scale & mode practice. Track your history and never repeat until all are completed.
+            </p>
+        </header>
+
+        <!-- Main Display Card -->
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-10 shadow-2xl relative overflow-hidden flex flex-col items-center justify-center text-center">
+            <div class="absolute -top-24 -left-24 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -bottom-24 -right-24 w-48 h-48 bg-pink-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+            <span class="text-xs uppercase tracking-widest text-indigo-400 font-semibold mb-2">Today's Scale Target</span>
+
+            <!-- Result Box -->
+            <div id="resultBox" class="my-6 min-h-[140px] flex flex-col items-center justify-center transition-all duration-300">
+                <div id="keyDisplay" class="text-4xl sm:text-6xl font-black text-white tracking-tight mb-2">
+                    Press Pick Below
+                </div>
+                <div id="detailsDisplay" class="text-lg sm:text-xl font-medium text-purple-300 h-8">
+                    Ready to practice?
+                </div>
+            </div>
+
+            <!-- Stats & Progress Indicator -->
+            <div class="w-full max-w-md bg-slate-950/60 rounded-xl p-3 border border-slate-800/80 mb-6 flex flex-col gap-2">
+                <div class="flex justify-between items-center text-xs text-slate-400">
+                    <span id="noRepeatStatus">No-Repeat: Enabled</span>
+                    <span id="poolCounter">0 / 0 Remaining</span>
+                </div>
+                <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                    <div id="progressBar" class="bg-gradient-to-r from-indigo-500 to-pink-500 h-full w-0 transition-all duration-500"></div>
+                </div>
+            </div>
+
+            <!-- Primary Actions -->
+            <div class="flex flex-wrap gap-4 justify-center items-center w-full max-w-md">
+                <button id="pickBtn" class="flex-1 min-w-[160px] bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 active:scale-95 text-white font-bold py-4 px-6 rounded-2xl shadow-lg shadow-indigo-500/20 transition-all flex items-center justify-center gap-2 text-lg">
+                    <i data-lucide="shuffle" class="w-6 h-6"></i>
+                    <span>Pick Next Mode</span>
+                </button>
+                <button id="playAudioBtn" disabled class="bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 p-4 rounded-2xl border border-slate-700 transition-all flex items-center justify-center">
+                    <i data-lucide="volume-2" class="w-6 h-6"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Controls & Pool Configuration -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 shadow-xl flex flex-col gap-6">
+            
+            <!-- Global Options Header -->
+            <div class="flex flex-wrap justify-between items-center border-b border-slate-800 pb-4 gap-4">
+                <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                    <i data-lucide="sliders" class="w-5 h-5 text-indigo-400"></i>
+                    Pool & Generator Settings
+                </h2>
+                
+                <div class="flex items-center gap-4">
+                    <!-- No Repeat Toggle -->
+                    <label class="inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="noRepeatToggle" class="sr-only peer" checked>
+                        <div class="relative w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                        <span class="ms-3 text-sm font-medium text-slate-300">No-Repeat Mode</span>
+                    </label>
+
+                    <!-- Reset Completed Button -->
+                    <button id="resetCycleBtn" class="text-xs text-amber-400 hover:text-amber-300 border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 px-3 py-1.5 rounded-lg transition flex items-center gap-1">
+                        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                        Reset Cycle
+                    </button>
+                </div>
+            </div>
+
+            <!-- Scales & Modes Selector -->
+            <div>
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-sm font-semibold text-slate-300 uppercase tracking-wider">Scales & Modes</h3>
+                    <div class="flex gap-2">
+                        <button id="selectAllModes" class="text-xs bg-slate-800 hover:bg-slate-700 text-indigo-300 px-2.5 py-1 rounded border border-slate-700 transition">Select All</button>
+                        <button id="deselectAllModes" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-400 px-2.5 py-1 rounded border border-slate-700 transition">Select None</button>
+                    </div>
+                </div>
+                <div id="modesContainer" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
+                    <!-- Populated dynamically via JS -->
+                </div>
+            </div>
+
+            <!-- Toast / Message Box (Replaces Alert) -->
+            <div id="toast" class="hidden bg-indigo-950 border border-indigo-700 text-indigo-200 px-4 py-3 rounded-xl text-sm flex items-center justify-between">
+                <span id="toastMessage">Notice message here.</span>
+                <button id="closeToastBtn" class="text-indigo-400 hover:text-white ml-4">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full text-center text-xs text-slate-500 my-6">
+        <p>Daily Scale & Mode Chooser • Settings auto-save locally</p>
+    </footer>
+
+    <!-- App Logic -->
+    <script>
+        // Data Definitions
+        const ALL_MODES = [
+            { name: "Ionian (Major)", intervals: [0, 2, 4, 5, 7, 9, 11] },
+            { name: "Dorian", intervals: [0, 2, 3, 5, 7, 9, 10] },
+            { name: "Phrygian", intervals: [0, 1, 3, 5, 7, 8, 10] },
+            { name: "Lydian", intervals: [0, 2, 4, 6, 7, 9, 11] },
+            { name: "Mixolydian", intervals: [0, 2, 4, 5, 7, 9, 10] },
+            { name: "Aeolian (Natural Minor)", intervals: [0, 2, 3, 5, 7, 8, 10] },
+            { name: "Locrian", intervals: [0, 1, 3, 5, 6, 8, 10] },
+            { name: "Harmonic Minor", intervals: [0, 2, 3, 5, 7, 8, 11] },
+            { name: "Melodic Minor", intervals: [0, 2, 3, 5, 7, 9, 11] },
+            { name: "Pentatonic Major", intervals: [0, 2, 4, 7, 9] },
+            { name: "Pentatonic Minor", intervals: [0, 3, 5, 7, 10] },
+            { name: "Blues Scale", intervals: [0, 3, 5, 6, 7, 10] }
+        ];
+
+        // Reference Base Frequency (C4 = 261.63Hz)
+        const BASE_FREQ = 261.63;
+
+        // State Storage Keys
+        const STORAGE_KEY = "music_mode_chooser_state_v2";
+
+        // Application State
+        let state = {
+            selectedModes: ALL_MODES.map(m => m.name),
+            noRepeat: true,
+            usedModes: [], // Stores mode names that have been picked
+            currentPick: null // "Dorian"
+        };
+
+        // DOM Elements
+        const modesContainer = document.getElementById("modesContainer");
+        const pickBtn = document.getElementById("pickBtn");
+        const playAudioBtn = document.getElementById("playAudioBtn");
+        const keyDisplay = document.getElementById("keyDisplay");
+        const detailsDisplay = document.getElementById("detailsDisplay");
+        const noRepeatToggle = document.getElementById("noRepeatToggle");
+        const noRepeatStatus = document.getElementById("noRepeatStatus");
+        const poolCounter = document.getElementById("poolCounter");
+        const progressBar = document.getElementById("progressBar");
+        const resetCycleBtn = document.getElementById("resetCycleBtn");
+        const toast = document.getElementById("toast");
+        const toastMessage = document.getElementById("toastMessage");
+        const closeToastBtn = document.getElementById("closeToastBtn");
+
+        // Web Audio Context initialization (Lazy loaded)
+        let audioCtx = null;
+
+        // Load Saved State
+        function loadSavedState() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    state = { ...state, ...parsed };
+                }
+            } catch (e) {
+                console.error("Failed to load local storage state:", e);
+            }
+        }
+
+        // Save State
+        function saveState() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            } catch (e) {
+                console.error("Failed to save local storage state:", e);
+            }
+        }
+
+        // Show Custom Toast (Alert Replacement)
+        function showToast(msg) {
+            toastMessage.textContent = msg;
+            toast.classList.remove("hidden");
+            setTimeout(() => {
+                toast.classList.add("hidden");
+            }, 4000);
+        }
+
+        closeToastBtn.addEventListener("click", () => {
+            toast.classList.add("hidden");
+        });
+
+        // Initialize UI Elements
+        function renderUI() {
+            // Populate Mode Checkboxes
+            modesContainer.innerHTML = "";
+            ALL_MODES.forEach(mode => {
+                const isChecked = state.selectedModes.includes(mode.name);
+                const btn = document.createElement("label");
+                btn.className = `cursor-pointer text-left text-sm font-medium p-3 rounded-xl border transition-all flex items-center justify-between select-none ${
+                    isChecked 
+                    ? "bg-purple-600/20 border-purple-500/60 text-purple-200 shadow-sm" 
+                    : "bg-slate-950 border-slate-800 text-slate-500 hover:border-slate-700"
+                }`;
+                btn.innerHTML = `
+                    <span class="truncate">${mode.name}</span>
+                    <input type="checkbox" class="accent-purple-500 rounded mode-checkbox" value="${mode.name}" ${isChecked ? "checked" : ""}>
+                `;
+                modesContainer.appendChild(btn);
+            });
+
+            // Update Toggle
+            noRepeatToggle.checked = state.noRepeat;
+
+            // Render Current Pick Display
+            if (state.currentPick) {
+                keyDisplay.textContent = state.currentPick;
+                detailsDisplay.textContent = "Today's Scale Mode";
+                playAudioBtn.disabled = false;
+            } else {
+                keyDisplay.textContent = "Press Pick Below";
+                detailsDisplay.textContent = "Ready to practice?";
+                playAudioBtn.disabled = true;
+            }
+
+            updateStats();
+            lucide.createIcons();
+        }
+
+        // Calculate and Update Progress & Counters
+        function updateStats() {
+            const totalPossible = state.selectedModes.length;
+            
+            // Clean up used modes that are no longer valid due to pool changes
+            const validUsed = state.usedModes.filter(m => state.selectedModes.includes(m));
+            
+            if (validUsed.length !== state.usedModes.length) {
+                state.usedModes = validUsed;
+                saveState();
+            }
+
+            const usedCount = state.usedModes.length;
+            const remaining = totalPossible - usedCount;
+
+            noRepeatStatus.textContent = state.noRepeat ? "No-Repeat Mode: ACTIVE" : "No-Repeat Mode: OFF";
+
+            if (totalPossible === 0) {
+                poolCounter.textContent = "Pool empty! Select items below.";
+                progressBar.style.width = "0%";
+            } else if (!state.noRepeat) {
+                poolCounter.textContent = `${totalPossible} Total Modes Selected`;
+                progressBar.style.width = "100%";
+            } else {
+                poolCounter.textContent = `${usedCount} / ${totalPossible} Completed (${remaining} left)`;
+                const percentage = Math.round((usedCount / totalPossible) * 100);
+                progressBar.style.width = `${percentage}%`;
+            }
+        }
+
+        // Generate Pool Array
+        function getAvailablePool() {
+            return state.selectedModes.filter(m => !state.noRepeat || !state.usedModes.includes(m));
+        }
+
+        // Handle Pick Action
+        function pickNext() {
+            if (state.selectedModes.length === 0) {
+                showToast("Please select at least one scale mode.");
+                return;
+            }
+
+            let pool = getAvailablePool();
+
+            // If No-Repeat is on and all modes have been completed, auto-reset cycle!
+            if (state.noRepeat && pool.length === 0) {
+                state.usedModes = [];
+                saveState();
+                pool = getAvailablePool();
+                showToast("🎉 All scale modes in your pool completed! Resetting cycle for the next round.");
+            }
+
+            // Pick Random
+            const randomIndex = Math.floor(Math.random() * pool.length);
+            const pickedMode = pool[randomIndex];
+
+            state.currentPick = pickedMode;
+
+            if (state.noRepeat) {
+                state.usedModes.push(pickedMode);
+            }
+
+            saveState();
+
+            // Visual feedback animation
+            keyDisplay.classList.add("scale-95", "opacity-50");
+            setTimeout(() => {
+                keyDisplay.textContent = pickedMode;
+                detailsDisplay.textContent = "Today's Scale Mode";
+                keyDisplay.classList.remove("scale-95", "opacity-50");
+            }, 150);
+
+            playAudioBtn.disabled = false;
+            updateStats();
+        }
+
+        // Audio Preview Generator using Web Audio API
+        function playScaleAudio() {
+            if (!state.currentPick) return;
+
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            const modeObj = ALL_MODES.find(m => m.name === state.currentPick);
+            const intervals = modeObj ? modeObj.intervals : [0, 2, 4, 5, 7, 9, 11];
+
+            // Add octave back to top of scale preview
+            const scaleIntervals = [...intervals, 12];
+
+            const now = audioCtx.currentTime;
+            const noteDuration = 0.28;
+
+            scaleIntervals.forEach((semitones, idx) => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+
+                // Smooth synth tone
+                osc.type = "triangle";
+                
+                // Frequency calculation relative to C4
+                const freq = BASE_FREQ * Math.pow(2, semitones / 12);
+                osc.frequency.setValueAtTime(freq, now + (idx * noteDuration));
+
+                // Envelope
+                gain.gain.setValueAtTime(0.01, now + (idx * noteDuration));
+                gain.gain.exponentialRampToValueAtTime(0.2, now + (idx * noteDuration) + 0.04);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + (idx * noteDuration) + noteDuration - 0.02);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                osc.start(now + (idx * noteDuration));
+                osc.stop(now + (idx * noteDuration) + noteDuration);
+            });
+        }
+
+        // Setup Event Listeners
+        function setupEventListeners() {
+            // Main Action Buttons
+            pickBtn.addEventListener("click", pickNext);
+            playAudioBtn.addEventListener("click", playScaleAudio);
+
+            // Toggle No-Repeat
+            noRepeatToggle.addEventListener("change", (e) => {
+                state.noRepeat = e.target.checked;
+                saveState();
+                updateStats();
+            });
+
+            // Reset Cycle Button
+            resetCycleBtn.addEventListener("click", () => {
+                state.usedModes = [];
+                saveState();
+                updateStats();
+                showToast("Practice cycle history reset!");
+            });
+
+            // Checkbox Container Event Delegation (Modes)
+            modesContainer.addEventListener("change", (e) => {
+                if (e.target.classList.contains("mode-checkbox")) {
+                    const checkedModes = Array.from(document.querySelectorAll(".mode-checkbox:checked")).map(cb => cb.value);
+                    state.selectedModes = checkedModes;
+                    saveState();
+                    renderUI();
+                }
+            });
+
+            // Select / Deselect All Modes
+            document.getElementById("selectAllModes").addEventListener("click", () => {
+                state.selectedModes = ALL_MODES.map(m => m.name);
+                saveState();
+                renderUI();
+            });
+
+            document.getElementById("deselectAllModes").addEventListener("click", () => {
+                state.selectedModes = [];
+                saveState();
+                renderUI();
+            });
+        }
+
+        // Initialize App
+        window.onload = function() {
+            loadSavedState();
+            renderUI();
+            setupEventListeners();
+        };
+    </script>
+</body>
+</html>
